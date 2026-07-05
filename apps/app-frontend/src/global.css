@@ -52,6 +52,5 @@ body {
   .pf-v6-c-button.pf-m-link:focus-visible {
     outline: none;
     box-shadow: none;
-    
-  } 
+  }
 }
