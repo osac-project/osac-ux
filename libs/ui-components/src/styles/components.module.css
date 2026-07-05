@@ -1,0 +1,13 @@
+/* network */
+.networkClassGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--pf-t--global--spacer--md);
+}
+
+.networkRuleRow {
+  display: grid;
+  grid-template-columns: 140px 80px 80px 1fr auto;
+  gap: var(--pf-t--global--spacer--sm);
+  align-items: flex-end;
+}
