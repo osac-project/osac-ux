@@ -43,6 +43,10 @@ storybook-static/
 apps/e2e/cypress/screenshots/
 apps/e2e/cypress/videos/
 apps/e2e/cypress/downloads/
+apps/e2e/cypress/api-coverage-report.json
+apps/e2e/cypress/api-coverage-report.html
+apps/e2e/api-diff-manifest.generated.json
+apps/e2e/cypress.env.json
 
 # Coverage
 coverage/

@@ -3,11 +3,13 @@
  *
  * Codegen script that introspects source files to produce an API diff manifest:
  *   libs/ui-components/src/pages/dev/api-diff-manifest.generated.ts
+ *   apps/e2e/api-diff-manifest.generated.json  (companion JSON for gen-coverage-html.mjs)
  *
  * Sources read:
  *   - libs/ui-components/src/api/types.ts          (ApiRoute union + inline comments)
  *   - libs/ui-components/src/api/v1/*.ts            (hook files → ops + @temp-api)
- *   - libs/ui-components/src/api/v1/*.ts            (route references)
+ *   - libs/ui-components/src/pages/**\/*.tsx        (page files → hook imports → pages mapping)
+ *   - apps/app-frontend/src/shell/AppShell.tsx      (component → URL path mapping)
  *   - fulfillment-service/proto/public/osac/public/v1/*_service.proto
  *   - apps/app-frontend/src/demo/mock-store.ts      (mock data presence)
  *
@@ -35,8 +37,28 @@ const mockStoreFile = path.join(
   repoRoot,
   'apps/app-frontend/src/demo/mock-store.ts',
 )
+const pagesDir = path.join(repoRoot, 'libs/ui-components/src/pages')
+const appShellFile = path.join(repoRoot, 'apps/app-frontend/src/shell/AppShell.tsx')
 const outDir = path.join(repoRoot, 'libs/ui-components/src/pages/dev')
 const outFile = path.join(outDir, 'api-diff-manifest.generated.ts')
+const jsonOutFile = path.join(repoRoot, 'apps/e2e/api-diff-manifest.generated.json')
+
+// Known nested route expansions (components used as router outlets in AppShell)
+// Maps outlet component name -> [ { path, component } ]
+const NESTED_ROUTE_EXPANSIONS = {
+  NetworkRoutes: [
+    { path: '/networks', component: 'NetworkListPage' },
+    { path: '/networks/new', component: 'VirtualNetworkNewPage' },
+    { path: '/networks/subnets/new', component: 'SubnetNewPage' },
+    { path: '/networks/security-groups/new', component: 'SecurityGroupNewPage' },
+    { path: '/networks/security-groups/:id/rules', component: 'SecurityGroupRulesPage' },
+    { path: '/networks/:id', component: 'VirtualNetworkDetailPage' },
+  ],
+  ClusterRoutes: [
+    { path: '/clusters', component: 'ClustersPage' },
+    { path: '/clusters/:clusterId', component: 'ClusterDetailsPage' },
+  ],
+}
 
 // ---------------------------------------------------------------------------
 // Step 1: Parse ApiRoute union from types.ts
@@ -149,6 +171,108 @@ async function scanHookFiles() {
   }
 
   return { hookMap, routeToHook }
+}
+
+// ---------------------------------------------------------------------------
+// Step 2b: Scan pages to build hookFile -> URL paths mapping
+// ---------------------------------------------------------------------------
+
+/** Recursively collect all .tsx files under a directory. */
+async function collectTsxFiles(dir) {
+  const entries = await readdir(dir, { withFileTypes: true })
+  const files = []
+  for (const e of entries) {
+    const full = path.join(dir, e.name)
+    if (e.isDirectory()) {
+      files.push(...await collectTsxFiles(full))
+    } else if (e.isFile() && e.name.endsWith('.tsx')) {
+      files.push(full)
+    }
+  }
+  return files
+}
+
+/**
+ * Returns:
+ *   hookToComponents: hookFilename -> Set<componentName>
+ *   allPageComponents: Set of all component names exported from page files
+ *
+ * Reads import statements in every page .tsx file.
+ */
+async function scanPagesForHookImports() {
+  const tsxFiles = await collectTsxFiles(pagesDir)
+  /** @type {Map<string, Set<string>>} hookFile -> Set<componentName> */
+  const hookToComponents = new Map()
+  /** @type {Set<string>} all component names from page files */
+  const allPageComponents = new Set()
+
+  for (const file of tsxFiles) {
+    const src = await readFile(file, 'utf8')
+    // Collect the component names exported from this page file
+    const componentNames = new Set()
+    for (const m of src.matchAll(/export (?:const|function) (\w+)/g)) {
+      componentNames.add(m[1])
+      allPageComponents.add(m[1])
+    }
+
+    // Find imports from api/v1/ within this page
+    for (const m of src.matchAll(/from ['"][^'"]*\/api\/v1\/([^'"./]+)['"]/g)) {
+      const hookFilename = m[1] + '.ts'
+      if (!hookToComponents.has(hookFilename)) hookToComponents.set(hookFilename, new Set())
+      for (const comp of componentNames) {
+        hookToComponents.get(hookFilename).add(comp)
+      }
+    }
+  }
+
+  return { hookToComponents, allPageComponents }
+}
+
+/**
+ * Parses AppShell.tsx and the known nested route files to build a map:
+ * componentName -> string[]  (URL paths where this component renders)
+ *
+ * @param {Set<string>} knownPageComponents - set of component names from the pages directory
+ */
+async function buildComponentToPathsMap(knownPageComponents) {
+  const src = await readFile(appShellFile, 'utf8')
+
+  /** @type {Map<string, string[]>} */
+  const compToPaths = new Map()
+
+  // Each <Route path="X"> block in AppShell contains exactly one page component.
+  // We extract all (path, component) pairs by scanning the whole file for patterns:
+  //   path="<path>"  ...  <PageComponent
+  // between consecutive <Route> blocks.
+  // Strategy: split on "path=" occurrences and parse each block.
+  const routeBlocks = src.split(/(?=\s*path=")/)
+
+  for (const block of routeBlocks) {
+    const pathMatch = block.match(/path="([^"]+)"/)
+    if (!pathMatch) continue
+    const urlPath = pathMatch[1]
+
+    // Find the first uppercase component in this block that is a known page component
+    for (const m of block.matchAll(/<([A-Z][A-Za-z]+)[\s/>]/g)) {
+      const comp = m[1]
+      if (knownPageComponents.has(comp) || comp in NESTED_ROUTE_EXPANSIONS) {
+        if (!compToPaths.has(comp)) compToPaths.set(comp, [])
+        compToPaths.get(comp).push(urlPath)
+        break
+      }
+    }
+  }
+
+  // Expand nested route outlets: replace the wildcard path with concrete paths
+  for (const [outlet, expansions] of Object.entries(NESTED_ROUTE_EXPANSIONS)) {
+    compToPaths.delete(outlet)
+    for (const { path: p, component } of expansions) {
+      if (!compToPaths.has(component)) compToPaths.set(component, [])
+      compToPaths.get(component).push(p)
+    }
+  }
+
+  return compToPaths
 }
 
 // ---------------------------------------------------------------------------
@@ -276,6 +400,7 @@ function renderTs(entries) {
         `    hookFile: ${e.hookFile ? `'${e.hookFile}'` : 'null'}`,
         `    hasMockData: ${e.hasMockData}`,
         `    notes: ${e.notes ? `'${e.notes}'` : 'null'}`,
+        `    pages: [${e.pages.map((p) => `'${p}'`).join(', ')}]`,
       ]
       return `  {\n${fields.join(',\n')},\n  }`
     })
@@ -293,6 +418,7 @@ export interface ApiDiffEntry {
   hookFile: string | null;
   hasMockData: boolean;
   notes: string | null;
+  pages: string[];
 }
 
 export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
@@ -308,14 +434,23 @@ ${entriesStr},
 async function main() {
   console.log('[gen-api-diff] Scanning source files...')
 
-  const [routeEntries, { routeToHook, hookMap }, protoMap, mockRoutes, sectionComments] =
-    await Promise.all([
-      parseApiRoutes(),
-      scanHookFiles(),
-      getProtoServices(),
-      getMockRoutes(),
-      getSectionComments(),
-    ])
+  const [
+    routeEntries,
+    { routeToHook, hookMap },
+    protoMap,
+    mockRoutes,
+    sectionComments,
+    { hookToComponents, allPageComponents },
+  ] = await Promise.all([
+    parseApiRoutes(),
+    scanHookFiles(),
+    getProtoServices(),
+    getMockRoutes(),
+    getSectionComments(),
+    scanPagesForHookImports(),
+  ])
+
+  const compToPaths = await buildComponentToPathsMap(allPageComponents)
 
   const entries = routeEntries.map(({ route }) => {
     const sectionComment = sectionComments.get(route) ?? ''
@@ -329,7 +464,18 @@ async function main() {
     const hasMockData = mockRoutes.has(route)
     const notes = buildNotes(route, sectionComment, category)
 
-    return { route, category, ops, missingOps, protoFile, hookFile, hasMockData, notes }
+    // Build pages list: hookFile -> components -> URL paths
+    const pagesSet = new Set()
+    if (hookFile) {
+      const components = hookToComponents.get(hookFile) ?? new Set()
+      for (const comp of components) {
+        const paths = compToPaths.get(comp) ?? []
+        for (const p of paths) pagesSet.add(p)
+      }
+    }
+    const pages = [...pagesSet].sort()
+
+    return { route, category, ops, missingOps, protoFile, hookFile, hasMockData, notes, pages }
   })
 
   const counts = {
@@ -344,6 +490,12 @@ async function main() {
   await mkdir(outDir, { recursive: true })
   await writeFile(outFile, renderTs(entries), 'utf8')
   console.log(`[gen-api-diff] Written → ${path.relative(repoRoot, outFile)}`)
+
+  // Also write a JSON companion used by gen-coverage-html.mjs
+  const jsonOutDir = path.dirname(jsonOutFile)
+  await mkdir(jsonOutDir, { recursive: true })
+  await writeFile(jsonOutFile, JSON.stringify(entries, null, 2), 'utf8')
+  console.log(`[gen-api-diff] Written → ${path.relative(repoRoot, jsonOutFile)}`)
 }
 
 main().catch((err) => {

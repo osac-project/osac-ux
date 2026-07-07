@@ -1,0 +1,125 @@
+# osac-ux demo deployment — all resources in one file.
+#
+# NOTE: The cluster's built-in image builder (BuildConfig) cannot pull its
+# builder image from quay.io due to an expired cluster pull secret.
+# Images must be built locally and pushed to the cluster's internal registry.
+# See deploy/demo/README.md for the full push workflow.
+#
+# Apply with:
+#   oc apply -f deploy/demo/openshift.yaml
+#
+# Then push the image (see README.md) and the Deployment rolls out automatically.
+#
+# Access the app at:
+#   https://osac-ux-demo-osac-ux-demo.apps.test-infra-cluster-osacui.redhat.com/osac-ux/
+
+---
+# ── ImageStream: internal image storage ───────────────────────────────────
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: osac-ux-demo
+  namespace: osac-ux-demo
+  labels:
+    app: osac-ux-demo
+spec:
+  lookupPolicy:
+    local: true
+
+---
+# ── Deployment: runs the nginx container ──────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: osac-ux-demo
+  namespace: osac-ux-demo
+  labels:
+    app: osac-ux-demo
+  annotations:
+    # Auto-rollout when a new image is pushed to the ImageStream
+    image.openshift.io/triggers: |
+      [{"from":{"kind":"ImageStreamTag","name":"osac-ux-demo:latest","namespace":"osac-ux-demo"},"fieldPath":"spec.template.spec.containers[?(@.name==\"osac-ux-demo\")].image"}]
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: osac-ux-demo
+  template:
+    metadata:
+      labels:
+        app: osac-ux-demo
+    spec:
+      containers:
+        - name: osac-ux-demo
+          image: osac-ux-demo:latest
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /osac-ux/
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /osac-ux/
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+      securityContext:
+        runAsNonRoot: true
+
+---
+# ── Service: internal cluster access ──────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: osac-ux-demo
+  namespace: osac-ux-demo
+  labels:
+    app: osac-ux-demo
+spec:
+  selector:
+    app: osac-ux-demo
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+
+---
+# ── Route: public HTTPS access ─────────────────────────────────────────────
+# Resulting URL:
+#   https://osac-ux-demo-osac-ux-demo.apps.test-infra-cluster-osacui.redhat.com/osac-ux/
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: osac-ux-demo
+  namespace: osac-ux-demo
+  labels:
+    app: osac-ux-demo
+spec:
+  to:
+    kind: Service
+    name: osac-ux-demo
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
