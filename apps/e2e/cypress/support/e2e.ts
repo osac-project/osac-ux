@@ -1,6 +1,21 @@
 /**
- * E2E support — stub authenticated session without a real IdP.
+ * E2E support — loaded before every spec file.
+ *
+ * Exports:
+ *   - cy.loginStub / cy.visitAuthenticated  (stubbed IdP — existing specs)
+ *   - cy.realLogin                           (real Keycloak — api-coverage specs)
+ *   - cy.trackApi / cy.checkField            (API coverage report helpers)
+ *   - cy.deleteResource                      (cleanup helper for flows specs)
  */
+
+import './real-login';
+import './api-report';
+import './cleanup';
+
+// ---------------------------------------------------------------------------
+// Stubbed auth helpers (kept for existing specs)
+// ---------------------------------------------------------------------------
+
 Cypress.Commands.add('loginStub', (username = 'e2e-user@example.com') => {
   cy.intercept('GET', '/api/login/info', {
     statusCode: 200,
