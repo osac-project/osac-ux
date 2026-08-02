@@ -1,3 +1,4 @@
+import { readBillableComponents, totalHourlyRate } from '../../api/v1/template-billing';
 import {
   CATALOG_ITEM_RESOURCE_FIELD_PATHS,
   type CatalogFieldDefinition,
@@ -25,6 +26,7 @@ export interface CatalogItemForDisplay {
   metadata?: {
     name?: string;
     labels?: Record<string, string>;
+    annotations?: Record<string, string>;
   };
   fieldDefinitions?: ReadonlyArray<{
     path: string;
@@ -98,8 +100,27 @@ export const catalogItemMetadataLabelEntries = (
 /** Returns formatted price string or undefined if no recognized price label.
  *  - Capacity-based (VM/CaaS/BM): "$0.15/hr"
  *  - Consumption-based (MaaS): "$2.00/1M tokens" (input token rate)
+ *
+ * Prefers the canonical BillableComponent annotation (osac.io/billable-components)
+ * when present, falling back to the legacy price_per_hour / price_per_input_token
+ * labels for items created before the BillableComponent model existed.
  */
 export const catalogItemPrice = (item: CatalogItemForDisplay): string | undefined => {
+  const components = readBillableComponents(item);
+  if (components.length > 0) {
+    const hourly = totalHourlyRate(components, undefined);
+    if (hourly > 0) {
+      return `$${hourly.toFixed(2)}/hr`;
+    }
+    const inputComponent = components.find((c) => c.meterKey === 'input-tokens');
+    if (inputComponent) {
+      const num = parseFloat(inputComponent.baseRate);
+      if (!isNaN(num)) {
+        return `$${(num * 1_000_000).toFixed(2)}/1M tokens`;
+      }
+    }
+  }
+
   const hourly = item.metadata?.labels?.['price_per_hour'];
   if (hourly) {
     const num = parseFloat(hourly);

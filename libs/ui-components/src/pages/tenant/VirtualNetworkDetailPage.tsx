@@ -26,8 +26,10 @@ import { SecurityGroupsList } from '../../components/Network/SecurityGroupsList'
 import { SubnetsList } from '../../components/Network/SubnetsList';
 import { ResourceDetailHeader } from '../../components/Resource/ResourceDetailHeader';
 import { DeleteConfirmModal } from '../../components/shared/DeleteConfirmModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export const VirtualNetworkDetailPage = () => {
+  const { t } = useTranslation();
   const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -52,14 +54,14 @@ export const VirtualNetworkDetailPage = () => {
               <FlexItem>
                 <ResourceDetailHeader
                   parentTo="/networks"
-                  parentLabel="Networks"
+                  parentLabel={t('Networks')}
                   resourceName={vnetName}
                   titleAddon={vnet ? <NetworkStatusLabel state={vnet.status?.state} /> : undefined}
                 />
               </FlexItem>
               <FlexItem>
                 <Button variant="danger" onClick={() => setDeleteOpen(true)}>
-                  Delete
+                  {t('Delete')}
                 </Button>
               </FlexItem>
             </Flex>
@@ -72,14 +74,14 @@ export const VirtualNetworkDetailPage = () => {
 
       <PageSection hasBodyWrapper={false}>
         <Title headingLevel="h2" size="xl" style={{ marginBottom: '0.75rem' }}>
-          Subnets
+          {t('Subnets')}
         </Title>
         <SubnetsList virtualNetworkId={id} />
       </PageSection>
 
       <PageSection hasBodyWrapper={false}>
         <Title headingLevel="h2" size="xl" style={{ marginBottom: '0.75rem' }}>
-          Security Groups
+          {t('Security Groups')}
         </Title>
         <SecurityGroupsList virtualNetworkId={id} />
       </PageSection>
@@ -87,7 +89,7 @@ export const VirtualNetworkDetailPage = () => {
       {deleteOpen && (
         <DeleteConfirmModal
           resourceName={vnetName}
-          resourceKind="virtual network"
+          resourceKind={t('virtual network')}
           error={deleteVNet.error}
           onConfirm={async () => {
             await deleteVNet.mutateAsync(id);

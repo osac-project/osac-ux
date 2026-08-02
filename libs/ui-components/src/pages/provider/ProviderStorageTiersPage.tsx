@@ -39,6 +39,7 @@ import OsacForm from '../../components/Form/OsacForm';
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
 import { DeleteConfirmModal } from '../../components/shared/DeleteConfirmModal';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 type Protocol = 'nfs' | 'rbd' | 's3';
@@ -65,6 +66,7 @@ const QOS_COLOR: Record<string, 'green' | 'blue' | 'grey'> = {
 // ---------------------------------------------------------------------------
 
 const SetPriceModal = ({ tier, onClose }: { tier: StorageTier; onClose: () => void }) => {
+  const { t } = useTranslation();
   const patch = usePatchStorageTier();
   const [price, setPrice] = useState(tier.metadata?.labels?.['price_per_gib_month'] ?? '');
   const [isPending, setIsPending] = useState(false);
@@ -96,12 +98,12 @@ const SetPriceModal = ({ tier, onClose }: { tier: StorageTier; onClose: () => vo
       aria-labelledby="st-price-title"
     >
       <ModalHeader
-        title={`Set price — ${tier.metadata?.name ?? tier.id}`}
+        title={t('Set price — {{name}}', { name: tier.metadata?.name ?? tier.id })}
         labelId="st-price-title"
       />
       <ModalBody>
         <OsacForm isResponsive={false}>
-          <FormGroup label="Price per GiB / month (USD)" fieldId="sp-price" isRequired>
+          <FormGroup label={t('Price per GiB / month (USD)')} fieldId="sp-price" isRequired>
             <TextInput
               id="sp-price"
               value={price}
@@ -110,7 +112,7 @@ const SetPriceModal = ({ tier, onClose }: { tier: StorageTier; onClose: () => vo
             />
           </FormGroup>
           {patch.error && (
-            <Alert variant="danger" title="Failed to set price" isInline>
+            <Alert variant="danger" title={t('Failed to set price')} isInline>
               {getErrorMessage(patch.error)}
             </Alert>
           )}
@@ -118,7 +120,7 @@ const SetPriceModal = ({ tier, onClose }: { tier: StorageTier; onClose: () => vo
       </ModalBody>
       <ModalFooter>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
         <Button
           variant="primary"
@@ -126,7 +128,7 @@ const SetPriceModal = ({ tier, onClose }: { tier: StorageTier; onClose: () => vo
           isDisabled={isPending || price.trim() === ''}
           isLoading={isPending}
         >
-          Save
+          {t('Save')}
         </Button>
       </ModalFooter>
     </Modal>
@@ -138,6 +140,7 @@ const SetPriceModal = ({ tier, onClose }: { tier: StorageTier; onClose: () => vo
 // ---------------------------------------------------------------------------
 
 export const ProviderStorageTiersPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: tiers = [], isLoading, error } = useStorageTiers();
   const { data: backends = [] } = useStorageBackends();
@@ -158,22 +161,22 @@ export const ProviderStorageTiersPage = () => {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return tiers.filter((t) => {
+    return tiers.filter((tier) => {
       if (q) {
-        const name = (t.metadata?.name ?? t.id).toLowerCase();
-        const dn = (t.spec.displayName ?? '').toLowerCase();
+        const name = (tier.metadata?.name ?? tier.id).toLowerCase();
+        const dn = (tier.spec.displayName ?? '').toLowerCase();
         if (!name.includes(q) && !dn.includes(q)) {
           return false;
         }
       }
-      if (protoFilters.length > 0 && !protoFilters.includes(t.spec.protocol as Protocol)) {
+      if (protoFilters.length > 0 && !protoFilters.includes(tier.spec.protocol as Protocol)) {
         return false;
       }
-      if (qosFilters.length > 0 && !qosFilters.includes(t.spec.qosClass as QosClass)) {
+      if (qosFilters.length > 0 && !qosFilters.includes(tier.spec.qosClass as QosClass)) {
         return false;
       }
       if (availFilters.length > 0) {
-        const isAvail = t.status.available ? 'yes' : 'no';
+        const isAvail = tier.status.available ? 'yes' : 'no';
         if (!availFilters.includes(isAvail)) {
           return false;
         }
@@ -203,8 +206,10 @@ export const ProviderStorageTiersPage = () => {
   return (
     <>
       <ListPage
-        title="Storage Tiers"
-        description="Named storage classes that tenants can request when provisioning block or object volumes."
+        title={t('Storage Tiers')}
+        description={t(
+          'Named storage classes that tenants can request when provisioning block or object volumes.',
+        )}
       >
         <ListPageBody isLoading={isLoading} error={error}>
           <Toolbar
@@ -219,7 +224,7 @@ export const ProviderStorageTiersPage = () => {
               <ToolbarGroup variant="filter-group">
                 <ToolbarItem>
                   <SearchInput
-                    placeholder="Filter by name or display name"
+                    placeholder={t('Filter by name or display name')}
                     value={search}
                     onChange={(_e, v) => setSearch(v)}
                     onClear={() => setSearch('')}
@@ -229,7 +234,7 @@ export const ProviderStorageTiersPage = () => {
                   labels={protoFilters}
                   deleteLabel={(_cat, chip) => setProtoFilters((f) => f.filter((x) => x !== chip))}
                   deleteLabelGroup={() => setProtoFilters([])}
-                  categoryName="Protocol"
+                  categoryName={t('Protocol')}
                 >
                   <Select
                     isOpen={protoOpen}
@@ -242,7 +247,7 @@ export const ProviderStorageTiersPage = () => {
                         isExpanded={protoOpen}
                         badge={protoFilters.length || undefined}
                       >
-                        Protocol
+                        {t('Protocol')}
                       </MenuToggle>
                     )}
                   >
@@ -264,7 +269,7 @@ export const ProviderStorageTiersPage = () => {
                   labels={qosFilters}
                   deleteLabel={(_cat, chip) => setQosFilters((f) => f.filter((x) => x !== chip))}
                   deleteLabelGroup={() => setQosFilters([])}
-                  categoryName="QoS class"
+                  categoryName={t('QoS class')}
                 >
                   <Select
                     isOpen={qosOpen}
@@ -277,7 +282,7 @@ export const ProviderStorageTiersPage = () => {
                         isExpanded={qosOpen}
                         badge={qosFilters.length || undefined}
                       >
-                        QoS class
+                        {t('QoS class')}
                       </MenuToggle>
                     )}
                   >
@@ -299,7 +304,7 @@ export const ProviderStorageTiersPage = () => {
                   labels={availFilters}
                   deleteLabel={(_cat, chip) => setAvailFilters((f) => f.filter((x) => x !== chip))}
                   deleteLabelGroup={() => setAvailFilters([])}
-                  categoryName="Available"
+                  categoryName={t('Available')}
                 >
                   <Select
                     isOpen={availOpen}
@@ -314,7 +319,7 @@ export const ProviderStorageTiersPage = () => {
                         isExpanded={availOpen}
                         badge={availFilters.length || undefined}
                       >
-                        Available
+                        {t('Available')}
                       </MenuToggle>
                     )}
                   >
@@ -326,7 +331,7 @@ export const ProviderStorageTiersPage = () => {
                           hasCheckbox
                           isSelected={availFilters.includes(a)}
                         >
-                          {a === 'yes' ? 'Available' : 'Unavailable'}
+                          {a === 'yes' ? t('Available') : t('Unavailable')}
                         </SelectOption>
                       ))}
                     </SelectList>
@@ -335,58 +340,64 @@ export const ProviderStorageTiersPage = () => {
               </ToolbarGroup>
               <ToolbarItem align={{ default: 'alignRight' }}>
                 <Button variant="primary" onClick={() => navigate('/provider/storage-tiers/new')}>
-                  Create storage tier
+                  {t('Create storage tier')}
                 </Button>
               </ToolbarItem>
             </ToolbarContent>
           </Toolbar>
 
           {filtered.length === 0 ? (
-            <Alert variant="info" isInline title="No storage tiers match the current filters" />
+            <Alert
+              variant="info"
+              isInline
+              title={t('No storage tiers match the current filters')}
+            />
           ) : (
-            <Table aria-label="Storage tiers" variant="compact">
+            <Table aria-label={t('Storage tiers')} variant="compact">
               <Thead>
                 <Tr>
-                  <Th>Name</Th>
-                  <Th>Display name</Th>
-                  <Th>Protocol</Th>
-                  <Th>QoS class</Th>
-                  <Th>Storage class</Th>
-                  <Th>Backend</Th>
-                  <Th>Price / GiB / mo</Th>
-                  <Th>Available</Th>
-                  <Th aria-label="Actions" />
+                  <Th>{t('Name')}</Th>
+                  <Th>{t('Display name')}</Th>
+                  <Th>{t('Protocol')}</Th>
+                  <Th>{t('QoS class')}</Th>
+                  <Th>{t('Storage class')}</Th>
+                  <Th>{t('Backend')}</Th>
+                  <Th>{t('Price / GiB / mo')}</Th>
+                  <Th>{t('Available')}</Th>
+                  <Th aria-label={t('Actions')} />
                 </Tr>
               </Thead>
               <Tbody>
                 {filtered.map((tier) => (
                   <Tr key={tier.id}>
-                    <Td dataLabel="Name">
+                    <Td dataLabel={t('Name')}>
                       <strong>{tier.metadata?.name ?? tier.id}</strong>
                     </Td>
-                    <Td dataLabel="Display name">{tier.spec.displayName ?? '—'}</Td>
-                    <Td dataLabel="Protocol">
+                    <Td dataLabel={t('Display name')}>{tier.spec.displayName ?? '—'}</Td>
+                    <Td dataLabel={t('Protocol')}>
                       <Label color={PROTOCOL_COLOR[tier.spec.protocol] ?? 'grey'} isCompact>
                         {tier.spec.protocol.toUpperCase()}
                       </Label>
                     </Td>
-                    <Td dataLabel="QoS class">
+                    <Td dataLabel={t('QoS class')}>
                       <Label color={QOS_COLOR[tier.spec.qosClass] ?? 'grey'} isCompact>
                         {tier.spec.qosClass}
                       </Label>
                     </Td>
-                    <Td dataLabel="Storage class">
+                    <Td dataLabel={t('Storage class')}>
                       <code style={{ fontSize: '0.8em' }}>{tier.spec.storageClassName}</code>
                     </Td>
-                    <Td dataLabel="Backend">{backendName(tier.spec.storageBackend)}</Td>
-                    <Td dataLabel="Price / GiB / mo">
+                    <Td dataLabel={t('Backend')}>{backendName(tier.spec.storageBackend)}</Td>
+                    <Td dataLabel={t('Price / GiB / mo')}>
                       {tier.metadata?.labels?.['price_per_gib_month']
                         ? `$${tier.metadata.labels['price_per_gib_month']}`
                         : '—'}
                     </Td>
-                    <Td dataLabel="Available">
+                    <Td dataLabel={t('Available')}>
                       <Switch
-                        aria-label={`Toggle availability for ${tier.metadata?.name ?? tier.id}`}
+                        aria-label={t('Toggle availability for {{name}}', {
+                          name: tier.metadata?.name ?? tier.id,
+                        })}
                         isChecked={tier.status.available}
                         onChange={() => onToggleAvailability(tier)}
                       />
@@ -395,12 +406,12 @@ export const ProviderStorageTiersPage = () => {
                       <ActionsColumn
                         items={[
                           {
-                            title: 'Edit',
+                            title: t('Edit'),
                             onClick: () => navigate(`/provider/storage-tiers/${tier.id}/edit`),
                           },
-                          { title: 'Set price', onClick: () => setPriceTarget(tier) },
+                          { title: t('Set price'), onClick: () => setPriceTarget(tier) },
                           {
-                            title: 'Delete',
+                            title: t('Delete'),
                             onClick: () => setPendingDelete(tier),
                             isDanger: true,
                           },
@@ -419,7 +430,7 @@ export const ProviderStorageTiersPage = () => {
       {pendingDelete && (
         <DeleteConfirmModal
           resourceName={pendingDelete.metadata?.name ?? pendingDelete.id}
-          resourceKind="storage tier"
+          resourceKind={t('storage tier')}
           onClose={() => setPendingDelete(null)}
           onConfirm={async () => {
             await deleteTier.mutateAsync(pendingDelete.id);

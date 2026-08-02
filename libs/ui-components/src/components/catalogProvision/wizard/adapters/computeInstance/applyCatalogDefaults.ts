@@ -5,6 +5,11 @@ import type { ComputeInstanceCatalogItem } from '@osac/types';
 
 import type { ComputeInstanceWizardValues } from './fields';
 import {
+  fieldDefinitionDefaultToInputString,
+  isDynamicFieldPath,
+  resolvedFieldDefault,
+} from '../../../catalogFieldDefinition';
+import {
   getCatalogFieldOverlay,
   overlayDefaultToFormValue,
   readCatalogFieldDefinitions,
@@ -47,4 +52,17 @@ export const applyVmCatalogConfigurationDefaults = (
   setDefault(helpers, 'spec.image.sourceRef', overlayDefaultToFormValue(imageOverlay));
   setDefault(helpers, 'spec.userData', overlayDefaultToFormValue(userDataOverlay));
   setDefault(helpers, 'spec.bootDisk.sizeGib', overlayDefaultToFormValue(bootDiskOverlay) ?? '');
+
+  // Seed custom.* and template_parameters.* fields from the catalog item's org defaults —
+  // makes the Tenant Admin's authoring-time defaults actually reach the provisioning user.
+  const dynamicParameters: Record<string, string> = {};
+  for (const def of definitions.filter((d) => isDynamicFieldPath(d.path))) {
+    const resolved = resolvedFieldDefault(def);
+    if (resolved !== undefined) {
+      dynamicParameters[def.path] = fieldDefinitionDefaultToInputString(resolved);
+    }
+  }
+  if (Object.keys(dynamicParameters).length > 0) {
+    setDefault(helpers, 'spec.dynamicParameters', dynamicParameters);
+  }
 };

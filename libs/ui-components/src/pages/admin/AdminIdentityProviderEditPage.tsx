@@ -27,9 +27,11 @@ import {
 
 import { useIdentityProvider, usePatchIdentityProvider } from '../../api/v1/identity-provider';
 import type { OidcConfig } from '../../api/v1/identity-provider';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 export const AdminIdentityProviderEditPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id = '' } = useParams<{ id: string }>();
   const { data: idp, isLoading } = useIdentityProvider(id);
@@ -91,7 +93,7 @@ export const AdminIdentityProviderEditPage = () => {
   if (isLoading) {
     return (
       <PageSection hasBodyWrapper={false}>
-        <Spinner aria-label="Loading identity provider" />
+        <Spinner aria-label={t('Loading identity provider')} />
       </PageSection>
     );
   }
@@ -99,9 +101,9 @@ export const AdminIdentityProviderEditPage = () => {
   if (!idp) {
     return (
       <PageSection hasBodyWrapper={false}>
-        <Alert variant="warning" isInline title={`Identity provider not found: ${id}`}>
+        <Alert variant="warning" isInline title={t('Identity provider not found: {{id}}', { id })}>
           <Button variant="link" onClick={() => navigate('/admin/identity-providers')}>
-            Back to Identity providers
+            {t('Back to Identity providers')}
           </Button>
         </Alert>
       </PageSection>
@@ -115,38 +117,41 @@ export const AdminIdentityProviderEditPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/admin/identity-providers')}>
-                Identity providers
+                {t('Identity providers')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Edit — {title || internalName}</BreadcrumbItem>
+            <BreadcrumbItem isActive>
+              {t('Edit — {{name}}', { name: title || internalName })}
+            </BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Edit identity provider
+            {t('Edit identity provider')}
           </Title>
         </Stack>
       </PageSection>
 
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '520px' }} id="idp-edit-form">
-          <FormGroup label="Internal name" fieldId="idp-name">
+          <FormGroup label={t('Internal name')} fieldId="idp-name">
             <Label color="grey" isCompact>
               {internalName}
             </Label>
             <FormHelperText>
               <HelperText>
-                <HelperTextItem>Internal name is immutable after creation.</HelperTextItem>
+                <HelperTextItem>{t('Internal name is immutable after creation.')}</HelperTextItem>
               </HelperText>
             </FormHelperText>
           </FormGroup>
 
           {!isOidc && (
-            <Alert variant="info" isInline title="LDAP provider">
-              This provider uses LDAP configuration. Editing LDAP-specific fields is not yet
-              supported in this form.
+            <Alert variant="info" isInline title={t('LDAP provider')}>
+              {t(
+                'This provider uses LDAP configuration. Editing LDAP-specific fields is not yet supported in this form.',
+              )}
             </Alert>
           )}
 
-          <FormGroup label="Display title" isRequired fieldId="idp-title">
+          <FormGroup label={t('Display title')} isRequired fieldId="idp-title">
             <TextInput
               id="idp-title"
               value={title}
@@ -158,7 +163,7 @@ export const AdminIdentityProviderEditPage = () => {
 
           {isOidc && (
             <>
-              <FormGroup label="Issuer URL" fieldId="idp-issuer">
+              <FormGroup label={t('Issuer URL')} fieldId="idp-issuer">
                 <TextInput
                   id="idp-issuer"
                   value={issuer}
@@ -167,7 +172,7 @@ export const AdminIdentityProviderEditPage = () => {
                 />
               </FormGroup>
 
-              <FormGroup label="Client ID" isRequired fieldId="idp-client-id">
+              <FormGroup label={t('Client ID')} isRequired fieldId="idp-client-id">
                 <TextInput
                   id="idp-client-id"
                   value={clientId}
@@ -176,38 +181,38 @@ export const AdminIdentityProviderEditPage = () => {
                 />
               </FormGroup>
 
-              <FormGroup label="Client secret" fieldId="idp-client-secret">
+              <FormGroup label={t('Client secret')} fieldId="idp-client-secret">
                 <TextInput
                   id="idp-client-secret"
                   type="password"
                   value={clientSecret}
                   onChange={(_e, v) => setClientSecret(v)}
-                  placeholder="Leave blank to keep existing secret"
+                  placeholder={t('Leave blank to keep existing secret')}
                 />
                 <FormHelperText>
                   <HelperText>
                     <HelperTextItem>
-                      Leave blank to keep the current secret unchanged.
+                      {t('Leave blank to keep the current secret unchanged.')}
                     </HelperTextItem>
                   </HelperText>
                 </FormHelperText>
               </FormGroup>
 
-              <FormGroup label="Authorization URL (optional override)" fieldId="idp-auth-url">
+              <FormGroup label={t('Authorization URL (optional override)')} fieldId="idp-auth-url">
                 <TextInput
                   id="idp-auth-url"
                   value={authorizationUrl}
                   onChange={(_e, v) => setAuthorizationUrl(v)}
-                  placeholder="Derived from issuer if blank"
+                  placeholder={t('Derived from issuer if blank')}
                 />
               </FormGroup>
 
-              <FormGroup label="Token URL (optional override)" fieldId="idp-token-url">
+              <FormGroup label={t('Token URL (optional override)')} fieldId="idp-token-url">
                 <TextInput
                   id="idp-token-url"
                   value={tokenUrl}
                   onChange={(_e, v) => setTokenUrl(v)}
-                  placeholder="Derived from issuer if blank"
+                  placeholder={t('Derived from issuer if blank')}
                 />
               </FormGroup>
             </>
@@ -216,14 +221,14 @@ export const AdminIdentityProviderEditPage = () => {
           <FormGroup fieldId="idp-enabled">
             <Checkbox
               id="idp-enabled"
-              label="Provider enabled"
+              label={t('Provider enabled')}
               isChecked={enabled}
               onChange={(_e, v) => setEnabled(v)}
             />
           </FormGroup>
 
           {error && (
-            <Alert variant="danger" isInline title="Failed to update identity provider">
+            <Alert variant="danger" isInline title={t('Failed to update identity provider')}>
               {getErrorMessage(error)}
             </Alert>
           )}
@@ -236,14 +241,14 @@ export const AdminIdentityProviderEditPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !isValid}
             >
-              Save changes
+              {t('Save changes')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate('/admin/identity-providers')}
               isDisabled={isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

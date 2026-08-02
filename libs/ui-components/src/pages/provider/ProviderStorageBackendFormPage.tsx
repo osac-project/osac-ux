@@ -31,6 +31,7 @@ import {
   useRegisterStorageBackend,
   useStorageBackends,
 } from '../../api/v1/storage-backend';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 const PROVIDERS = ['ceph', 'nfs', 's3'] as const;
@@ -39,6 +40,7 @@ type Provider = (typeof PROVIDERS)[number];
 const BACK = '/provider/storage-backends';
 
 export const ProviderStorageBackendFormPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
@@ -122,7 +124,7 @@ export const ProviderStorageBackendFormPage = () => {
   if (isEdit && (loadingList || !hydrated)) {
     return (
       <PageSection hasBodyWrapper={false}>
-        <Spinner aria-label="Loading storage backend" />
+        <Spinner aria-label={t('Loading storage backend')} />
       </PageSection>
     );
   }
@@ -130,7 +132,7 @@ export const ProviderStorageBackendFormPage = () => {
   if (isEdit && !existing) {
     return (
       <PageSection hasBodyWrapper={false}>
-        <Alert variant="danger" isInline title={`Storage backend "${id}" not found`} />
+        <Alert variant="danger" isInline title={t('Storage backend "{{id}}" not found', { id })} />
       </PageSection>
     );
   }
@@ -144,15 +146,17 @@ export const ProviderStorageBackendFormPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate(BACK)}>
-                Storage Backends
+                {t('Storage Backends')}
               </Button>
             </BreadcrumbItem>
             <BreadcrumbItem isActive>
-              {isEdit ? `Edit — ${backendName}` : 'Register storage backend'}
+              {isEdit
+                ? t('Edit — {{backendName}}', { backendName })
+                : t('Register storage backend')}
             </BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            {isEdit ? 'Edit storage backend' : 'Register storage backend'}
+            {isEdit ? t('Edit storage backend') : t('Register storage backend')}
           </Title>
         </Stack>
       </PageSection>
@@ -160,7 +164,7 @@ export const ProviderStorageBackendFormPage = () => {
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '560px' }} id="sb-form">
           {!isEdit && (
-            <FormGroup label="Identifier (name)" fieldId="sb-name" isRequired>
+            <FormGroup label={t('Identifier (name)')} fieldId="sb-name" isRequired>
               <TextInput
                 id="sb-name"
                 value={name}
@@ -173,7 +177,7 @@ export const ProviderStorageBackendFormPage = () => {
           )}
 
           {!isEdit && (
-            <FormGroup label="Provider" fieldId="sb-provider" isRequired>
+            <FormGroup label={t('Provider')} fieldId="sb-provider" isRequired>
               <Select
                 isOpen={providerOpen}
                 onOpenChange={setProviderOpen}
@@ -188,7 +192,7 @@ export const ProviderStorageBackendFormPage = () => {
                     onClick={() => setProviderOpen(!providerOpen)}
                     isExpanded={providerOpen}
                   >
-                    {provider ? provider.toUpperCase() : 'Select provider'}
+                    {provider ? provider.toUpperCase() : t('Select provider')}
                   </MenuToggle>
                 )}
               >
@@ -203,7 +207,7 @@ export const ProviderStorageBackendFormPage = () => {
             </FormGroup>
           )}
 
-          <FormGroup label="Endpoint" fieldId="sb-endpoint" isRequired>
+          <FormGroup label={t('Endpoint')} fieldId="sb-endpoint" isRequired>
             <TextInput
               id="sb-endpoint"
               value={endpoint}
@@ -214,7 +218,7 @@ export const ProviderStorageBackendFormPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Description" fieldId="sb-description">
+          <FormGroup label={t('Description')} fieldId="sb-description">
             <TextArea
               id="sb-description"
               value={description}
@@ -223,7 +227,7 @@ export const ProviderStorageBackendFormPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Credentials — username" fieldId="sb-username">
+          <FormGroup label={t('Credentials — username')} fieldId="sb-username">
             <TextInput
               id="sb-username"
               value={username}
@@ -236,8 +240,8 @@ export const ProviderStorageBackendFormPage = () => {
           <FormGroup
             label={
               isEdit
-                ? 'Credentials — new password (leave blank to keep current)'
-                : 'Credentials — password'
+                ? t('Credentials — new password (leave blank to keep current)')
+                : t('Credentials — password')
             }
             fieldId="sb-password"
           >
@@ -254,7 +258,9 @@ export const ProviderStorageBackendFormPage = () => {
             <Alert
               variant="danger"
               title={
-                isEdit ? 'Failed to update storage backend' : 'Failed to register storage backend'
+                isEdit
+                  ? t('Failed to update storage backend')
+                  : t('Failed to register storage backend')
               }
               isInline
             >
@@ -270,10 +276,10 @@ export const ProviderStorageBackendFormPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !isValid}
             >
-              {isEdit ? 'Save changes' : 'Register'}
+              {isEdit ? t('Save changes') : t('Register')}
             </Button>
             <Button variant="link" onClick={() => navigate(BACK)} isDisabled={isPending}>
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

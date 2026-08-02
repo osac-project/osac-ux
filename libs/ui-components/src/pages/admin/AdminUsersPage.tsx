@@ -27,6 +27,7 @@ import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { useUsers } from '@osac/ui-components/api/v1/user';
 import ListPage from '@osac/ui-components/components/Page/ListPage';
 import ListPageBody from '@osac/ui-components/components/Page/ListPageBody';
+import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 import {
   readUserDisplayName,
@@ -43,6 +44,7 @@ type StatusFilter = 'active' | 'inactive';
 type MfaFilter = 'Enrolled' | 'Pending';
 
 export const AdminUsersPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: users = [], isLoading, error } = useUsers();
 
@@ -108,14 +110,14 @@ export const AdminUsersPage = () => {
   }, [users, search, roleFilters, statusFilters, mfaFilters]);
 
   return (
-    <ListPage title="Users" description="Manage users and access for your organization.">
+    <ListPage title={t('Users')} description={t('Manage users and access for your organization.')}>
       <ListPageBody isLoading={isLoading} error={error}>
         <Toolbar clearAllFilters={clearAll}>
           <ToolbarContent>
             <ToolbarItem>
               <SearchInput
-                aria-label="Search users"
-                placeholder="Search by name, email or username"
+                aria-label={t('Search users')}
+                placeholder={t('Search by name, email or username')}
                 value={search}
                 onChange={(_e, v) => setSearch(v)}
                 onClear={() => setSearch('')}
@@ -128,7 +130,7 @@ export const AdminUsersPage = () => {
                   toggleRole((typeof v === 'string' ? v : (v as { key: string }).key) as RoleFilter)
                 }
                 deleteLabelGroup={() => setRoleFilters([])}
-                categoryName="Role"
+                categoryName={t('Role')}
               >
                 <Select
                   isOpen={roleOpen}
@@ -141,7 +143,7 @@ export const AdminUsersPage = () => {
                       isExpanded={roleOpen}
                       badge={roleFilters.length || undefined}
                     >
-                      Role
+                      {t('Role')}
                     </MenuToggle>
                   )}
                 >
@@ -167,7 +169,7 @@ export const AdminUsersPage = () => {
                   )
                 }
                 deleteLabelGroup={() => setStatusFilters([])}
-                categoryName="Status"
+                categoryName={t('Status')}
               >
                 <Select
                   isOpen={statusOpen}
@@ -180,7 +182,7 @@ export const AdminUsersPage = () => {
                       isExpanded={statusOpen}
                       badge={statusFilters.length || undefined}
                     >
-                      Status
+                      {t('Status')}
                     </MenuToggle>
                   )}
                 >
@@ -204,7 +206,7 @@ export const AdminUsersPage = () => {
                   toggleMfa((typeof v === 'string' ? v : (v as { key: string }).key) as MfaFilter)
                 }
                 deleteLabelGroup={() => setMfaFilters([])}
-                categoryName="MFA"
+                categoryName={t('MFA')}
               >
                 <Select
                   isOpen={mfaOpen}
@@ -217,7 +219,7 @@ export const AdminUsersPage = () => {
                       isExpanded={mfaOpen}
                       badge={mfaFilters.length || undefined}
                     >
-                      MFA
+                      {t('MFA')}
                     </MenuToggle>
                   )}
                 >
@@ -238,7 +240,7 @@ export const AdminUsersPage = () => {
             </ToolbarGroup>
             <ToolbarItem align={{ default: 'alignEnd' }}>
               <Button variant="primary" onClick={() => navigate('/admin/users/new')}>
-                Invite user
+                {t('Invite user')}
               </Button>
             </ToolbarItem>
           </ToolbarContent>
@@ -249,27 +251,27 @@ export const AdminUsersPage = () => {
             alignItems={{ default: 'alignItemsCenter' }}
             style={{ gap: '0.5rem', padding: '1rem 0' }}
           >
-            <FlexItem>No users match the current filters.</FlexItem>
+            <FlexItem>{t('No users match the current filters.')}</FlexItem>
             <FlexItem>
               <Button variant="link" isInline onClick={clearAll}>
-                Clear filters
+                {t('Clear filters')}
               </Button>
             </FlexItem>
           </Flex>
         ) : users.length === 0 ? (
-          <Alert variant="info" isInline title="No users found">
-            No users are registered for this organization yet.
+          <Alert variant="info" isInline title={t('No users found')}>
+            {t('No users are registered for this organization yet.')}
           </Alert>
         ) : (
-          <Table aria-label="Tenant users">
+          <Table aria-label={t('Tenant users')}>
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Email</Th>
-                <Th>Role</Th>
-                <Th>MFA</Th>
-                <Th>Status</Th>
-                <Th>Last login</Th>
+                <Th>{t('Name')}</Th>
+                <Th>{t('Email')}</Th>
+                <Th>{t('Role')}</Th>
+                <Th>{t('MFA')}</Th>
+                <Th>{t('Status')}</Th>
+                <Th>{t('Last login')}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -281,11 +283,11 @@ export const AdminUsersPage = () => {
                   (user as Record<string, unknown>).mfaEnrolled;
                 return (
                   <Tr key={user.id}>
-                    <Td dataLabel="Name" className="osac-data-table__primary-cell">
+                    <Td dataLabel={t('Name')} className="osac-data-table__primary-cell">
                       {readUserDisplayName(user)}
                     </Td>
-                    <Td dataLabel="Email">{readUserEmail(user) ?? '—'}</Td>
-                    <Td dataLabel="Role">
+                    <Td dataLabel={t('Email')}>{readUserEmail(user) ?? '—'}</Td>
+                    <Td dataLabel={t('Role')}>
                       {role ? (
                         <Label
                           color={role === 'tenantAdmin' ? 'blue' : 'grey'}
@@ -298,14 +300,14 @@ export const AdminUsersPage = () => {
                         '—'
                       )}
                     </Td>
-                    <Td dataLabel="MFA">
+                    <Td dataLabel={t('MFA')}>
                       {mfaEnrolled === true ? (
                         <Label color="green" isCompact>
-                          Enrolled
+                          {t('Enrolled')}
                         </Label>
                       ) : mfaEnrolled === false ? (
                         <Label color="orange" isCompact>
-                          Pending
+                          {t('Pending')}
                         </Label>
                       ) : (
                         <Label color="grey" isCompact>
@@ -313,7 +315,7 @@ export const AdminUsersPage = () => {
                         </Label>
                       )}
                     </Td>
-                    <Td dataLabel="Status">
+                    <Td dataLabel={t('Status')}>
                       {status ? (
                         <Label color={status === 'active' ? 'green' : 'grey'} isCompact>
                           {status}
@@ -322,7 +324,7 @@ export const AdminUsersPage = () => {
                         '—'
                       )}
                     </Td>
-                    <Td dataLabel="Last login" className="osac-data-table__muted-cell">
+                    <Td dataLabel={t('Last login')} className="osac-data-table__muted-cell">
                       {readUserLastLogin(user) ?? '—'}
                     </Td>
                   </Tr>

@@ -12,18 +12,9 @@ import type { MenuToggleElement } from '@patternfly/react-core';
 import { Protocol } from '@osac/types';
 
 import type { SecurityRuleInput } from '../../api/v1/networking';
+import { useTranslation } from '../../hooks/useTranslation';
 
 import styles from '../../styles/components.module.css';
-
-const PROTOCOL_OPTIONS: { value: Protocol; label: string }[] = [
-  { value: Protocol.TCP, label: 'TCP' },
-  { value: Protocol.UDP, label: 'UDP' },
-  { value: Protocol.ICMP, label: 'ICMP' },
-  { value: Protocol.ALL, label: 'All' },
-];
-
-const protocolLabel = (protocol: Protocol): string =>
-  PROTOCOL_OPTIONS.find((o) => o.value === protocol)?.label ?? 'TCP';
 
 const needsPorts = (protocol: Protocol): boolean =>
   protocol === Protocol.TCP || protocol === Protocol.UDP;
@@ -36,13 +27,22 @@ interface RuleRowProps {
 }
 
 const RuleRow = ({ rule, index, onUpdate, onRemove }: RuleRowProps) => {
+  const { t } = useTranslation();
   const [protocolOpen, setProtocolOpen] = React.useState(false);
   const protocol = (rule.protocol as Protocol) ?? Protocol.TCP;
   const showPorts = needsPorts(protocol);
 
+  const protocolOptions: { value: Protocol; label: string }[] = [
+    { value: Protocol.TCP, label: t('TCP') },
+    { value: Protocol.UDP, label: t('UDP') },
+    { value: Protocol.ICMP, label: t('ICMP') },
+    { value: Protocol.ALL, label: t('All') },
+  ];
+  const protocolLabel = protocolOptions.find((o) => o.value === protocol)?.label ?? t('TCP');
+
   return (
     <div className={styles.networkRuleRow}>
-      <FormGroup label={index === 0 ? 'Protocol' : undefined} fieldId={`rule-protocol-${index}`}>
+      <FormGroup label={index === 0 ? t('Protocol') : undefined} fieldId={`rule-protocol-${index}`}>
         <Select
           isOpen={protocolOpen}
           selected={protocol}
@@ -58,11 +58,11 @@ const RuleRow = ({ rule, index, onUpdate, onRemove }: RuleRowProps) => {
               isExpanded={protocolOpen}
               style={{ width: '100%' }}
             >
-              {protocolLabel(protocol)}
+              {protocolLabel}
             </MenuToggle>
           )}
         >
-          {PROTOCOL_OPTIONS.map((opt) => (
+          {protocolOptions.map((opt) => (
             <SelectOption key={opt.value} value={opt.value}>
               {opt.label}
             </SelectOption>
@@ -70,7 +70,10 @@ const RuleRow = ({ rule, index, onUpdate, onRemove }: RuleRowProps) => {
         </Select>
       </FormGroup>
 
-      <FormGroup label={index === 0 ? 'Port from' : undefined} fieldId={`rule-port-from-${index}`}>
+      <FormGroup
+        label={index === 0 ? t('Port from') : undefined}
+        fieldId={`rule-port-from-${index}`}
+      >
         <TextInput
           id={`rule-port-from-${index}`}
           type="number"
@@ -83,7 +86,7 @@ const RuleRow = ({ rule, index, onUpdate, onRemove }: RuleRowProps) => {
         />
       </FormGroup>
 
-      <FormGroup label={index === 0 ? 'Port to' : undefined} fieldId={`rule-port-to-${index}`}>
+      <FormGroup label={index === 0 ? t('Port to') : undefined} fieldId={`rule-port-to-${index}`}>
         <TextInput
           id={`rule-port-to-${index}`}
           type="number"
@@ -96,7 +99,7 @@ const RuleRow = ({ rule, index, onUpdate, onRemove }: RuleRowProps) => {
         />
       </FormGroup>
 
-      <FormGroup label={index === 0 ? 'CIDR' : undefined} fieldId={`rule-cidr-${index}`}>
+      <FormGroup label={index === 0 ? t('CIDR') : undefined} fieldId={`rule-cidr-${index}`}>
         <TextInput
           id={`rule-cidr-${index}`}
           value={rule.ipv4Cidr ?? ''}
@@ -106,7 +109,7 @@ const RuleRow = ({ rule, index, onUpdate, onRemove }: RuleRowProps) => {
       </FormGroup>
 
       <FormGroup label={index === 0 ? ' ' : undefined} fieldId={`rule-remove-${index}`}>
-        <Button variant="plain" aria-label="Remove rule" onClick={() => onRemove(index)}>
+        <Button variant="plain" aria-label={t('Remove rule')} onClick={() => onRemove(index)}>
           ×
         </Button>
       </FormGroup>
@@ -123,6 +126,7 @@ interface SecurityRulesFieldsProps {
 const emptyRule = (): SecurityRuleInput => ({ protocol: Protocol.TCP, ipv4Cidr: '0.0.0.0/0' });
 
 export const SecurityRulesFields = ({ label, rules, onChange }: SecurityRulesFieldsProps) => {
+  const { t } = useTranslation();
   const handleUpdate = (index: number, updated: SecurityRuleInput) => {
     const next = [...rules];
     next[index] = updated;
@@ -140,7 +144,7 @@ export const SecurityRulesFields = ({ label, rules, onChange }: SecurityRulesFie
         <RuleRow key={i} rule={rule} index={i} onUpdate={handleUpdate} onRemove={handleRemove} />
       ))}
       <Button variant="link" isInline onClick={() => onChange([...rules, emptyRule()])}>
-        + Add rule
+        {t('+ Add rule')}
       </Button>
     </div>
   );

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Alert, Bullseye, Spinner } from '@patternfly/react-core';
 
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 import ErrorBoundary from '../ErrorBoundary/ErrorBoundary';
 
@@ -14,6 +15,7 @@ const ListPageBody = ({
   error,
   children,
 }: React.PropsWithChildren<ListPageBodyProps>) => {
+  const { t } = useTranslation();
   if (isLoading) {
     return (
       <Bullseye>
@@ -23,7 +25,7 @@ const ListPageBody = ({
   }
   if (error) {
     return (
-      <Alert variant="danger" title="An error occurred" isInline>
+      <Alert variant="danger" title={t('An error occurred')} isInline>
         {getErrorMessage(error)}
       </Alert>
     );

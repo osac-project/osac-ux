@@ -92,6 +92,9 @@ export const useCreateBareMetalInstance = () => {
         sshPublicKey?: string;
         userData?: string;
         runStrategy?: number;
+        /** custom.* and template_parameters.* dynamic catalog fields, keyed by their
+         * wire-resolved name — see wireKeyForDynamicFieldPath in catalogFieldDefinition.ts. */
+        templateParameters?: Record<string, unknown>;
       };
     }) =>
       apiFetch<BareMetalInstance>('v1/baremetal_instances', {

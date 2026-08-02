@@ -6,6 +6,7 @@
   "scripts": {
     "gen-types": "pnpm --filter @osac/types run gen-types",
     "gen:api-diff": "node scripts/gen-api-diff.mjs",
+    "gen:coverage-report": "node scripts/gen-api-diff.mjs && node scripts/gen-coverage-html.mjs",
     "postinstall": "pnpm gen:api-diff",
     "i18n": "pnpm --filter @osac/i18n run i18n",
     "dev": "concurrently \"pnpm dev:proxy\" \"pnpm dev:frontend\"",

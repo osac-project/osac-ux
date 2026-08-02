@@ -25,6 +25,7 @@ import {
 
 import { useCreateUser } from '@osac/ui-components/api/v1/user';
 
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 const ROLE_OPTIONS = [
@@ -33,6 +34,7 @@ const ROLE_OPTIONS = [
 ];
 
 export const AdminUserNewPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -72,20 +74,20 @@ export const AdminUserNewPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/admin/users')}>
-                Users
+                {t('Users')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Invite user</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Invite user')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Invite user
+            {t('Invite user')}
           </Title>
         </Stack>
       </PageSection>
 
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '480px' }} id="invite-user-form">
-          <FormGroup label="First name" isRequired fieldId="invite-first-name">
+          <FormGroup label={t('First name')} isRequired fieldId="invite-first-name">
             <TextInput
               id="invite-first-name"
               value={firstName}
@@ -96,7 +98,7 @@ export const AdminUserNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Last name" isRequired fieldId="invite-last-name">
+          <FormGroup label={t('Last name')} isRequired fieldId="invite-last-name">
             <TextInput
               id="invite-last-name"
               value={lastName}
@@ -106,7 +108,7 @@ export const AdminUserNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Email" isRequired fieldId="invite-email">
+          <FormGroup label={t('Email')} isRequired fieldId="invite-email">
             <TextInput
               id="invite-email"
               type="email"
@@ -117,7 +119,7 @@ export const AdminUserNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Role" isRequired fieldId="invite-role">
+          <FormGroup label={t('Role')} isRequired fieldId="invite-role">
             <Select
               isOpen={roleOpen}
               onSelect={(_e, val) => {
@@ -133,13 +135,13 @@ export const AdminUserNewPage = () => {
                   isExpanded={roleOpen}
                   style={{ width: '100%' }}
                 >
-                  {selectedRoleLabel}
+                  {t(selectedRoleLabel)}
                 </MenuToggle>
               )}
             >
               {ROLE_OPTIONS.map((o) => (
                 <SelectOption key={o.value} value={o.value}>
-                  {o.label}
+                  {t(o.label)}
                 </SelectOption>
               ))}
             </Select>
@@ -148,7 +150,7 @@ export const AdminUserNewPage = () => {
           <FormGroup fieldId="invite-mfa">
             <Checkbox
               id="invite-mfa"
-              label="Require MFA enrollment"
+              label={t('Require MFA enrollment')}
               isChecked={requireMfa}
               onChange={(_e, v) => setRequireMfa(v)}
             />
@@ -157,14 +159,14 @@ export const AdminUserNewPage = () => {
           <FormGroup fieldId="invite-send-email">
             <Checkbox
               id="invite-send-email"
-              label="Send invite email"
+              label={t('Send invite email')}
               isChecked={sendEmail}
               onChange={(_e, v) => setSendEmail(v)}
             />
           </FormGroup>
 
           {error && (
-            <Alert variant="danger" isInline title="Failed to invite user">
+            <Alert variant="danger" isInline title={t('Failed to invite user')}>
               {getErrorMessage(error)}
             </Alert>
           )}
@@ -177,10 +179,10 @@ export const AdminUserNewPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !isValid}
             >
-              Send invite
+              {t('Send invite')}
             </Button>
             <Button variant="link" onClick={() => navigate('/admin/users')} isDisabled={isPending}>
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

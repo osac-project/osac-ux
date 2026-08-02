@@ -11,6 +11,7 @@ import {
   StackItem,
 } from '@patternfly/react-core';
 
+import { useTranslation } from '../../hooks/useTranslation';
 import { GuestOsIcon, type OsType } from '../shared/GuestOsIcon';
 
 import './TemplateCard.css';
@@ -40,28 +41,32 @@ const subtitleForTemplate = (template: TemplateCardDisplay): string => {
   return template.metadata.name;
 };
 
-const workloadLabel = (template: TemplateCardDisplay): string => {
+const workloadLabel = (
+  t: (key: string, options?: Record<string, unknown>) => string,
+  template: TemplateCardDisplay,
+): string => {
   if (!template.workloadProfile) {
-    return template.workload ?? 'General';
+    return template.workload ?? t('General');
   }
   if (template.workloadProfile === 'high-performance') {
-    return 'High performance';
+    return t('High performance');
   }
   if (template.workloadProfile === 'machine-learning') {
-    return 'Machine learning';
+    return t('Machine learning');
   }
   if (template.workloadProfile === 'data-processing') {
-    return 'Data processing';
+    return t('Data processing');
   }
-  return 'Analytics';
+  return t('Analytics');
 };
 
 export const TemplateCard = ({ template }: TemplateCardProps) => {
+  const { t } = useTranslation();
   const cpu = `${template.defaultCores ?? 2} vCPU`;
   const memory = `${template.defaultMemoryGib ?? 8} GiB`;
   const diskGib = template.defaultBootDiskSizeGib ?? 40;
   const storage = `${diskGib} GiB`;
-  const workload = workloadLabel(template);
+  const workload = workloadLabel(t, template);
   const subtitle = subtitleForTemplate(template);
 
   return (
@@ -109,7 +114,7 @@ export const TemplateCard = ({ template }: TemplateCardProps) => {
           </StackItem>
           <StackItem>
             <Content component="small" className="tenant-vm-template-card__workload-line">
-              Workload: {workload}
+              {t('Workload: {{workload}}', { workload })}
             </Content>
           </StackItem>
         </Stack>

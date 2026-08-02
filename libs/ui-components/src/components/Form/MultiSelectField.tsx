@@ -7,6 +7,7 @@ import { getVisibleFieldError } from './fieldError';
 import { useShowFieldValidationErrors } from './FieldValidationContext';
 import { FormFieldHelper } from './FormFieldHelper';
 import type { SelectFieldOption } from './SelectField';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface MultiSelectFieldProps {
   name: string;
@@ -29,15 +30,21 @@ export const MultiSelectField = ({
   isRequired = false,
   isDisabled = false,
   isLoading = false,
-  placeholder = 'Select options',
-  loadingPlaceholder = 'Loading...',
-  noOptionsFoundMessage = (filter) => `No options found for "${filter}"`,
+  placeholder,
+  loadingPlaceholder,
+  noOptionsFoundMessage,
 }: MultiSelectFieldProps) => {
+  const { t } = useTranslation();
   const [field, meta, helpers] = useField<string[]>(name);
   const showValidationErrors = useShowFieldValidationErrors();
   const error = getVisibleFieldError(meta, showValidationErrors);
   const validated = error ? 'error' : 'default';
-  const effectivePlaceholder = isLoading ? loadingPlaceholder : placeholder;
+  const effectivePlaceholder = isLoading
+    ? (loadingPlaceholder ?? t('Loading...'))
+    : (placeholder ?? t('Select options'));
+  const effectiveNoOptionsFoundMessage =
+    noOptionsFoundMessage ??
+    ((filter: string) => t('No options found for "{{filter}}"', { filter }));
   const controlDisabled = isDisabled || isLoading;
 
   const initialOptions = useMemo<MultiTypeaheadSelectOption[]>(() => {
@@ -57,7 +64,7 @@ export const MultiSelectField = ({
         initialOptions={initialOptions}
         placeholder={effectivePlaceholder}
         isDisabled={controlDisabled}
-        noOptionsFoundMessage={noOptionsFoundMessage}
+        noOptionsFoundMessage={effectiveNoOptionsFoundMessage}
         onSelectionChange={(_event, selections) => {
           void helpers.setValue(selections.map(String));
           void helpers.setTouched(true);

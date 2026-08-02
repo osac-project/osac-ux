@@ -30,6 +30,7 @@ import {
 } from '../../api/v1/load-balancer';
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const STATE_COLORS: Record<string, 'green' | 'orange' | 'red' | 'grey' | 'blue'> = {
   READY: 'green',
@@ -54,6 +55,7 @@ const listenersLabel = (lb: LoadBalancer) =>
   lb.spec.listeners.map((l) => `${l.protocol}:${l.port}`).join(', ') || '—';
 
 export const LoadBalancersPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: lbs = [], isLoading, error } = useLoadBalancers();
   const { mutate: deleteLb } = useDeleteLoadBalancer();
@@ -104,14 +106,16 @@ export const LoadBalancersPage = () => {
 
   return (
     <ListPage
-      title="Load Balancers"
-      description="Distribute network traffic across compute resources."
+      title={t('Load Balancers')}
+      description={t('Distribute network traffic across compute resources.')}
     >
       {toDelete && (
         <Alert
           variant="warning"
           isInline
-          title={`Delete load balancer "${toDelete.metadata?.name ?? toDelete.id}"?`}
+          title={t('Delete load balancer "{{name}}"?', {
+            name: toDelete.metadata?.name ?? toDelete.id,
+          })}
           style={{ marginBottom: '1rem' }}
           actionLinks={
             <>
@@ -122,10 +126,10 @@ export const LoadBalancersPage = () => {
                   setToDelete(null);
                 }}
               >
-                Delete
+                {t('Delete')}
               </Button>
               <Button variant="link" onClick={() => setToDelete(null)}>
-                Cancel
+                {t('Cancel')}
               </Button>
             </>
           }
@@ -137,8 +141,8 @@ export const LoadBalancersPage = () => {
           <ToolbarContent>
             <ToolbarItem variant="search-filter">
               <SearchInput
-                aria-label="Search load balancers"
-                placeholder="Search by name, description, or network"
+                aria-label={t('Search load balancers')}
+                placeholder={t('Search by name, description, or network')}
                 value={search}
                 onChange={(_e, v) => setSearch(v)}
                 onClear={() => setSearch('')}
@@ -150,7 +154,7 @@ export const LoadBalancersPage = () => {
                 chips={stateFilters}
                 deleteChip={(_g, v) => toggleState(v as StateFilter)}
                 deleteChipGroup={() => setStateFilters([])}
-                categoryName="State"
+                categoryName={t('State')}
               >
                 <Select
                   isOpen={stateOpen}
@@ -163,7 +167,7 @@ export const LoadBalancersPage = () => {
                       isExpanded={stateOpen}
                       badge={stateFilters.length || undefined}
                     >
-                      State
+                      {t('State')}
                     </MenuToggle>
                   )}
                 >
@@ -186,7 +190,7 @@ export const LoadBalancersPage = () => {
                 chips={protoFilters}
                 deleteChip={(_g, v) => toggleProto(v as ProtocolFilter)}
                 deleteChipGroup={() => setProtoFilters([])}
-                categoryName="Protocol"
+                categoryName={t('Protocol')}
               >
                 <Select
                   isOpen={protoOpen}
@@ -199,7 +203,7 @@ export const LoadBalancersPage = () => {
                       isExpanded={protoOpen}
                       badge={protoFilters.length || undefined}
                     >
-                      Protocol
+                      {t('Protocol')}
                     </MenuToggle>
                   )}
                 >
@@ -221,7 +225,7 @@ export const LoadBalancersPage = () => {
 
             <ToolbarItem align={{ default: 'alignEnd' }}>
               <Button variant="primary" onClick={() => navigate('/load-balancers/new')}>
-                Create load balancer
+                {t('Create load balancer')}
               </Button>
             </ToolbarItem>
           </ToolbarContent>
@@ -232,57 +236,57 @@ export const LoadBalancersPage = () => {
             alignItems={{ default: 'alignItemsCenter' }}
             style={{ gap: '0.5rem', padding: '1rem 0' }}
           >
-            <FlexItem>No load balancers match the current filters.</FlexItem>
+            <FlexItem>{t('No load balancers match the current filters.')}</FlexItem>
             <FlexItem>
               <Button variant="link" isInline onClick={clearAll}>
-                Clear filters
+                {t('Clear filters')}
               </Button>
             </FlexItem>
           </Flex>
         ) : lbs.length === 0 ? (
-          <Alert variant="info" isInline title="No load balancers found">
-            Create a load balancer to distribute traffic across your instances.
+          <Alert variant="info" isInline title={t('No load balancers found')}>
+            {t('Create a load balancer to distribute traffic across your instances.')}
           </Alert>
         ) : (
-          <Table aria-label="Load balancers" variant="compact">
+          <Table aria-label={t('Load balancers')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Virtual Network</Th>
-                <Th>Listeners</Th>
-                <Th>Internal IP</Th>
-                <Th>External IP</Th>
-                <Th>State</Th>
-                <Th>Created</Th>
+                <Th>{t('Name')}</Th>
+                <Th>{t('Virtual Network')}</Th>
+                <Th>{t('Listeners')}</Th>
+                <Th>{t('Internal IP')}</Th>
+                <Th>{t('External IP')}</Th>
+                <Th>{t('State')}</Th>
+                <Th>{t('Created')}</Th>
                 <Td />
               </Tr>
             </Thead>
             <Tbody>
               {filtered.map((lb) => (
                 <Tr key={lb.id}>
-                  <Td dataLabel="Name">
+                  <Td dataLabel={t('Name')}>
                     <strong>{lb.metadata?.name ?? lb.id}</strong>
                   </Td>
-                  <Td dataLabel="Virtual Network">{lb.spec.virtualNetwork}</Td>
-                  <Td dataLabel="Listeners">{listenersLabel(lb)}</Td>
-                  <Td dataLabel="Internal IP">
+                  <Td dataLabel={t('Virtual Network')}>{lb.spec.virtualNetwork}</Td>
+                  <Td dataLabel={t('Listeners')}>{listenersLabel(lb)}</Td>
+                  <Td dataLabel={t('Internal IP')}>
                     {lb.status.internalIpAddress ? (
                       <code style={{ fontSize: '0.85em' }}>{lb.status.internalIpAddress}</code>
                     ) : (
                       '—'
                     )}
                   </Td>
-                  <Td dataLabel="External IP">
+                  <Td dataLabel={t('External IP')}>
                     {lb.status.externalIpAddress ? (
                       <code style={{ fontSize: '0.85em' }}>{lb.status.externalIpAddress}</code>
                     ) : (
                       '—'
                     )}
                   </Td>
-                  <Td dataLabel="State">
+                  <Td dataLabel={t('State')}>
                     <StateBadge state={lb.status.state} />
                   </Td>
-                  <Td dataLabel="Created">
+                  <Td dataLabel={t('Created')}>
                     {lb.metadata?.creationTimestamp
                       ? new Date(lb.metadata.creationTimestamp).toLocaleDateString()
                       : '—'}
@@ -291,11 +295,11 @@ export const LoadBalancersPage = () => {
                     <ActionsColumn
                       items={[
                         {
-                          title: 'Edit',
+                          title: t('Edit'),
                           onClick: () => navigate(`/load-balancers/${lb.id}/edit`),
                         },
                         {
-                          title: 'Delete',
+                          title: t('Delete'),
                           onClick: () => setToDelete(lb),
                           isDanger: true,
                         },

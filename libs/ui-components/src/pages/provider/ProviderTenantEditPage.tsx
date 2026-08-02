@@ -25,14 +25,16 @@ import {
 } from '@patternfly/react-core';
 
 import { usePatchTenant, useTenants } from '../../api/v1/tenant';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 export const ProviderTenantEditPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
   const { data: tenants = [], isLoading } = useTenants();
-  const tenant = tenants.find((t) => t.id === id);
+  const tenant = tenants.find((tn) => tn.id === id);
 
   const [domainInput, setDomainInput] = useState('');
   const [domains, setDomains] = useState<string[] | null>(null);
@@ -71,7 +73,7 @@ export const ProviderTenantEditPage = () => {
   if (isLoading) {
     return (
       <PageSection hasBodyWrapper={false}>
-        <Spinner aria-label="Loading tenant" />
+        <Spinner aria-label={t('Loading tenant')} />
       </PageSection>
     );
   }
@@ -79,7 +81,7 @@ export const ProviderTenantEditPage = () => {
   if (!tenant) {
     return (
       <PageSection hasBodyWrapper={false}>
-        <Alert variant="danger" isInline title={`Tenant "${id}" not found`} />
+        <Alert variant="danger" isInline title={t('Tenant "{{id}}" not found', { id })} />
       </PageSection>
     );
   }
@@ -93,13 +95,13 @@ export const ProviderTenantEditPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/provider/organizations')}>
-                Organizations
+                {t('Organizations')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Edit — {tenantName}</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Edit — {{tenantName}}', { tenantName })}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Edit tenant — {tenantName}
+            {t('Edit tenant — {{tenantName}}', { tenantName })}
           </Title>
         </Stack>
       </PageSection>
@@ -107,12 +109,12 @@ export const ProviderTenantEditPage = () => {
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '480px' }} id="edit-tenant-form">
           {error && (
-            <Alert variant="danger" isInline title="Error">
+            <Alert variant="danger" isInline title={t('Error')}>
               {getErrorMessage(error)}
             </Alert>
           )}
 
-          <FormGroup label="Email domains" fieldId="edit-tenant-domains">
+          <FormGroup label={t('Email domains')} fieldId="edit-tenant-domains">
             {effectiveDomains.length > 0 && (
               <LabelGroup style={{ marginBottom: '0.5rem' }}>
                 {effectiveDomains.map((d) => (
@@ -132,12 +134,12 @@ export const ProviderTenantEditPage = () => {
               onChange={(_e, v) => setDomainInput(v)}
               onKeyDown={handleDomainKeyDown}
               onBlur={addDomain}
-              placeholder="example.com (press Enter to add)"
+              placeholder={t('example.com (press Enter to add)')}
             />
             <FormHelperText>
               <HelperText>
                 <HelperTextItem>
-                  Used for IdP login routing. Press Enter or comma to add each domain.
+                  {t('Used for IdP login routing. Press Enter or comma to add each domain.')}
                 </HelperTextItem>
               </HelperText>
             </FormHelperText>
@@ -151,14 +153,14 @@ export const ProviderTenantEditPage = () => {
               isLoading={isPending}
               isDisabled={isPending}
             >
-              Save
+              {t('Save')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate('/provider/organizations')}
               isDisabled={isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

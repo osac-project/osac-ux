@@ -20,17 +20,22 @@ import {
   Title,
 } from '@patternfly/react-core';
 
-import type { ClusterTemplate } from '@osac/types';
+import type { ClusterCatalogItem, ClusterTemplate } from '@osac/types';
 
 import type { ClusterWizardValues } from './fields';
 import { isAiGridTemplate } from '../../../../api/v1/cluster-templates';
+import { useTranslation } from '../../../../hooks/useTranslation';
 import OsacForm from '../../../Form/OsacForm';
+import { isCustomFieldPath } from '../../catalogFieldDefinition';
+import { readCatalogFieldDefinitions } from '../catalogOverlay';
+import { DynamicFieldsFormSection } from '../DynamicFieldsFormSection';
 
 interface Props {
   values: ClusterWizardValues;
   onChange: <K extends keyof ClusterWizardValues>(field: K, value: ClusterWizardValues[K]) => void;
   template: ClusterTemplate | undefined;
   templateLoading: boolean;
+  catalogItem: ClusterCatalogItem | null;
 }
 
 const isNumericType = (type: string): boolean =>
@@ -44,12 +49,19 @@ export const ClusterConfigurationStep = ({
   onChange,
   template,
   templateLoading,
+  catalogItem,
 }: Props) => {
+  const { t } = useTranslation();
   const nodeSets = Object.entries(template?.nodeSets ?? {});
   const isAiGrid = template ? isAiGridTemplate(template) : false;
+  const definitions = readCatalogFieldDefinitions(catalogItem);
 
   const handleParameterChange = (name: string, value: string) => {
     onChange('templateParameters', { ...values.templateParameters, [name]: value });
+  };
+
+  const handleCustomFieldChange = (path: string, value: string) => {
+    onChange('customParameters', { ...values.customParameters, [path]: value });
   };
 
   return (
@@ -60,15 +72,18 @@ export const ClusterConfigurationStep = ({
           <Stack hasGutter>
             <StackItem>
               <Title headingLevel="h3" size="md">
-                Node sets
+                {t('catalogProvision.cluster.fields.nodeSets')}
               </Title>
               <Content component="small" className="pf-v6-u-color-text-subtle">
-                Defined by the selected cluster template — not configurable here.
+                {t('catalogProvision.cluster.configuration.nodeSetsDescription')}
               </Content>
             </StackItem>
             <StackItem>
               {templateLoading ? (
-                <Skeleton width="300px" screenreaderText="Loading template" />
+                <Skeleton
+                  width="300px"
+                  screenreaderText={t('catalogProvision.cluster.configuration.loadingTemplate')}
+                />
               ) : (
                 <DescriptionList isHorizontal isCompact>
                   {nodeSets.map(([name, ns]) => (
@@ -86,7 +101,10 @@ export const ClusterConfigurationStep = ({
                           </FlexItem>
                           <FlexItem>
                             <Content component="small">
-                              × {ns.size} node{ns.size !== 1 ? 's' : ''}
+                              ×{' '}
+                              {t('catalogProvision.cluster.configuration.nodeCount', {
+                                count: ns.size,
+                              })}
                             </Content>
                           </FlexItem>
                         </Flex>
@@ -109,7 +127,10 @@ export const ClusterConfigurationStep = ({
       {/* ── Dynamic template parameters ──────────────────────── */}
       {templateLoading ? (
         <StackItem>
-          <Spinner size="sm" aria-label="Loading template parameters" />
+          <Spinner
+            size="sm"
+            aria-label={t('catalogProvision.cluster.configuration.loadingParameters')}
+          />
         </StackItem>
       ) : (
         (template?.parameters ?? []).length > 0 && (
@@ -117,7 +138,7 @@ export const ClusterConfigurationStep = ({
             <Stack hasGutter>
               <StackItem>
                 <Title headingLevel="h3" size="md">
-                  Parameters
+                  {t('catalogProvision.cluster.configuration.parameters')}
                 </Title>
               </StackItem>
               <StackItem>
@@ -161,7 +182,10 @@ export const ClusterConfigurationStep = ({
       </StackItem>
       <StackItem>
         <OsacForm>
-          <FormGroup label="Release image override" fieldId="cluster-release-image">
+          <FormGroup
+            label={t('catalogProvision.cluster.fields.releaseImage')}
+            fieldId="cluster-release-image"
+          >
             <TextInput
               id="cluster-release-image"
               value={values.releaseImage}
@@ -175,11 +199,12 @@ export const ClusterConfigurationStep = ({
             <FormHelperText>
               <HelperText id="cluster-release-image-helper">
                 <HelperTextItem>
-                  Optional. Overrides the OCP release image from the template.
+                  {t('catalogProvision.cluster.fields.releaseImageHelper')}
                   {template?.specDefaults?.releaseImage && (
                     <>
                       {' '}
-                      Template default: <code>{template.specDefaults.releaseImage}</code>
+                      {t('catalogProvision.cluster.fields.releaseImageTemplateDefault')}{' '}
+                      <code>{template.specDefaults.releaseImage}</code>
                     </>
                   )}
                 </HelperTextItem>
@@ -187,6 +212,15 @@ export const ClusterConfigurationStep = ({
             </FormHelperText>
           </FormGroup>
         </OsacForm>
+      </StackItem>
+
+      <StackItem>
+        <DynamicFieldsFormSection
+          definitions={definitions}
+          values={values.customParameters}
+          onChange={handleCustomFieldChange}
+          filter={(def) => isCustomFieldPath(def.path)}
+        />
       </StackItem>
     </Stack>
   );

@@ -40,6 +40,7 @@ import {
 } from '../../api/v1/ip-management';
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 // ---------------------------------------------------------------------------
@@ -49,30 +50,31 @@ import { getErrorMessage } from '../../utils/error';
 const IP_FAMILY_LABELS: Record<number, string> = { 1: 'IPv4', 2: 'IPv6' };
 
 const PublicIPStateLabel = ({ state }: { state?: number }) => {
+  const { t } = useTranslation();
   if (state === 2) {
     return (
       <Label color="green" isCompact>
-        Allocated
+        {t('Allocated')}
       </Label>
     );
   }
   if (state === 1) {
     return (
       <Label color="orange" isCompact>
-        Pending
+        {t('Pending')}
       </Label>
     );
   }
   if (state === 3) {
     return (
       <Label color="red" isCompact>
-        Failed
+        {t('Failed')}
       </Label>
     );
   }
   return (
     <Label color="grey" isCompact>
-      Unknown
+      {t('Unknown')}
     </Label>
   );
 };
@@ -88,6 +90,7 @@ interface AllocateIPModalProps {
 }
 
 const AllocateIPModal = ({ pools, isOpen, onClose }: AllocateIPModalProps) => {
+  const { t } = useTranslation();
   const [poolId, setPoolId] = useState(pools[0]?.id ?? '');
   const [poolOpen, setPoolOpen] = useState(false);
   const { mutateAsync, isPending, error } = useCreatePublicIP();
@@ -103,11 +106,11 @@ const AllocateIPModal = ({ pools, isOpen, onClose }: AllocateIPModalProps) => {
   const selectedPool = pools.find((p) => p.id === poolId);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label="Allocate public IP">
-      <ModalHeader title="Allocate public IP" />
+    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label={t('Allocate public IP')}>
+      <ModalHeader title={t('Allocate public IP')} />
       <ModalBody>
         {error && (
-          <Alert variant="danger" isInline title="Error" style={{ marginBottom: '1rem' }}>
+          <Alert variant="danger" isInline title={t('Error')} style={{ marginBottom: '1rem' }}>
             {getErrorMessage(error)}
           </Alert>
         )}
@@ -127,15 +130,19 @@ const AllocateIPModal = ({ pools, isOpen, onClose }: AllocateIPModalProps) => {
               style={{ width: '100%' }}
             >
               {selectedPool
-                ? `${selectedPool.metadata?.name ?? selectedPool.id} (${IP_FAMILY_LABELS[selectedPool.spec?.ipFamily ?? 0] ?? '?'}, ${String(selectedPool.status?.available ?? '?')} available)`
-                : 'Select pool'}
+                ? t('{{name}} ({{family}}, {{available}} available)', {
+                    name: selectedPool.metadata?.name ?? selectedPool.id,
+                    family: IP_FAMILY_LABELS[selectedPool.spec?.ipFamily ?? 0] ?? '?',
+                    available: String(selectedPool.status?.available ?? '?'),
+                  })
+                : t('Select pool')}
             </MenuToggle>
           )}
         >
           {pools.map((p) => (
             <SelectOption key={p.id} value={p.id}>
               {p.metadata?.name ?? p.id} — {IP_FAMILY_LABELS[p.spec?.ipFamily ?? 0] ?? '?'},{' '}
-              {String(p.status?.available ?? '?')} available
+              {t('{{count}} available', { count: String(p.status?.available ?? '?') })}
             </SelectOption>
           ))}
         </Select>
@@ -147,10 +154,10 @@ const AllocateIPModal = ({ pools, isOpen, onClose }: AllocateIPModalProps) => {
           isLoading={isPending}
           isDisabled={isPending || !poolId}
         >
-          Allocate
+          {t('Allocate')}
         </Button>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
       </ModalFooter>
     </Modal>
@@ -168,6 +175,7 @@ interface AttachIPModalProps {
 }
 
 const AttachIPModal = ({ ip, isOpen, onClose }: AttachIPModalProps) => {
+  const { t } = useTranslation();
   const { data: vms = [] } = useComputeInstances();
   const [vmId, setVmId] = useState('');
   const [vmOpen, setVmOpen] = useState(false);
@@ -186,11 +194,13 @@ const AttachIPModal = ({ ip, isOpen, onClose }: AttachIPModalProps) => {
   const selectedVm = vms.find((v) => v.id === vmId);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label="Attach public IP">
-      <ModalHeader title={`Attach ${ip.status?.address ?? ip.id} to a VM`} />
+    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label={t('Attach public IP')}>
+      <ModalHeader
+        title={t('Attach {{address}} to a VM', { address: ip.status?.address ?? ip.id })}
+      />
       <ModalBody>
         {error && (
-          <Alert variant="danger" isInline title="Error" style={{ marginBottom: '1rem' }}>
+          <Alert variant="danger" isInline title={t('Error')} style={{ marginBottom: '1rem' }}>
             {getErrorMessage(error)}
           </Alert>
         )}
@@ -209,13 +219,15 @@ const AttachIPModal = ({ ip, isOpen, onClose }: AttachIPModalProps) => {
               isExpanded={vmOpen}
               style={{ width: '100%' }}
             >
-              {selectedVm ? (selectedVm.metadata?.name ?? selectedVm.id) : 'Select virtual machine'}
+              {selectedVm
+                ? (selectedVm.metadata?.name ?? selectedVm.id)
+                : t('Select virtual machine')}
             </MenuToggle>
           )}
         >
           {vms.length === 0 ? (
             <SelectOption value="" isDisabled>
-              No VMs available
+              {t('No VMs available')}
             </SelectOption>
           ) : (
             vms.map((v) => (
@@ -233,10 +245,10 @@ const AttachIPModal = ({ ip, isOpen, onClose }: AttachIPModalProps) => {
           isLoading={isPending}
           isDisabled={isPending || !vmId}
         >
-          Attach
+          {t('Attach')}
         </Button>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
       </ModalFooter>
     </Modal>
@@ -254,6 +266,7 @@ interface ReleaseIPModalProps {
 }
 
 const ReleaseIPModal = ({ ip, isOpen, onClose }: ReleaseIPModalProps) => {
+  const { t } = useTranslation();
   const { mutateAsync, isPending } = useDeletePublicIP();
 
   const handleRelease = async () => {
@@ -262,11 +275,11 @@ const ReleaseIPModal = ({ ip, isOpen, onClose }: ReleaseIPModalProps) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label="Release public IP">
-      <ModalHeader title="Release public IP" />
+    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label={t('Release public IP')}>
+      <ModalHeader title={t('Release public IP')} />
       <ModalBody>
-        Release <strong>{ip.status?.address ?? ip.id}</strong>? This returns it to the pool and
-        cannot be undone.
+        {t('Release')} <strong>{ip.status?.address ?? ip.id}</strong>?{' '}
+        {t('This returns it to the pool and cannot be undone.')}
       </ModalBody>
       <ModalFooter>
         <Button
@@ -275,10 +288,10 @@ const ReleaseIPModal = ({ ip, isOpen, onClose }: ReleaseIPModalProps) => {
           isLoading={isPending}
           isDisabled={isPending}
         >
-          Release
+          {t('Release')}
         </Button>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
       </ModalFooter>
     </Modal>
@@ -290,6 +303,7 @@ const ReleaseIPModal = ({ ip, isOpen, onClose }: ReleaseIPModalProps) => {
 // ---------------------------------------------------------------------------
 
 const MyPublicIPsSection = ({ pools }: { pools: PublicIPPool[] }) => {
+  const { t } = useTranslation();
   const { data: ips = [], isLoading, error } = usePublicIPs();
   const { data: attachments = [] } = usePublicIPAttachments();
   const { mutate: deleteAttachment } = useDeletePublicIPAttachment();
@@ -325,29 +339,29 @@ const MyPublicIPsSection = ({ pools }: { pools: PublicIPPool[] }) => {
       >
         <FlexItem>
           <Title headingLevel="h3" size="md">
-            My public IPs
+            {t('My public IPs')}
           </Title>
         </FlexItem>
         <FlexItem>
           <Button variant="primary" size="sm" onClick={() => setAllocateOpen(true)}>
-            Allocate IP
+            {t('Allocate IP')}
           </Button>
         </FlexItem>
       </Flex>
 
       <ListPageBody isLoading={isLoading} error={error}>
         {ips.length === 0 ? (
-          <Alert variant="info" isInline title="No IPs allocated">
-            Click &ldquo;Allocate IP&rdquo; to reserve a public IP address from a pool.
+          <Alert variant="info" isInline title={t('No IPs allocated')}>
+            {t('Click “Allocate IP” to reserve a public IP address from a pool.')}
           </Alert>
         ) : (
-          <Table aria-label="My public IPs" variant="compact">
+          <Table aria-label={t('My public IPs')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Address</Th>
-                <Th>Pool</Th>
-                <Th>State</Th>
-                <Th>Attached to</Th>
+                <Th>{t('Address')}</Th>
+                <Th>{t('Pool')}</Th>
+                <Th>{t('State')}</Th>
+                <Th>{t('Attached to')}</Th>
                 <Td />
               </Tr>
             </Thead>
@@ -357,28 +371,28 @@ const MyPublicIPsSection = ({ pools }: { pools: PublicIPPool[] }) => {
                 const isAttached = !!att;
                 return (
                   <Tr key={ip.id}>
-                    <Td dataLabel="Address">
+                    <Td dataLabel={t('Address')}>
                       {ip.status?.address ? (
                         <strong>{ip.status.address}</strong>
                       ) : (
-                        <Spinner size="sm" aria-label="Allocating" />
+                        <Spinner size="sm" aria-label={t('Allocating')} />
                       )}
                     </Td>
-                    <Td dataLabel="Pool">{poolName(ip.spec?.pool ?? '')}</Td>
-                    <Td dataLabel="State">
+                    <Td dataLabel={t('Pool')}>{poolName(ip.spec?.pool ?? '')}</Td>
+                    <Td dataLabel={t('State')}>
                       <PublicIPStateLabel state={ip.status?.state} />
                     </Td>
-                    <Td dataLabel="Attached to">
+                    <Td dataLabel={t('Attached to')}>
                       {isAttached ? (
                         <>
                           <Label color="green" isCompact>
-                            Attached
+                            {t('Attached')}
                           </Label>{' '}
                           {attachedToLabel(ip.id)}
                         </>
                       ) : (
                         <Label color="grey" isCompact>
-                          Not attached
+                          {t('Not attached')}
                         </Label>
                       )}
                     </Td>
@@ -386,7 +400,7 @@ const MyPublicIPsSection = ({ pools }: { pools: PublicIPPool[] }) => {
                       <ActionsColumn
                         items={[
                           {
-                            title: 'Attach',
+                            title: t('Attach'),
                             isDisabled: isAttached,
                             onClick: (e) => {
                               e.stopPropagation();
@@ -394,7 +408,7 @@ const MyPublicIPsSection = ({ pools }: { pools: PublicIPPool[] }) => {
                             },
                           },
                           {
-                            title: 'Detach',
+                            title: t('Detach'),
                             isDisabled: !isAttached,
                             onClick: (e) => {
                               e.stopPropagation();
@@ -405,7 +419,7 @@ const MyPublicIPsSection = ({ pools }: { pools: PublicIPPool[] }) => {
                           },
                           { isSeparator: true },
                           {
-                            title: 'Release',
+                            title: t('Release'),
                             isDisabled: isAttached,
                             onClick: (e) => {
                               e.stopPropagation();
@@ -431,49 +445,52 @@ const MyPublicIPsSection = ({ pools }: { pools: PublicIPPool[] }) => {
 // ---------------------------------------------------------------------------
 
 export const TenantPublicIPsPage = () => {
+  const { t } = useTranslation();
   const { data: pools = [], isLoading: poolsLoading, error: poolsError } = usePublicIPPools();
   const { data: myIPs = [] } = usePublicIPs();
 
   return (
     <ListPage
-      title="Public IPs"
-      description="View available IP pools and manage your allocated public IP addresses."
+      title={t('Public IPs')}
+      description={t('View available IP pools and manage your allocated public IP addresses.')}
     >
       <Stack hasGutter>
         <StackItem>
           <Card>
             <CardTitle>
               <Title headingLevel="h3" size="md">
-                Available pools
+                {t('Available pools')}
               </Title>
             </CardTitle>
             <CardBody>
               <ListPageBody isLoading={poolsLoading} error={poolsError}>
                 {pools.length === 0 ? (
-                  <Alert variant="info" isInline title="No pools available">
-                    No public IP pools have been assigned to your tenant yet.
+                  <Alert variant="info" isInline title={t('No pools available')}>
+                    {t('No public IP pools have been assigned to your tenant yet.')}
                   </Alert>
                 ) : (
-                  <Table aria-label="Public IP pools" variant="compact">
+                  <Table aria-label={t('Public IP pools')} variant="compact">
                     <Thead>
                       <Tr>
-                        <Th>Name</Th>
-                        <Th>IP family</Th>
-                        <Th>Available</Th>
-                        <Th>My allocations</Th>
+                        <Th>{t('Name')}</Th>
+                        <Th>{t('IP family')}</Th>
+                        <Th>{t('Available')}</Th>
+                        <Th>{t('My allocations')}</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
                       {pools.map((pool) => (
                         <Tr key={pool.id}>
-                          <Td dataLabel="Name">{pool.metadata?.name ?? pool.id}</Td>
-                          <Td dataLabel="IP family">
+                          <Td dataLabel={t('Name')}>{pool.metadata?.name ?? pool.id}</Td>
+                          <Td dataLabel={t('IP family')}>
                             <Label color="blue" isCompact>
                               {IP_FAMILY_LABELS[pool.spec?.ipFamily ?? 0] ?? '—'}
                             </Label>
                           </Td>
-                          <Td dataLabel="Available">{String(pool.status?.available ?? '—')}</Td>
-                          <Td dataLabel="My allocations">
+                          <Td dataLabel={t('Available')}>
+                            {String(pool.status?.available ?? '—')}
+                          </Td>
+                          <Td dataLabel={t('My allocations')}>
                             {myIPs.filter((ip) => ip.spec?.pool === pool.id).length}
                           </Td>
                         </Tr>

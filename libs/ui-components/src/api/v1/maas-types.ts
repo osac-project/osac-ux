@@ -14,6 +14,8 @@
  *   GET       /v1/ai_environments/:id
  *   GET/POST/PATCH/DELETE  /v1/model_catalog_items[/:id]
  *   GET/POST/PATCH  /v1/model_accesses[/:id]
+ *   GET/POST/PATCH/DELETE  /v1/subscriptions[/:id]
+ *   GET  /v1/maas_token_usage
  */
 
 // ---------------------------------------------------------------------------
@@ -81,6 +83,13 @@ export interface ModelCatalogItem {
     name?: string;
     creationTimestamp?: string;
     labels?: Record<string, string>;
+    /**
+     * Carries osac.io/billable-components (JSON BillableComponent[]) — the
+     * canonical input/output/cache token rate declaration, replacing the
+     * ad-hoc price_per_input_token / price_per_output_token labels above.
+     * Both are written for now; readers should prefer this annotation.
+     */
+    annotations?: Record<string, string>;
   };
   field_definitions?: Array<{
     path: string;
@@ -128,4 +137,67 @@ export interface ModelAccess {
 
 export interface ModelAccessesListResponse {
   items: ModelAccess[];
+}
+
+// ---------------------------------------------------------------------------
+// Subscription — tenant-admin resource (governs Consumer access to a model)
+// ---------------------------------------------------------------------------
+
+/**
+ * A Subscription is the tenant-admin-owned governance unit for MaaS access.
+ * It maps to the MaaS gateway stack:
+ *   - groupAccess  -> Authorino group-based authentication
+ *   - rateLimit    -> Limiter requests/minute enforcement
+ *   - tokenQuota   -> monthly token ceiling
+ *   - idpRef       -> tenant IDP reference used by Authorino for this subscription
+ */
+export type SubscriptionState = 'ACTIVE' | 'SUSPENDED';
+
+export interface Subscription {
+  id: string;
+  metadata?: {
+    name?: string;
+    creationTimestamp?: string;
+    tenant?: string;
+  };
+  spec?: {
+    /** ID of the ModelCatalogItem this subscription governs access to */
+    modelCatalogItemId: string;
+    /** Authorino group IDs allowed to consume this subscription */
+    groupAccess: string[];
+    /** Limiter requests/minute enforcement */
+    rateLimit?: number;
+    /** Monthly token ceiling across all consumers of this subscription */
+    tokenQuota?: number;
+    /** Tenant IDP reference used by Authorino for this subscription */
+    idpRef?: string;
+  };
+  status?: {
+    state: SubscriptionState;
+    message?: string;
+  };
+}
+
+export interface SubscriptionsListResponse {
+  items: Subscription[];
+}
+
+// ---------------------------------------------------------------------------
+// MaaS Token Usage — provider-admin metering resource (input/output/cache tokens)
+// ---------------------------------------------------------------------------
+
+export interface MaaSTokenUsage {
+  id: string;
+  tenantId: string;
+  tenantName: string;
+  subscriptionId: string;
+  subscriptionName: string;
+  period: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheTokens: number;
+}
+
+export interface MaaSTokenUsageListResponse {
+  items: MaaSTokenUsage[];
 }

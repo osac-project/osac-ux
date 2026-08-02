@@ -13,6 +13,7 @@ import {
 } from '@patternfly/react-core';
 
 import { useCreateNetworkClass } from '../../api/v1/networking';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 import OsacForm from '../Form/OsacForm';
 
@@ -22,6 +23,7 @@ interface NetworkClassCreateModalProps {
 }
 
 export const NetworkClassCreateModal = ({ onClose, onSuccess }: NetworkClassCreateModalProps) => {
+  const { t } = useTranslation();
   const [name, setName] = React.useState('');
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
@@ -62,10 +64,10 @@ export const NetworkClassCreateModal = ({ onClose, onSuccess }: NetworkClassCrea
       onClose={isPending ? undefined : onClose}
       aria-labelledby="nc-create-title"
     >
-      <ModalHeader title="Create network class" labelId="nc-create-title" />
+      <ModalHeader title={t('Create network class')} labelId="nc-create-title" />
       <ModalBody>
         <OsacForm>
-          <FormGroup label="Identifier (name)" fieldId="nc-name" isRequired>
+          <FormGroup label={t('Identifier (name)')} fieldId="nc-name" isRequired>
             <TextInput
               id="nc-name"
               value={name}
@@ -75,7 +77,7 @@ export const NetworkClassCreateModal = ({ onClose, onSuccess }: NetworkClassCrea
             />
           </FormGroup>
 
-          <FormGroup label="Title" fieldId="nc-title" isRequired>
+          <FormGroup label={t('Title')} fieldId="nc-title" isRequired>
             <TextInput
               id="nc-title"
               value={title}
@@ -85,32 +87,32 @@ export const NetworkClassCreateModal = ({ onClose, onSuccess }: NetworkClassCrea
             />
           </FormGroup>
 
-          <FormGroup label="Description" fieldId="nc-description">
+          <FormGroup label={t('Description')} fieldId="nc-description">
             <TextArea
               id="nc-description"
               value={description}
               onChange={(_e, v) => setDescription(v)}
-              placeholder="Describe this network class, its characteristics and limitations…"
+              placeholder={t('Describe this network class, its characteristics and limitations…')}
               rows={3}
             />
           </FormGroup>
 
-          <FormGroup label="Capabilities" fieldId="nc-capabilities">
+          <FormGroup label={t('Capabilities')} fieldId="nc-capabilities">
             <Checkbox
               id="nc-ipv4"
-              label="Supports IPv4"
+              label={t('Supports IPv4')}
               isChecked={supportsIpv4}
               onChange={(_e, v) => setSupportsIpv4(v)}
             />
             <Checkbox
               id="nc-ipv6"
-              label="Supports IPv6"
+              label={t('Supports IPv6')}
               isChecked={supportsIpv6}
               onChange={(_e, v) => setSupportsIpv6(v)}
             />
             <Checkbox
               id="nc-dualstack"
-              label="Supports dual-stack (IPv4 + IPv6)"
+              label={t('Supports dual-stack (IPv4 + IPv6)')}
               isChecked={supportsDualStack}
               onChange={(_e, v) => setSupportsDualStack(v)}
             />
@@ -119,14 +121,14 @@ export const NetworkClassCreateModal = ({ onClose, onSuccess }: NetworkClassCrea
           <FormGroup fieldId="nc-default">
             <Checkbox
               id="nc-default"
-              label="Set as default network class"
+              label={t('Set as default network class')}
               isChecked={isDefault}
               onChange={(_e, v) => setIsDefault(v)}
             />
           </FormGroup>
 
           {createNC.error && (
-            <Alert variant="danger" title="Failed to create network class" isInline>
+            <Alert variant="danger" title={t('Failed to create network class')} isInline>
               {getErrorMessage(createNC.error)}
             </Alert>
           )}
@@ -134,7 +136,7 @@ export const NetworkClassCreateModal = ({ onClose, onSuccess }: NetworkClassCrea
       </ModalBody>
       <ModalFooter>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
         <Button
           variant="primary"
@@ -142,7 +144,7 @@ export const NetworkClassCreateModal = ({ onClose, onSuccess }: NetworkClassCrea
           isDisabled={isPending || !name.trim() || !title.trim()}
           isLoading={isPending}
         >
-          Create
+          {t('Create')}
         </Button>
       </ModalFooter>
     </Modal>

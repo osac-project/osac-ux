@@ -39,27 +39,17 @@ const invalidateBmTemplatesQueries = async (qc: ReturnType<typeof useApiQueryCli
   });
 };
 
-export const useCreateBareMetalInstanceTemplate = () => {
+export const usePatchBareMetalInstanceTemplate = () => {
   const apiFetch = useApiFetch();
   const qc = useApiQueryClient();
   return useMutation({
-    mutationFn: (body: Omit<BareMetalInstanceTemplate, 'id'>) =>
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<BareMetalInstanceTemplate> }) =>
       apiFetch<BareMetalInstanceTemplate>('v1/baremetal_instance_templates', {
-        method: 'POST',
-        body,
+        pathParams: [id],
+        method: 'PATCH',
+        body: patch,
         decode: BareMetalInstanceTemplateSchema,
       }),
-    onSuccess: () => invalidateBmTemplatesQueries(qc),
-    retry: false,
-  });
-};
-
-export const useDeleteBareMetalInstanceTemplate = () => {
-  const apiFetch = useApiFetch();
-  const qc = useApiQueryClient();
-  return useMutation({
-    mutationFn: (id: string) =>
-      apiFetch<void>('v1/baremetal_instance_templates', { pathParams: [id], method: 'DELETE' }),
     onSuccess: () => invalidateBmTemplatesQueries(qc),
     retry: false,
   });

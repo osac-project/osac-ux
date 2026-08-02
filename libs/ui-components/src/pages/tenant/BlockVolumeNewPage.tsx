@@ -24,6 +24,7 @@ import {
 
 import { type BlockVolumeStorageClass, useCreateBlockVolume } from '../../api/v1/block-volumes';
 import { STORAGE_CLASS_LABELS } from '../../api/v1/compute-instance-disk';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 const STORAGE_CLASSES: { value: BlockVolumeStorageClass; label: string }[] = [
@@ -33,6 +34,7 @@ const STORAGE_CLASSES: { value: BlockVolumeStorageClass; label: string }[] = [
 ];
 
 export const BlockVolumeNewPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [sizeGib, setSizeGib] = useState(50);
@@ -56,31 +58,31 @@ export const BlockVolumeNewPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/storage/volumes')}>
-                Block volumes
+                {t('Block volumes')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Create volume</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Create volume')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Create block volume
+            {t('Create block volume')}
           </Title>
         </Stack>
       </PageSection>
 
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '480px' }} id="vol-create-form">
-          <FormGroup label="Name" isRequired fieldId="vol-name">
+          <FormGroup label={t('Name')} isRequired fieldId="vol-name">
             <TextInput
               id="vol-name"
               value={name}
               onChange={(_e, v) => setName(v)}
-              placeholder="e.g. data-vol-01"
+              placeholder={t('e.g. data-vol-01')}
               isRequired
               autoFocus
             />
           </FormGroup>
 
-          <FormGroup label="Size (GiB)" isRequired fieldId="vol-size">
+          <FormGroup label={t('Size (GiB)')} isRequired fieldId="vol-size">
             <NumberInput
               id="vol-size"
               value={sizeGib}
@@ -96,7 +98,7 @@ export const BlockVolumeNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Storage class" isRequired fieldId="vol-class">
+          <FormGroup label={t('Storage class')} isRequired fieldId="vol-class">
             <Select
               isOpen={scOpen}
               onSelect={(_e, val) => {
@@ -118,14 +120,14 @@ export const BlockVolumeNewPage = () => {
             >
               {STORAGE_CLASSES.map((sc) => (
                 <SelectOption key={sc.value} value={sc.value}>
-                  {sc.label}
+                  {t(sc.label)}
                 </SelectOption>
               ))}
             </Select>
           </FormGroup>
 
           {error && (
-            <Alert variant="danger" isInline title="Failed to create volume">
+            <Alert variant="danger" isInline title={t('Failed to create volume')}>
               {getErrorMessage(error)}
             </Alert>
           )}
@@ -138,14 +140,14 @@ export const BlockVolumeNewPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !name.trim()}
             >
-              Create
+              {t('Create')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate('/storage/volumes')}
               isDisabled={isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

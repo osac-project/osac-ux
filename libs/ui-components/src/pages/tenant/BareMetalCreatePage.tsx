@@ -6,8 +6,10 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Breadcrumb, BreadcrumbItem, PageBreadcrumb } from '@patternfly/react-core';
 
 import { BareMetalProvisionWizard } from '../../components/catalogProvision/BareMetalProvisionWizard';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export const BareMetalCreatePage = () => {
+  const { t } = useTranslation();
   const { catalogItemId } = useParams<{ catalogItemId?: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -19,7 +21,7 @@ export const BareMetalCreatePage = () => {
     (location.state as { from?: string } | null)?.from === '/catalog' || Boolean(catalogItemId);
 
   const parentPath = fromCatalog ? '/catalog' : '/bare-metal';
-  const parentLabel = fromCatalog ? 'Catalog' : 'Bare Metal';
+  const parentLabel = fromCatalog ? t('Catalog') : t('Bare Metal');
 
   return (
     <>
@@ -28,7 +30,7 @@ export const BareMetalCreatePage = () => {
           <BreadcrumbItem onClick={() => navigate(parentPath)} style={{ cursor: 'pointer' }}>
             {parentLabel}
           </BreadcrumbItem>
-          <BreadcrumbItem isActive>Create bare metal</BreadcrumbItem>
+          <BreadcrumbItem isActive>{t('Create bare metal')}</BreadcrumbItem>
         </Breadcrumb>
       </PageBreadcrumb>
 

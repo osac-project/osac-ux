@@ -14,6 +14,7 @@ import {
 
 import { useSession } from '../../hooks/use-session';
 import { Theme } from '../../hooks/use-theme';
+import { useTranslation } from '../../hooks/useTranslation';
 import OsacForm from '../Form/OsacForm';
 
 const themeLabels: { [key in Theme]: string } = {
@@ -27,15 +28,16 @@ type UserPreferencesModalProps = {
 };
 
 const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ onClose }) => {
+  const { t } = useTranslation();
   const { userTheme, setUserTheme } = useSession();
   const [themeExpanded, setThemeExpanded] = React.useState(false);
 
   return (
     <Modal isOpen variant="small" onClose={onClose}>
-      <ModalHeader title="User preferences" />
+      <ModalHeader title={t('User preferences')} />
       <ModalBody>
         <OsacForm>
-          <FormGroup label="Theme">
+          <FormGroup label={t('Theme')}>
             <Select
               toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                 <MenuToggle
@@ -44,7 +46,7 @@ const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ onClose }) 
                   onClick={() => setThemeExpanded(true)}
                   isExpanded={themeExpanded}
                 >
-                  {themeLabels[userTheme]}
+                  {t(themeLabels[userTheme])}
                 </MenuToggle>
               )}
               selected={userTheme}
@@ -52,13 +54,13 @@ const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ onClose }) 
                 setUserTheme(value as Theme);
                 setThemeExpanded(false);
               }}
-              aria-label="theme"
+              aria-label={t('theme')}
               isOpen={themeExpanded}
               onOpenChange={setThemeExpanded}
             >
               {(Object.keys(themeLabels) as Theme[]).map((theme) => (
                 <SelectOption key={theme} value={theme}>
-                  {themeLabels[theme]}
+                  {t(themeLabels[theme])}
                 </SelectOption>
               ))}
             </Select>
@@ -67,7 +69,7 @@ const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({ onClose }) 
       </ModalBody>
       <ModalFooter>
         <Button variant="secondary" onClick={onClose}>
-          Close
+          {t('Close')}
         </Button>
       </ModalFooter>
     </Modal>

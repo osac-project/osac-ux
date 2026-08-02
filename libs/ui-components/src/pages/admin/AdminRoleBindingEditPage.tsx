@@ -22,9 +22,11 @@ import {
 import { Form } from '@patternfly/react-core';
 
 import { usePatchRoleBinding, useRoleBindings, useRoles } from '../../api/v1/role-binding';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 export const AdminRoleBindingEditPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
@@ -67,7 +69,7 @@ export const AdminRoleBindingEditPage = () => {
   if (isLoading) {
     return (
       <PageSection hasBodyWrapper={false}>
-        <Spinner aria-label="Loading role binding" />
+        <Spinner aria-label={t('Loading role binding')} />
       </PageSection>
     );
   }
@@ -75,9 +77,9 @@ export const AdminRoleBindingEditPage = () => {
   if (!binding) {
     return (
       <PageSection hasBodyWrapper={false}>
-        <Alert variant="warning" isInline title={`Role binding not found: ${id}`}>
+        <Alert variant="warning" isInline title={t('Role binding not found: {{id}}', { id })}>
           <Button variant="link" onClick={() => navigate('/admin/role-bindings')}>
-            Back to Role management
+            {t('Back to Role management')}
           </Button>
         </Alert>
       </PageSection>
@@ -91,30 +93,34 @@ export const AdminRoleBindingEditPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/admin/role-bindings')}>
-                Role management
+                {t('Role management')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Edit binding — {roleName}</BreadcrumbItem>
+            <BreadcrumbItem isActive>
+              {t('Edit binding — {{roleName}}', { roleName })}
+            </BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Edit role binding
+            {t('Edit role binding')}
           </Title>
         </Stack>
       </PageSection>
 
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '480px' }} id="edit-binding-form">
-          <FormGroup label="Role" fieldId="binding-role">
+          <FormGroup label={t('Role')} fieldId="binding-role">
             <Label color="blue" isCompact>
               {roleName}
             </Label>
           </FormGroup>
 
           <FormGroup
-            label="Users"
+            label={t('Users')}
             isRequired
             fieldId="binding-users"
-            helperText="Enter a user ID or email and press Enter to add or remove. The binding will be updated with this exact user list."
+            helperText={t(
+              'Enter a user ID or email and press Enter to add or remove. The binding will be updated with this exact user list.',
+            )}
           >
             {users.length > 0 && (
               <LabelGroup style={{ marginBottom: '0.5rem' }}>
@@ -140,12 +146,12 @@ export const AdminRoleBindingEditPage = () => {
                 }
               }}
               onBlur={addUser}
-              placeholder="user ID or email (press Enter to add)"
+              placeholder={t('user ID or email (press Enter to add)')}
             />
           </FormGroup>
 
           {patch.error && (
-            <Alert variant="danger" isInline title="Failed to update binding">
+            <Alert variant="danger" isInline title={t('Failed to update binding')}>
               {getErrorMessage(patch.error)}
             </Alert>
           )}
@@ -158,14 +164,14 @@ export const AdminRoleBindingEditPage = () => {
               isLoading={patch.isPending}
               isDisabled={patch.isPending || users.length === 0}
             >
-              Save changes
+              {t('Save changes')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate('/admin/role-bindings')}
               isDisabled={patch.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

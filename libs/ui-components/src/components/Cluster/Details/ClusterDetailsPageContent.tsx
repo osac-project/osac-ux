@@ -27,6 +27,7 @@ import ClusterDetailsSummary from './ClusterDetailsSummary';
 import ClusterNodeSetsTab from './ClusterNodeSetsTab';
 import { ClusterOverviewTab } from './ClusterOverviewTab';
 import { useTranslation } from '../../../hooks/useTranslation';
+import { ResourceUsageCard } from '../../metering/ResourceUsageCard';
 import { ResourceConditionsTable } from '../../Resource/ResourceConditionsTable';
 import { ResourceDetailHeader } from '../../Resource/ResourceDetailHeader';
 import { ClusterStatusLabel } from '../ClusterStatusLabel';
@@ -37,6 +38,7 @@ interface ClusterDetailViewProps {
 
 const CLUSTER_DETAIL_OVERVIEW_TAB_ID = 'cluster-detail-overview';
 const CLUSTER_DETAIL_NODE_SETS_TAB_ID = 'cluster-detail-node-sets';
+const CLUSTER_DETAIL_USAGE_TAB_ID = 'cluster-detail-usage';
 
 const ClusterDetailsPageContent = ({ cluster }: ClusterDetailViewProps) => {
   const { t } = useTranslation();
@@ -88,6 +90,11 @@ const ClusterDetailsPageContent = ({ cluster }: ClusterDetailViewProps) => {
                 title={<TabTitleText>{t('Node sets')}</TabTitleText>}
                 tabContentId={CLUSTER_DETAIL_NODE_SETS_TAB_ID}
               />
+              <Tab
+                eventKey={2}
+                title={<TabTitleText>{t('Usage')}</TabTitleText>}
+                tabContentId={CLUSTER_DETAIL_USAGE_TAB_ID}
+              />
             </Tabs>
           </StackItem>
         </Stack>
@@ -130,6 +137,20 @@ const ClusterDetailsPageContent = ({ cluster }: ClusterDetailViewProps) => {
             >
               <TabContentBody>
                 <ClusterNodeSetsTab cluster={cluster} />
+              </TabContentBody>
+            </TabContent>
+            <TabContent
+              eventKey={2}
+              id={CLUSTER_DETAIL_USAGE_TAB_ID}
+              activeKey={activeTabKey}
+              hidden={2 !== activeTabKey}
+            >
+              <TabContentBody>
+                <ResourceUsageCard
+                  resourceId={cluster.id}
+                  tenantId={cluster.metadata?.tenant}
+                  title={t('Cluster usage')}
+                />
               </TabContentBody>
             </TabContent>
           </StackItem>

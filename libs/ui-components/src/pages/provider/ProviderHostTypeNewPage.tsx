@@ -23,9 +23,11 @@ import {
 import type { HostType } from '@osac/types';
 
 import { useCreateHostType } from '../../api/v1/host-types';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 export const ProviderHostTypeNewPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
@@ -71,56 +73,58 @@ export const ProviderHostTypeNewPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/provider/host-types')}>
-                Host Types
+                {t('Host Types')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Create host type</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Create host type')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Create host type
+            {t('Create host type')}
           </Title>
         </Stack>
       </PageSection>
 
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '560px' }} id="ht-create-form">
-          <FormGroup label="Identifier (name)" fieldId="ht-name" isRequired>
+          <FormGroup label={t('Identifier (name)')} fieldId="ht-name" isRequired>
             <TextInput
               id="ht-name"
               value={name}
               onChange={(_e, v) => setName(v)}
-              placeholder="ibm-mi300x"
+              placeholder={t('ibm-mi300x')}
               isRequired
               autoFocus
             />
           </FormGroup>
 
-          <FormGroup label="Title" fieldId="ht-title" isRequired>
+          <FormGroup label={t('Title')} fieldId="ht-title" isRequired>
             <TextInput
               id="ht-title"
               value={title}
               onChange={(_e, v) => setTitle(v)}
-              placeholder="IBM MI300X GPU Server"
+              placeholder={t('IBM MI300X GPU Server')}
               isRequired
             />
           </FormGroup>
 
-          <FormGroup label="Description" fieldId="ht-description">
+          <FormGroup label={t('Description')} fieldId="ht-description">
             <TextArea
               id="ht-description"
               value={description}
               onChange={(_e, v) => setDescription(v)}
-              placeholder="Hardware characteristics, CPU, RAM, GPU, storage… (Markdown supported)"
+              placeholder={t(
+                'Hardware characteristics, CPU, RAM, GPU, storage… (Markdown supported)',
+              )}
               rows={4}
             />
           </FormGroup>
 
-          <FormGroup label="Price per hour (USD)" fieldId="ht-price">
+          <FormGroup label={t('Price per hour (USD)')} fieldId="ht-price">
             <TextInput
               id="ht-price"
               value={pricePerHour}
               onChange={(_e, v) => setPricePerHour(v)}
-              placeholder="4.50"
+              placeholder={t('4.50')}
               type="number"
             />
           </FormGroup>
@@ -128,14 +132,14 @@ export const ProviderHostTypeNewPage = () => {
           <FormGroup fieldId="ht-gpu">
             <Checkbox
               id="ht-gpu"
-              label="GPU accelerator node"
+              label={t('GPU accelerator node')}
               isChecked={isGpu}
               onChange={(_e, v) => setIsGpu(v)}
             />
           </FormGroup>
 
           {create.error && (
-            <Alert variant="danger" title="Failed to create host type" isInline>
+            <Alert variant="danger" title={t('Failed to create host type')} isInline>
               {getErrorMessage(create.error)}
             </Alert>
           )}
@@ -148,14 +152,14 @@ export const ProviderHostTypeNewPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !isValid}
             >
-              Create
+              {t('Create')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate('/provider/host-types')}
               isDisabled={isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

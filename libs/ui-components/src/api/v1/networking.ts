@@ -156,6 +156,27 @@ export const useDeleteNetworkClass = () => {
   });
 };
 
+/**
+ * @temp-api — price_per_hour is stored as a metadata label (REQ-BA-2 pending).
+ * NetworkClass has no BillableComponent proto field yet; this is priced as an
+ * infra pass-through component consumed by Cluster/VM/MaaS resources.
+ */
+export const usePatchNetworkClass = () => {
+  const apiFetch = useApiFetch();
+  const qc = useApiQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<NetworkClass> }) =>
+      apiFetch<NetworkClass>('v1/network_classes', {
+        pathParams: [id],
+        method: 'PATCH',
+        body: patch,
+        decode: NetworkClassSchema,
+      }),
+    onSuccess: () => invalidateNetworkClassesQueries(qc),
+    retry: false,
+  });
+};
+
 // ---------------------------------------------------------------------------
 // Invalidation helpers
 // ---------------------------------------------------------------------------

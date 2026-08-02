@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   Alert,
   Content,
@@ -18,6 +19,9 @@ import {
   BM_RUN_STRATEGY_HALTED,
   type BareMetalWizardValues,
 } from './fields';
+import { readBillableComponents } from '../../../../api/v1/template-billing';
+import { useTranslation } from '../../../../hooks/useTranslation';
+import { PriceBreakdown } from '../../../catalog/PriceBreakdown';
 
 interface Props {
   values: BareMetalWizardValues;
@@ -25,55 +29,75 @@ interface Props {
   provisionError?: string;
 }
 
-const runStrategyLabel = (strategy: number): string => {
+const runStrategyLabelKey = (strategy: number): string => {
   if (strategy === BM_RUN_STRATEGY_ALWAYS) {
-    return 'Always (start immediately)';
+    return 'catalogProvision.baremetal.runStrategy.always';
   }
   if (strategy === BM_RUN_STRATEGY_HALTED) {
-    return 'Halted (start stopped)';
+    return 'catalogProvision.baremetal.runStrategy.halted';
   }
   return String(strategy);
 };
 
 export const BareMetalReviewStep = ({ values, catalogItem, provisionError }: Props) => {
+  const { t } = useTranslation();
   const pricePerHour = catalogItem?.metadata?.labels?.['price_per_hour'];
+  const billableComponents = useMemo(
+    () =>
+      catalogItem
+        ? readBillableComponents(
+            catalogItem as unknown as { metadata?: { annotations?: Record<string, string> } },
+          )
+        : [],
+    [catalogItem],
+  );
 
   return (
     <Stack hasGutter>
       {provisionError && (
         <StackItem>
-          <Alert variant="danger" isInline title="Failed to create bare metal instance">
+          <Alert
+            variant="danger"
+            isInline
+            title={t('catalogProvision.baremetal.review.provisionErrorTitle')}
+          >
             {provisionError}
           </Alert>
         </StackItem>
       )}
 
-      {pricePerHour && (
+      {billableComponents.length > 0 ? (
         <StackItem>
-          <Alert variant="info" isInline title="Estimated cost (continuous 24/7 usage)">
-            <Label variant="filled" color="blue" isCompact>
-              ${pricePerHour}/hr
-            </Label>{' '}
-            <Content component="small">Metering estimate</Content>
-          </Alert>
+          <PriceBreakdown components={billableComponents} />
         </StackItem>
+      ) : (
+        pricePerHour && (
+          <StackItem>
+            <Alert variant="info" isInline title={t('Estimated cost (continuous 24/7 usage)')}>
+              <Label variant="filled" color="blue" isCompact>
+                ${pricePerHour}/hr
+              </Label>{' '}
+              <Content component="small">{t('catalogProvision.review.meteringEstimate')}</Content>
+            </Alert>
+          </StackItem>
+        )
       )}
 
       {/* ── Catalog ───────────────────────────────────────────── */}
       <StackItem>
         <Title headingLevel="h3" size="md">
-          Catalog
+          {t('catalogProvision.steps.catalog.title')}
         </Title>
       </StackItem>
       <StackItem>
         <DescriptionList isHorizontal isCompact>
           <DescriptionListGroup>
-            <DescriptionListTerm>Catalog item</DescriptionListTerm>
+            <DescriptionListTerm>{t('catalogProvision.review.catalogItem')}</DescriptionListTerm>
             <DescriptionListDescription>{catalogItem?.title ?? '—'}</DescriptionListDescription>
           </DescriptionListGroup>
           {catalogItem?.description && (
             <DescriptionListGroup>
-              <DescriptionListTerm>Description</DescriptionListTerm>
+              <DescriptionListTerm>{t('catalogProvision.review.description')}</DescriptionListTerm>
               <DescriptionListDescription>{catalogItem.description}</DescriptionListDescription>
             </DescriptionListGroup>
           )}
@@ -83,21 +107,23 @@ export const BareMetalReviewStep = ({ values, catalogItem, provisionError }: Pro
       {/* ── General ───────────────────────────────────────────── */}
       <StackItem>
         <Title headingLevel="h3" size="md">
-          General
+          {t('catalogProvision.steps.general.title')}
         </Title>
       </StackItem>
       <StackItem>
         <DescriptionList isHorizontal isCompact>
           <DescriptionListGroup>
-            <DescriptionListTerm>Instance name</DescriptionListTerm>
+            <DescriptionListTerm>{t('catalogProvision.baremetal.fields.name')}</DescriptionListTerm>
             <DescriptionListDescription>
               <code>{values.name}</code>
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
-            <DescriptionListTerm>Run strategy</DescriptionListTerm>
+            <DescriptionListTerm>
+              {t('catalogProvision.baremetal.fields.runStrategy')}
+            </DescriptionListTerm>
             <DescriptionListDescription>
-              {runStrategyLabel(values.runStrategy)}
+              {t(runStrategyLabelKey(values.runStrategy))}
             </DescriptionListDescription>
           </DescriptionListGroup>
         </DescriptionList>
@@ -106,35 +132,39 @@ export const BareMetalReviewStep = ({ values, catalogItem, provisionError }: Pro
       {/* ── Configuration ─────────────────────────────────────── */}
       <StackItem>
         <Title headingLevel="h3" size="md">
-          Configuration
+          {t('catalogProvision.steps.configuration.title')}
         </Title>
       </StackItem>
       <StackItem>
         <DescriptionList isHorizontal isCompact>
           <DescriptionListGroup>
-            <DescriptionListTerm>SSH public key</DescriptionListTerm>
+            <DescriptionListTerm>
+              {t('catalogProvision.baremetal.fields.sshKey')}
+            </DescriptionListTerm>
             <DescriptionListDescription>
               {values.sshPublicKey.trim() ? (
                 <Label isCompact color="green">
-                  Provided
+                  {t('catalogProvision.review.provided')}
                 </Label>
               ) : (
                 <Content component="small" className="pf-v6-u-color-text-subtle">
-                  Not set
+                  {t('catalogProvision.review.notSet')}
                 </Content>
               )}
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
-            <DescriptionListTerm>User data</DescriptionListTerm>
+            <DescriptionListTerm>
+              {t('catalogProvision.baremetal.fields.userData')}
+            </DescriptionListTerm>
             <DescriptionListDescription>
               {values.userData.trim() ? (
                 <Label isCompact color="green">
-                  Provided
+                  {t('catalogProvision.review.provided')}
                 </Label>
               ) : (
                 <Content component="small" className="pf-v6-u-color-text-subtle">
-                  Not set
+                  {t('catalogProvision.review.notSet')}
                 </Content>
               )}
             </DescriptionListDescription>

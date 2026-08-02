@@ -8,8 +8,10 @@ import { useCluster } from '../../api/v1/cluster';
 import ClusterDetailsPageContent from '../../components/Cluster/Details/ClusterDetailsPageContent';
 import { ResourceDetailsPageError } from '../../components/Resource/ResourceDetailsPageError';
 import { ResourceDetailsPageLoading } from '../../components/Resource/ResourceDetailsPageLoading';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export const ClusterDetailsPage = () => {
+  const { t } = useTranslation();
   const { clusterId } = useParams() as { clusterId: string };
   const { data: cluster, isLoading, isError, refetch } = useCluster(clusterId);
 
@@ -17,8 +19,8 @@ export const ClusterDetailsPage = () => {
     return (
       <ResourceDetailsPageLoading
         parentTo="/clusters"
-        parentLabel="Clusters"
-        tabLabels={['Overview', 'Conditions']}
+        parentLabel={t('Clusters')}
+        tabLabels={[t('Overview'), t('Conditions')]}
         tabsId="cluster-detail-tabs"
       />
     );
@@ -28,8 +30,8 @@ export const ClusterDetailsPage = () => {
     return (
       <ResourceDetailsPageError
         parentTo="/clusters"
-        parentLabel="Clusters"
-        resourceLabel="cluster"
+        parentLabel={t('Clusters')}
+        resourceLabel={t('cluster')}
         variant="load-error"
         onRetry={() => void refetch()}
       />
@@ -40,8 +42,8 @@ export const ClusterDetailsPage = () => {
     return (
       <ResourceDetailsPageError
         parentTo="/clusters"
-        parentLabel="Clusters"
-        resourceLabel="cluster"
+        parentLabel={t('Clusters')}
+        resourceLabel={t('cluster')}
         variant="not-found"
       />
     );

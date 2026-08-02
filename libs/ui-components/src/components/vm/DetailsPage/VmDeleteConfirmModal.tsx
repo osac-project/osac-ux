@@ -17,6 +17,7 @@ import {
   useDeleteComputeInstance,
   usePatchComputeInstance,
 } from '../../../api/v1/compute-instance';
+import { useTranslation } from '../../../hooks/useTranslation';
 import { getErrorMessage } from '../../../utils/error';
 
 interface VmDeleteConfirmModalProps {
@@ -26,6 +27,7 @@ interface VmDeleteConfirmModalProps {
 }
 
 export const VmDeleteConfirmModal = ({ vm, onClose, onSuccess }: VmDeleteConfirmModalProps) => {
+  const { t } = useTranslation();
   const [isPending, setIsPending] = React.useState(false);
   const deleteVm = useDeleteComputeInstance();
   const patchVm = usePatchComputeInstance();
@@ -55,7 +57,7 @@ export const VmDeleteConfirmModal = ({ vm, onClose, onSuccess }: VmDeleteConfirm
       aria-labelledby="vm-delete-confirm-title"
     >
       <ModalHeader
-        title={`Delete ${vm.metadata?.name ?? vm.id}?`}
+        title={t('Delete {{name}}?', { name: vm.metadata?.name ?? vm.id })}
         titleIconVariant="warning"
         labelId="vm-delete-confirm-title"
       />
@@ -63,24 +65,25 @@ export const VmDeleteConfirmModal = ({ vm, onClose, onSuccess }: VmDeleteConfirm
         <Stack hasGutter>
           {!isStopped ? (
             <StackItem>
-              This virtual machine is still running. It will be stopped first, then deleted
-              permanently. This action cannot be undone.
+              {t(
+                'This virtual machine is still running. It will be stopped first, then deleted permanently. This action cannot be undone.',
+              )}
             </StackItem>
           ) : (
             <StackItem>
-              This permanently deletes the virtual machine. This action cannot be undone.
+              {t('This permanently deletes the virtual machine. This action cannot be undone.')}
             </StackItem>
           )}
           {patchVm.error && (
             <StackItem>
-              <Alert variant="danger" title="Failed to stop VM" isInline>
+              <Alert variant="danger" title={t('Failed to stop VM')} isInline>
                 {getErrorMessage(patchVm.error)}
               </Alert>
             </StackItem>
           )}
           {deleteVm.error && (
             <StackItem>
-              <Alert variant="danger" title="Failed to delete VM" isInline>
+              <Alert variant="danger" title={t('Failed to delete VM')} isInline>
                 {getErrorMessage(deleteVm.error)}
               </Alert>
             </StackItem>
@@ -89,7 +92,7 @@ export const VmDeleteConfirmModal = ({ vm, onClose, onSuccess }: VmDeleteConfirm
       </ModalBody>
       <ModalFooter>
         <Button key="cancel" variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
         <Button
           key="delete"
@@ -98,7 +101,7 @@ export const VmDeleteConfirmModal = ({ vm, onClose, onSuccess }: VmDeleteConfirm
           isDisabled={isPending}
           isLoading={isPending}
         >
-          Delete
+          {t('Delete')}
         </Button>
       </ModalFooter>
     </Modal>

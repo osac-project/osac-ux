@@ -10,6 +10,7 @@ import {
 import type { ClusterTemplate } from '@osac/types';
 
 import { type ClusterWizardValues, DEFAULT_POD_CIDR, DEFAULT_SERVICE_CIDR } from './fields';
+import { useTranslation } from '../../../../hooks/useTranslation';
 import OsacForm from '../../../Form/OsacForm';
 
 interface Props {
@@ -19,17 +20,17 @@ interface Props {
 }
 
 export const ClusterNetworkingStep = ({ values, onChange, template }: Props) => {
+  const { t } = useTranslation();
   const podCidrDefault = template?.specDefaults?.network?.podCidr || DEFAULT_POD_CIDR;
   const serviceCidrDefault = template?.specDefaults?.network?.serviceCidr || DEFAULT_SERVICE_CIDR;
 
   return (
     <OsacForm>
       <Content component="p" className="pf-v6-u-color-text-subtle">
-        Configure the cluster network CIDRs. Leave blank to use the defaults from the selected
-        template.
+        {t('catalogProvision.cluster.networking.description')}
       </Content>
 
-      <FormGroup label="Pod network CIDR" fieldId="cluster-pod-cidr">
+      <FormGroup label={t('catalogProvision.cluster.fields.podCidr')} fieldId="cluster-pod-cidr">
         <TextInput
           id="cluster-pod-cidr"
           value={values.podCidr}
@@ -40,13 +41,16 @@ export const ClusterNetworkingStep = ({ values, onChange, template }: Props) => 
         <FormHelperText>
           <HelperText id="cluster-pod-cidr-helper">
             <HelperTextItem>
-              CIDR range for the cluster&apos;s pod network. Default: <code>{podCidrDefault}</code>
+              {t('catalogProvision.cluster.fields.podCidrHelper')} <code>{podCidrDefault}</code>
             </HelperTextItem>
           </HelperText>
         </FormHelperText>
       </FormGroup>
 
-      <FormGroup label="Service network CIDR" fieldId="cluster-service-cidr">
+      <FormGroup
+        label={t('catalogProvision.cluster.fields.serviceCidr')}
+        fieldId="cluster-service-cidr"
+      >
         <TextInput
           id="cluster-service-cidr"
           value={values.serviceCidr}
@@ -57,7 +61,7 @@ export const ClusterNetworkingStep = ({ values, onChange, template }: Props) => 
         <FormHelperText>
           <HelperText id="cluster-service-cidr-helper">
             <HelperTextItem>
-              CIDR range for the cluster&apos;s service network. Default:{' '}
+              {t('catalogProvision.cluster.fields.serviceCidrHelper')}{' '}
               <code>{serviceCidrDefault}</code>
             </HelperTextItem>
           </HelperText>

@@ -1,0 +1,43 @@
+# Demo-mode build: serves the SPA with fully mocked data (VITE_DEMO_MODE=true).
+# No Go proxy, no OIDC, no backend required.
+#
+# Usage (local):
+#   docker build -f Dockerfile.demo -t osac-ux-demo:latest .
+#   docker run --rm -p 8080:8080 osac-ux-demo:latest
+#   open http://localhost:8080/osac-ux/
+#
+# For OpenShift deployment use deploy/demo/openshift.yaml instead.
+
+# ── Stage 1: install SPA workspace dependencies ───────────────────────────
+FROM registry.access.redhat.com/ubi9/nodejs-22-minimal:9.8 AS deps
+USER root
+WORKDIR /app
+
+RUN npm install -g pnpm@9
+
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* tsconfig.base.json ./
+COPY scripts/ ./scripts/
+# Full source copied here so the postinstall gen:api-diff script can scan
+# libs/ui-components/src/api/types.ts and apps/app-frontend/src/demo/mock-store.ts
+COPY libs/ ./libs/
+COPY apps/app-frontend/ ./apps/app-frontend/
+COPY apps/e2e/package.json ./apps/e2e/
+
+RUN pnpm install --frozen-lockfile
+
+# ── Stage 2: build SPA in demo mode ───────────────────────────────────────
+# libs/ and apps/app-frontend/ are already present from the deps stage
+FROM deps AS spa-builder
+WORKDIR /app
+
+# VITE_DEMO_MODE=true → in-memory mock store, base path = /osac-ux/
+# Output: apps/app-frontend/dist/
+RUN pnpm --filter @osac/app-frontend run build:demo
+
+# ── Stage 3: serve with rootless nginx (OpenShift-compatible) ──────────────
+FROM nginxinc/nginx-unprivileged:alpine AS server
+
+COPY nginx.demo.conf /etc/nginx/conf.d/default.conf
+COPY --from=spa-builder /app/apps/app-frontend/dist /usr/share/nginx/html/osac-ux
+
+EXPOSE 8080

@@ -15,6 +15,7 @@ import {
 } from '@patternfly/react-core';
 
 import { useCreateObjectStorageBucket } from '../../api/v1/object-storage';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface CreateBucketModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface CreateBucketModalProps {
 }
 
 export const CreateBucketModal = ({ isOpen, onClose }: CreateBucketModalProps) => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [quotaGib, setQuotaGib] = useState<number | undefined>(undefined);
   const [versioning, setVersioning] = useState(false);
@@ -46,30 +48,30 @@ export const CreateBucketModal = ({ isOpen, onClose }: CreateBucketModalProps) =
       setVersioning(false);
       setDescription('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create bucket');
+      setError(err instanceof Error ? err.message : t('Failed to create bucket'));
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label="Create bucket">
-      <ModalHeader title="Create object storage bucket" />
+    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label={t('Create bucket')}>
+      <ModalHeader title={t('Create object storage bucket')} />
       <ModalBody>
         {error && (
-          <Alert variant="danger" isInline title="Error" style={{ marginBottom: '1rem' }}>
+          <Alert variant="danger" isInline title={t('Error')} style={{ marginBottom: '1rem' }}>
             {error}
           </Alert>
         )}
         <Form onSubmit={handleSubmit} id="create-bucket-form">
-          <FormGroup label="Bucket name" isRequired fieldId="bucket-name">
+          <FormGroup label={t('Bucket name')} isRequired fieldId="bucket-name">
             <TextInput
               id="bucket-name"
               value={name}
               onChange={(_e, v) => setName(v)}
               isRequired
-              placeholder="my-bucket"
+              placeholder={t('my-bucket')}
             />
           </FormGroup>
-          <FormGroup label="Quota (GiB)" fieldId="bucket-quota">
+          <FormGroup label={t('Quota (GiB)')} fieldId="bucket-quota">
             <NumberInput
               id="bucket-quota"
               value={quotaGib ?? ''}
@@ -80,23 +82,23 @@ export const CreateBucketModal = ({ isOpen, onClose }: CreateBucketModalProps) =
                 setQuotaGib(isNaN(v) ? undefined : v);
               }}
               min={1}
-              placeholder="No limit"
+              placeholder={t('No limit')}
             />
           </FormGroup>
           <FormGroup fieldId="bucket-versioning">
             <Checkbox
               id="bucket-versioning"
-              label="Enable versioning"
+              label={t('Enable versioning')}
               isChecked={versioning}
               onChange={(_e, checked) => setVersioning(checked)}
             />
           </FormGroup>
-          <FormGroup label="Description" fieldId="bucket-desc">
+          <FormGroup label={t('Description')} fieldId="bucket-desc">
             <TextInput
               id="bucket-desc"
               value={description}
               onChange={(_e, v) => setDescription(v)}
-              placeholder="Optional description"
+              placeholder={t('Optional description')}
             />
           </FormGroup>
         </Form>
@@ -110,10 +112,10 @@ export const CreateBucketModal = ({ isOpen, onClose }: CreateBucketModalProps) =
             isLoading={isPending}
             isDisabled={isPending || !name.trim()}
           >
-            Create bucket
+            {t('Create bucket')}
           </Button>
           <Button variant="link" onClick={onClose} isDisabled={isPending}>
-            Cancel
+            {t('Cancel')}
           </Button>
         </ActionGroup>
       </ModalFooter>

@@ -31,6 +31,7 @@ import {
 import type { SecurityRuleInput } from '../../api/v1/networking';
 import OsacForm from '../../components/Form/OsacForm';
 import { SecurityRulesFields } from '../../components/Network/SecurityRulesFields';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 const defaultEgressRule = (): SecurityRuleInput => ({
@@ -39,6 +40,7 @@ const defaultEgressRule = (): SecurityRuleInput => ({
 });
 
 export const SecurityGroupNewPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preselectedVNetId = searchParams.get('vnetId') ?? '';
@@ -87,13 +89,13 @@ export const SecurityGroupNewPage = () => {
                 isInline
                 onClick={() => navigate('/networks?tab=security-groups')}
               >
-                Networks
+                {t('Networks')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Create security group</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Create security group')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Create security group
+            {t('Create security group')}
           </Title>
         </Stack>
       </PageSection>
@@ -106,7 +108,7 @@ export const SecurityGroupNewPage = () => {
           id="sg-create-form"
         >
           {!preselectedVNetId && (
-            <FormGroup label="Virtual network" fieldId="sg-vnet" isRequired>
+            <FormGroup label={t('Virtual network')} fieldId="sg-vnet" isRequired>
               <Select
                 isOpen={vnetSelectOpen}
                 selected={selectedVNetId}
@@ -124,7 +126,7 @@ export const SecurityGroupNewPage = () => {
                   >
                     {selectedVNet
                       ? resourceDisplayName(selectedVNet.metadata, selectedVNet.id)
-                      : 'Select virtual network'}
+                      : t('Select virtual network')}
                   </MenuToggle>
                 )}
               >
@@ -137,7 +139,7 @@ export const SecurityGroupNewPage = () => {
             </FormGroup>
           )}
 
-          <FormGroup label="Name" fieldId="sg-name" isRequired>
+          <FormGroup label={t('Name')} fieldId="sg-name" isRequired>
             <TextInput
               id="sg-name"
               value={name}
@@ -147,11 +149,11 @@ export const SecurityGroupNewPage = () => {
             />
           </FormGroup>
 
-          <SecurityRulesFields label="Ingress rules" rules={ingress} onChange={setIngress} />
-          <SecurityRulesFields label="Egress rules" rules={egress} onChange={setEgress} />
+          <SecurityRulesFields label={t('Ingress rules')} rules={ingress} onChange={setIngress} />
+          <SecurityRulesFields label={t('Egress rules')} rules={egress} onChange={setEgress} />
 
           {createSG.error && (
-            <Alert variant="danger" title="Failed to create security group" isInline>
+            <Alert variant="danger" title={t('Failed to create security group')} isInline>
               {getErrorMessage(createSG.error)}
             </Alert>
           )}
@@ -164,14 +166,14 @@ export const SecurityGroupNewPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !name.trim() || !effectiveVNetId}
             >
-              Create
+              {t('Create')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate('/networks?tab=security-groups')}
               isDisabled={isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </OsacForm>

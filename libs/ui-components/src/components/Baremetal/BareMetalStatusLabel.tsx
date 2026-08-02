@@ -2,23 +2,14 @@ import { Flex, FlexItem, Label, Spinner } from '@patternfly/react-core';
 
 import { BareMetalInstanceState } from '@osac/types';
 
+import { useTranslation } from '../../hooks/useTranslation';
+
 type LabelColor = 'green' | 'orange' | 'red' | 'blue' | 'grey';
 
 interface LabelStyle {
   color: LabelColor;
   text: string;
 }
-
-const STATE_MAP: Record<BareMetalInstanceState, LabelStyle> = {
-  [BareMetalInstanceState.UNSPECIFIED]: { color: 'grey', text: 'Unknown' },
-  [BareMetalInstanceState.PROVISIONING]: { color: 'blue', text: 'Provisioning' },
-  [BareMetalInstanceState.RUNNING]: { color: 'green', text: 'Running' },
-  [BareMetalInstanceState.FAILED]: { color: 'red', text: 'Failed' },
-  [BareMetalInstanceState.DELETING]: { color: 'red', text: 'Deleting' },
-  [BareMetalInstanceState.STARTING]: { color: 'blue', text: 'Starting' },
-  [BareMetalInstanceState.STOPPING]: { color: 'orange', text: 'Stopping' },
-  [BareMetalInstanceState.STOPPED]: { color: 'orange', text: 'Stopped' },
-};
 
 const TRANSITION_STATES = new Set<BareMetalInstanceState>([
   BareMetalInstanceState.PROVISIONING,
@@ -32,15 +23,28 @@ interface BareMetalStatusLabelProps {
 }
 
 export const BareMetalStatusLabel = ({ state }: BareMetalStatusLabelProps) => {
-  const fallback = STATE_MAP[BareMetalInstanceState.UNSPECIFIED];
-  const style = state != null ? (STATE_MAP[state] ?? fallback) : fallback;
+  const { t } = useTranslation();
+
+  const stateMap: Record<BareMetalInstanceState, LabelStyle> = {
+    [BareMetalInstanceState.UNSPECIFIED]: { color: 'grey', text: t('Unknown') },
+    [BareMetalInstanceState.PROVISIONING]: { color: 'blue', text: t('Provisioning') },
+    [BareMetalInstanceState.RUNNING]: { color: 'green', text: t('Running') },
+    [BareMetalInstanceState.FAILED]: { color: 'red', text: t('Failed') },
+    [BareMetalInstanceState.DELETING]: { color: 'red', text: t('Deleting') },
+    [BareMetalInstanceState.STARTING]: { color: 'blue', text: t('Starting') },
+    [BareMetalInstanceState.STOPPING]: { color: 'orange', text: t('Stopping') },
+    [BareMetalInstanceState.STOPPED]: { color: 'orange', text: t('Stopped') },
+  };
+
+  const fallback = stateMap[BareMetalInstanceState.UNSPECIFIED];
+  const style = state != null ? (stateMap[state] ?? fallback) : fallback;
   const inTransition = state != null && TRANSITION_STATES.has(state);
 
   return (
     <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
       {inTransition && (
         <FlexItem>
-          <Spinner size="sm" aria-label={`${style.text} in progress`} />
+          <Spinner size="sm" aria-label={t('{{text}} in progress', { text: style.text })} />
         </FlexItem>
       )}
       <FlexItem>

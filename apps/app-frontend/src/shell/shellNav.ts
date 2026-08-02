@@ -17,23 +17,23 @@ export type NavRow = NavSection;
 const getTenantUserNav = (t: TFunction): NavRow[] => [
   {
     kind: 'section',
-    sectionId: 'nav-tenant-projects',
-    label: t('Projects'),
-    children: [
-      { id: 'projects-new', label: t('New project'), path: '/projects/new' },
-      { id: 'projects-list', label: t('Projects'), path: '/projects' },
-    ],
-  },
-  {
-    kind: 'section',
     sectionId: 'nav-tenant-services',
-    label: t('Instances'),
+    label: t('Services'),
     children: [
       { id: 'catalog', label: t('Catalog'), path: '/catalog' },
       { id: 'compute-vms', label: t('Virtual Machines'), path: '/vms' },
       { id: 'clusters', label: t('Clusters'), path: '/clusters' },
       { id: 'bare-metal', label: t('Bare Metal'), path: '/bare-metal' },
       { id: 'ai-models', label: t('AI Models'), path: '/models' },
+    ],
+  },
+  {
+    kind: 'section',
+    sectionId: 'nav-tenant-projects',
+    label: t('Projects'),
+    children: [
+      { id: 'projects-new', label: t('New project'), path: '/projects/new' },
+      { id: 'projects-list', label: t('Projects'), path: '/projects' },
     ],
   },
   {
@@ -56,6 +56,12 @@ const getTenantUserNav = (t: TFunction): NavRow[] => [
       { id: 'object-storage', label: t('Storage Buckets'), path: '/bucket-storage' },
       { id: 'storage-tiers', label: t('Storage Tiers'), path: '/storage/tiers' },
     ],
+  },
+  {
+    kind: 'section',
+    sectionId: 'nav-tenant-billing',
+    label: t('Billing'),
+    children: [{ id: 'usage', label: t('Usage'), path: '/usage' }],
   },
   {
     kind: 'section',
@@ -86,12 +92,19 @@ const getTenantAdminNav = (t: TFunction): NavRow[] => [
     sectionId: 'nav-admin-mgmt',
     label: t('Management'),
     children: [
+      { id: 'admin-catalog', label: t('Item Catalog'), path: '/admin/catalog' },
       { id: 'admin-users', label: t('Users'), path: '/admin/users' },
       { id: 'admin-role-bindings', label: t('Role Bindings'), path: '/admin/role-bindings' },
       {
         id: 'admin-identity-providers',
         label: t('Identity Providers'),
         path: '/admin/identity-providers',
+      },
+      { id: 'admin-ai-environment', label: t('AI Environment'), path: '/admin/ai-environment' },
+      {
+        id: 'admin-ai-subscriptions',
+        label: t('AI Subscriptions'),
+        path: '/admin/ai-subscriptions',
       },
     ],
   },
@@ -118,6 +131,12 @@ const getTenantAdminNav = (t: TFunction): NavRow[] => [
   },
   {
     kind: 'section',
+    sectionId: 'nav-admin-billing',
+    label: t('Billing'),
+    children: [{ id: 'admin-usage', label: t('Usage'), path: '/admin/usage' }],
+  },
+  {
+    kind: 'section',
     sectionId: 'nav-dev',
     label: t('Development'),
     children: [{ id: 'dev-api-diff', label: t('API Diff'), path: '/dev/api-diff' }],
@@ -137,15 +156,13 @@ const getProviderAdminNav = (t: TFunction): NavRow[] => [
     label: t('Management'),
     children: [
       { id: 'provider-orgs', label: t('Tenant organizations'), path: '/provider/organizations' },
-      { id: 'provider-catalog', label: t('Global catalog'), path: '/provider/catalog' },
     ],
   },
   {
     kind: 'section',
     sectionId: 'nav-provider-catalog-studio',
-    label: t('Catalog Studio'),
+    label: t('Catalog'),
     children: [
-      { id: 'provider-catalog-studio', label: t('Studio'), path: '/provider/catalog-studio' },
       { id: 'provider-templates', label: t('Templates'), path: '/provider/templates' },
       { id: 'provider-host-types', label: t('Host Types'), path: '/provider/host-types' },
       {
@@ -154,6 +171,25 @@ const getProviderAdminNav = (t: TFunction): NavRow[] => [
         path: '/provider/instance-types',
       },
       { id: 'provider-ai-setup', label: t('AI Setup'), path: '/provider/ai-setup' },
+    ],
+  },
+  {
+    kind: 'section',
+    sectionId: 'nav-provider-billing',
+    label: t('Billing'),
+    children: [
+      { id: 'provider-billing-dashboard', label: t('Overview'), path: '/provider/billing' },
+      { id: 'provider-billing-plans', label: t('Price Plans'), path: '/provider/billing/plans' },
+      {
+        id: 'provider-billing-tenants',
+        label: t('Tenant Billing'),
+        path: '/provider/billing/tenants',
+      },
+      {
+        id: 'provider-billing-usage',
+        label: t('Usage & Cost Reports'),
+        path: '/provider/billing/usage',
+      },
     ],
   },
   {
@@ -170,6 +206,11 @@ const getProviderAdminNav = (t: TFunction): NavRow[] => [
         id: 'provider-ip-pools',
         label: t('IP Pools'),
         path: '/provider/ip-pools',
+      },
+      {
+        id: 'provider-infra-topology',
+        label: t('Infrastructure Topology'),
+        path: '/provider/infra-topology',
       },
     ],
   },
@@ -188,6 +229,15 @@ const getProviderAdminNav = (t: TFunction): NavRow[] => [
         label: t('Storage Tiers'),
         path: '/provider/storage-tiers',
       },
+    ],
+  },
+  {
+    kind: 'section',
+    sectionId: 'nav-provider-compliance',
+    label: t('Compliance'),
+    children: [
+      { id: 'provider-compliance', label: t('Posture Dashboard'), path: '/provider/compliance' },
+      { id: 'provider-audit-log', label: t('Audit Log'), path: '/provider/audit-log' },
     ],
   },
   {

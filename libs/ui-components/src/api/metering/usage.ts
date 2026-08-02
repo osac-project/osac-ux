@@ -119,18 +119,77 @@ MOCK_USAGE.totalEstimatedCost = parseFloat(
   MOCK_USAGE.resources.reduce((sum, r) => sum + r.estimatedCost, 0).toFixed(4),
 );
 
+/** Second tenant, used by provider-scoped reports (Acme Corp / tenant-002). */
+const MOCK_USAGE_TENANT_002: MeteringUsageSummary = {
+  tenantId: 'tenant-002',
+  period: 'current_month',
+  resources: [
+    {
+      resourceType: 'compute_instance',
+      resourceId: 'vm-004',
+      resourceName: 'test-runner-1',
+      resourceClass: 'small',
+      uptimeSeconds: 172_800, // 2 days
+      pricePerHour: 0.05,
+      estimatedCost: parseFloat((172_800 * (0.05 / 3600)).toFixed(4)),
+    },
+    {
+      resourceType: 'cluster',
+      resourceId: 'cluster-003',
+      resourceName: 'staging-cluster',
+      resourceClass: 'standard-32',
+      uptimeSeconds: 43_200, // 0.5 day
+      pricePerHour: 0.4,
+      estimatedCost: parseFloat((43_200 * (0.4 / 3600)).toFixed(4)),
+    },
+  ],
+  totalEstimatedCost: 0,
+  currency: 'USD',
+};
+MOCK_USAGE_TENANT_002.totalEstimatedCost = parseFloat(
+  MOCK_USAGE_TENANT_002.resources.reduce((sum, r) => sum + r.estimatedCost, 0).toFixed(4),
+);
+
+const MOCK_USAGE_BY_TENANT: Record<string, MeteringUsageSummary> = {
+  'tenant-001': MOCK_USAGE,
+  'tenant-002': MOCK_USAGE_TENANT_002,
+};
+
 export interface UsageFetchOptions {
   tenantId?: string;
   period?: 'current_month' | 'last_month';
+  /** Restrict the summary to a single resource — used by per-resource usage widgets. */
+  resourceId?: string;
   /** Use mock data (demo mode) */
   demo?: boolean;
 }
+
+const scopeToResource = (
+  summary: MeteringUsageSummary,
+  resourceId?: string,
+): MeteringUsageSummary => {
+  if (!resourceId) {
+    return summary;
+  }
+  const resources = summary.resources.filter((r) => r.resourceId === resourceId);
+  return {
+    ...summary,
+    resources,
+    totalEstimatedCost: parseFloat(
+      resources.reduce((sum, r) => sum + r.estimatedCost, 0).toFixed(4),
+    ),
+  };
+};
 
 export async function fetchMeteringUsage(
   options: UsageFetchOptions = {},
 ): Promise<MeteringUsageSummary> {
   if (options.demo) {
-    return { ...MOCK_USAGE, tenantId: options.tenantId ?? MOCK_USAGE.tenantId };
+    const base = MOCK_USAGE_BY_TENANT[options.tenantId ?? 'tenant-001'] ?? MOCK_USAGE;
+    return scopeToResource(
+      { ...base, tenantId: options.tenantId ?? base.tenantId },
+      options.resourceId,
+    );
   }
   const params = new URLSearchParams();
   if (options.tenantId) {
@@ -139,10 +198,38 @@ export async function fetchMeteringUsage(
   if (options.period) {
     params.set('period', options.period);
   }
+  if (options.resourceId) {
+    params.set('resource_id', options.resourceId);
+  }
   const url = `${METERING_BASE}/usage?${params}`;
   const res = await window.fetch(url, { credentials: 'include' });
   if (!res.ok) {
     throw new Error(`Metering API error: ${res.status} ${res.statusText}`);
   }
   return res.json() as Promise<MeteringUsageSummary>;
+}
+
+/**
+ * @temp-api — Provider-scoped usage across all tenants (REQ-BA-4 billing-admin gate).
+ * Real implementation will query Koku's cross-tenant cost report, tagged by organization_id.
+ */
+export async function fetchAllTenantsMeteringUsage(
+  options: Pick<UsageFetchOptions, 'period' | 'demo'> = {},
+): Promise<MeteringUsageSummary[]> {
+  if (options.demo !== false) {
+    return Object.values(MOCK_USAGE_BY_TENANT).map((s) => ({
+      ...s,
+      period: options.period ?? s.period,
+    }));
+  }
+  const params = new URLSearchParams();
+  if (options.period) {
+    params.set('period', options.period);
+  }
+  const url = `${METERING_BASE}/usage/tenants?${params}`;
+  const res = await window.fetch(url, { credentials: 'include' });
+  if (!res.ok) {
+    throw new Error(`Metering API error: ${res.status} ${res.statusText}`);
+  }
+  return res.json() as Promise<MeteringUsageSummary[]>;
 }

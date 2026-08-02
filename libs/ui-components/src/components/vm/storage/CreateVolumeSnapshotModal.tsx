@@ -17,6 +17,7 @@ import {
 import type { ComputeInstance } from '@osac/types';
 
 import { useCreateVolumeSnapshot } from '../../../api/v1/volume-snapshot';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface CreateVolumeSnapshotModalProps {
   vm: ComputeInstance;
@@ -29,6 +30,7 @@ export const CreateVolumeSnapshotModal = ({
   isOpen,
   onClose,
 }: CreateVolumeSnapshotModalProps) => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [diskIndex, setDiskIndex] = useState(0);
   const [diskSelectOpen, setDiskSelectOpen] = useState(false);
@@ -40,14 +42,20 @@ export const CreateVolumeSnapshotModal = ({
 
   const additionalCount = vm.spec?.additionalDisks?.length ?? 0;
   const diskOptions = [
-    { value: 0, label: `Boot disk (${vm.spec?.bootDisk?.sizeGib ?? '?'} GiB)` },
+    {
+      value: 0,
+      label: t('Boot disk ({{size}} GiB)', { size: vm.spec?.bootDisk?.sizeGib ?? '?' }),
+    },
     ...Array.from({ length: additionalCount }, (_, i) => ({
       value: i + 1,
-      label: `Disk ${i + 1} (${vm.spec?.additionalDisks?.[i]?.sizeGib ?? '?'} GiB)`,
+      label: t('Disk {{index}} ({{size}} GiB)', {
+        index: i + 1,
+        size: vm.spec?.additionalDisks?.[i]?.sizeGib ?? '?',
+      }),
     })),
   ];
 
-  const selectedDiskLabel = diskOptions.find((o) => o.value === diskIndex)?.label ?? 'Boot disk';
+  const selectedDiskLabel = diskOptions.find((o) => o.value === diskIndex)?.label ?? t('Boot disk');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,21 +71,21 @@ export const CreateVolumeSnapshotModal = ({
       setDiskIndex(0);
       setDescription('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create snapshot');
+      setError(err instanceof Error ? err.message : t('Failed to create snapshot'));
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label="Take snapshot">
-      <ModalHeader title="Take snapshot" />
+    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label={t('Take snapshot')}>
+      <ModalHeader title={t('Take snapshot')} />
       <ModalBody>
         {error && (
-          <Alert variant="danger" isInline title="Error" style={{ marginBottom: '1rem' }}>
+          <Alert variant="danger" isInline title={t('Error')} style={{ marginBottom: '1rem' }}>
             {error}
           </Alert>
         )}
         <Form onSubmit={handleSubmit} id="create-snapshot-form">
-          <FormGroup label="Snapshot name" isRequired fieldId="snapshot-name">
+          <FormGroup label={t('Snapshot name')} isRequired fieldId="snapshot-name">
             <TextInput
               id="snapshot-name"
               value={name}
@@ -86,7 +94,7 @@ export const CreateVolumeSnapshotModal = ({
               placeholder="my-snapshot"
             />
           </FormGroup>
-          <FormGroup label="Source disk" fieldId="snapshot-disk">
+          <FormGroup label={t('Source disk')} fieldId="snapshot-disk">
             <Select
               id="snapshot-disk"
               isOpen={diskSelectOpen}
@@ -114,12 +122,12 @@ export const CreateVolumeSnapshotModal = ({
               ))}
             </Select>
           </FormGroup>
-          <FormGroup label="Description" fieldId="snapshot-desc">
+          <FormGroup label={t('Description')} fieldId="snapshot-desc">
             <TextInput
               id="snapshot-desc"
               value={description}
               onChange={(_e, v) => setDescription(v)}
-              placeholder="Optional description"
+              placeholder={t('Optional description')}
             />
           </FormGroup>
         </Form>
@@ -133,10 +141,10 @@ export const CreateVolumeSnapshotModal = ({
             isLoading={isPending}
             isDisabled={isPending || !name.trim()}
           >
-            Take snapshot
+            {t('Take snapshot')}
           </Button>
           <Button variant="link" onClick={onClose} isDisabled={isPending}>
-            Cancel
+            {t('Cancel')}
           </Button>
         </ActionGroup>
       </ModalFooter>

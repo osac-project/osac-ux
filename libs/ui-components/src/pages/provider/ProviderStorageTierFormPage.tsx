@@ -31,6 +31,7 @@ import {
   usePatchStorageTier,
   useStorageTiers,
 } from '../../api/v1/storage-tier';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 type Protocol = 'nfs' | 'rbd' | 's3';
@@ -42,13 +43,16 @@ const QOS_OPTIONS: QosClass[] = ['fast', 'standard', 'archival'];
 const BACK = '/provider/storage-tiers';
 
 export const ProviderStorageTierFormPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
 
   const { data: tiers = [], isLoading: loadingTiers } = useStorageTiers();
   const { data: backends = [] } = useStorageBackends();
-  const existing: StorageTier | undefined = isEdit ? tiers.find((t) => t.id === id) : undefined;
+  const existing: StorageTier | undefined = isEdit
+    ? tiers.find((tier) => tier.id === id)
+    : undefined;
 
   const create = useCreateStorageTier();
   const patch = usePatchStorageTier();
@@ -137,7 +141,7 @@ export const ProviderStorageTierFormPage = () => {
   if (isEdit && (loadingTiers || !hydrated)) {
     return (
       <PageSection hasBodyWrapper={false}>
-        <Spinner aria-label="Loading storage tier" />
+        <Spinner aria-label={t('Loading storage tier')} />
       </PageSection>
     );
   }
@@ -145,7 +149,7 @@ export const ProviderStorageTierFormPage = () => {
   if (isEdit && !existing) {
     return (
       <PageSection hasBodyWrapper={false}>
-        <Alert variant="danger" isInline title={`Storage tier "${id}" not found`} />
+        <Alert variant="danger" isInline title={t('Storage tier "{{id}}" not found', { id })} />
       </PageSection>
     );
   }
@@ -159,15 +163,15 @@ export const ProviderStorageTierFormPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate(BACK)}>
-                Storage Tiers
+                {t('Storage Tiers')}
               </Button>
             </BreadcrumbItem>
             <BreadcrumbItem isActive>
-              {isEdit ? `Edit — ${tierName}` : 'Create storage tier'}
+              {isEdit ? t('Edit — {{tierName}}', { tierName }) : t('Create storage tier')}
             </BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            {isEdit ? 'Edit storage tier' : 'Create storage tier'}
+            {isEdit ? t('Edit storage tier') : t('Create storage tier')}
           </Title>
         </Stack>
       </PageSection>
@@ -175,7 +179,7 @@ export const ProviderStorageTierFormPage = () => {
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '560px' }} id="st-form">
           {!isEdit && (
-            <FormGroup label="Name (identifier)" fieldId="st-name" isRequired>
+            <FormGroup label={t('Name (identifier)')} fieldId="st-name" isRequired>
               <TextInput
                 id="st-name"
                 value={name}
@@ -187,7 +191,7 @@ export const ProviderStorageTierFormPage = () => {
             </FormGroup>
           )}
 
-          <FormGroup label="Display name" fieldId="st-display-name" isRequired>
+          <FormGroup label={t('Display name')} fieldId="st-display-name" isRequired>
             <TextInput
               id="st-display-name"
               value={displayName}
@@ -198,7 +202,7 @@ export const ProviderStorageTierFormPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Protocol" fieldId="st-protocol" isRequired>
+          <FormGroup label={t('Protocol')} fieldId="st-protocol" isRequired>
             <Select
               isOpen={protocolOpen}
               onOpenChange={setProtocolOpen}
@@ -213,7 +217,7 @@ export const ProviderStorageTierFormPage = () => {
                   onClick={() => setProtocolOpen(!protocolOpen)}
                   isExpanded={protocolOpen}
                 >
-                  {protocol ? protocol.toUpperCase() : 'Select protocol'}
+                  {protocol ? protocol.toUpperCase() : t('Select protocol')}
                 </MenuToggle>
               )}
             >
@@ -227,7 +231,7 @@ export const ProviderStorageTierFormPage = () => {
             </Select>
           </FormGroup>
 
-          <FormGroup label="QoS class" fieldId="st-qos" isRequired>
+          <FormGroup label={t('QoS class')} fieldId="st-qos" isRequired>
             <Select
               isOpen={qosOpen}
               onOpenChange={setQosOpen}
@@ -240,7 +244,7 @@ export const ProviderStorageTierFormPage = () => {
                 <MenuToggle ref={ref} onClick={() => setQosOpen(!qosOpen)} isExpanded={qosOpen}>
                   {qosClass
                     ? qosClass.charAt(0).toUpperCase() + qosClass.slice(1)
-                    : 'Select QoS class'}
+                    : t('Select QoS class')}
                 </MenuToggle>
               )}
             >
@@ -254,7 +258,7 @@ export const ProviderStorageTierFormPage = () => {
             </Select>
           </FormGroup>
 
-          <FormGroup label="Storage class name (k8s)" fieldId="st-sc" isRequired>
+          <FormGroup label={t('Storage class name (k8s)')} fieldId="st-sc" isRequired>
             <TextInput
               id="st-sc"
               value={storageClassName}
@@ -264,7 +268,7 @@ export const ProviderStorageTierFormPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Storage backend" fieldId="st-backend">
+          <FormGroup label={t('Storage backend')} fieldId="st-backend">
             <Select
               isOpen={backendOpen}
               onOpenChange={setBackendOpen}
@@ -282,12 +286,12 @@ export const ProviderStorageTierFormPage = () => {
                   {storageBackend
                     ? (backends.find((b) => b.id === storageBackend)?.metadata?.name ??
                       storageBackend)
-                    : 'Select backend (optional)'}
+                    : t('Select backend (optional)')}
                 </MenuToggle>
               )}
             >
               <SelectList>
-                <SelectOption value="">— none —</SelectOption>
+                <SelectOption value="">{t('— none —')}</SelectOption>
                 {backends.map((b) => (
                   <SelectOption key={b.id} value={b.id}>
                     {b.metadata?.name ?? b.id} ({b.spec.provider.toUpperCase()})
@@ -297,7 +301,7 @@ export const ProviderStorageTierFormPage = () => {
             </Select>
           </FormGroup>
 
-          <FormGroup label="Price / GiB / month (USD)" fieldId="st-price">
+          <FormGroup label={t('Price / GiB / month (USD)')} fieldId="st-price">
             <TextInput
               id="st-price"
               value={pricePerGibMonth}
@@ -309,7 +313,9 @@ export const ProviderStorageTierFormPage = () => {
           {mutationError && (
             <Alert
               variant="danger"
-              title={isEdit ? 'Failed to update storage tier' : 'Failed to create storage tier'}
+              title={
+                isEdit ? t('Failed to update storage tier') : t('Failed to create storage tier')
+              }
               isInline
             >
               {getErrorMessage(mutationError)}
@@ -324,10 +330,10 @@ export const ProviderStorageTierFormPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !isValid}
             >
-              {isEdit ? 'Save changes' : 'Create'}
+              {isEdit ? t('Save changes') : t('Create')}
             </Button>
             <Button variant="link" onClick={() => navigate(BACK)} isDisabled={isPending}>
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

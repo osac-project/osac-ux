@@ -31,6 +31,7 @@ import {
   type MeteringUsageSummary,
   fetchMeteringUsage,
 } from '../../api/metering/usage';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const formatUptime = (seconds: number): string => {
   if (seconds < 60) {
@@ -63,6 +64,7 @@ interface UsageSummaryCardProps {
 }
 
 export const UsageSummaryCard = ({ tenantId, period = 'current_month' }: UsageSummaryCardProps) => {
+  const { t } = useTranslation();
   const [usage, setUsage] = React.useState<MeteringUsageSummary | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -72,33 +74,35 @@ export const UsageSummaryCard = ({ tenantId, period = 'current_month' }: UsageSu
     setError(null);
     fetchMeteringUsage({ demo: true, tenantId, period })
       .then(setUsage)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load usage'))
+      .catch((e) => setError(e instanceof Error ? e.message : t('Failed to load usage')))
       .finally(() => setIsLoading(false));
-  }, [tenantId, period]);
+  }, [tenantId, period, t]);
 
   return (
     <Card>
       <CardTitle>
         <Stack>
           <StackItem>
-            Estimated Usage — {period === 'current_month' ? 'Current Month' : 'Last Month'}
+            {period === 'current_month'
+              ? t('Estimated Usage — Current Month')
+              : t('Estimated Usage — Last Month')}
           </StackItem>
           <StackItem>
             <Label isCompact color="yellow" variant="outline">
-              Estimated — billing not yet active (Milestone 0.3)
+              {t('Estimated — billing not yet active (Milestone 0.3)')}
             </Label>
           </StackItem>
         </Stack>
       </CardTitle>
       <CardBody>
-        {isLoading && <Skeleton width="200px" screenreaderText="Loading usage summary" />}
+        {isLoading && <Skeleton width="200px" screenreaderText={t('Loading usage summary')} />}
         {error && <span style={{ color: 'var(--pf-t--color--red--40)' }}>{error}</span>}
         {usage && (
           <Stack hasGutter>
             <StackItem>
               <DescriptionList isHorizontal isCompact>
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Total estimated cost</DescriptionListTerm>
+                  <DescriptionListTerm>{t('Total estimated cost')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     <strong>
                       ${usage.totalEstimatedCost.toFixed(4)} {usage.currency}
@@ -106,7 +110,7 @@ export const UsageSummaryCard = ({ tenantId, period = 'current_month' }: UsageSu
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Active resources</DescriptionListTerm>
+                  <DescriptionListTerm>{t('Active resources')}</DescriptionListTerm>
                   <DescriptionListDescription>{usage.resources.length}</DescriptionListDescription>
                 </DescriptionListGroup>
               </DescriptionList>
@@ -114,42 +118,44 @@ export const UsageSummaryCard = ({ tenantId, period = 'current_month' }: UsageSu
 
             {usage.resources.length > 0 && (
               <StackItem>
-                <Table aria-label="Usage breakdown" variant="compact">
+                <Table aria-label={t('Usage breakdown')} variant="compact">
                   <Thead>
                     <Tr>
-                      <Th>Resource</Th>
-                      <Th>Type</Th>
-                      <Th>Class / Model</Th>
-                      <Th>Uptime / Tokens</Th>
-                      <Th>Rate</Th>
-                      <Th>Est. cost</Th>
+                      <Th>{t('Resource')}</Th>
+                      <Th>{t('Type')}</Th>
+                      <Th>{t('Class / Model')}</Th>
+                      <Th>{t('Uptime / Tokens')}</Th>
+                      <Th>{t('Rate')}</Th>
+                      <Th>{t('Est. cost')}</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
                     {usage.resources.map((r) => (
                       <Tr key={r.resourceId}>
-                        <Td dataLabel="Resource">
+                        <Td dataLabel={t('Resource')}>
                           <strong>{r.resourceName}</strong>
                         </Td>
-                        <Td dataLabel="Type">
+                        <Td dataLabel={t('Type')}>
                           <Label isCompact color={isMaaSEntry(r) ? 'teal' : 'blue'}>
-                            {RESOURCE_TYPE_LABELS[r.resourceType] ?? r.resourceType}
+                            {RESOURCE_TYPE_LABELS[r.resourceType]
+                              ? t(RESOURCE_TYPE_LABELS[r.resourceType])
+                              : r.resourceType}
                           </Label>
                         </Td>
-                        <Td dataLabel="Class / Model">
+                        <Td dataLabel={t('Class / Model')}>
                           {isMaaSEntry(r) ? r.modelName : r.resourceClass}
                         </Td>
-                        <Td dataLabel="Uptime / Tokens">
+                        <Td dataLabel={t('Uptime / Tokens')}>
                           {isMaaSEntry(r)
                             ? `${(r.inputTokens + r.outputTokens).toLocaleString()} tokens`
                             : formatUptime(r.uptimeSeconds)}
                         </Td>
-                        <Td dataLabel="Rate">
+                        <Td dataLabel={t('Rate')}>
                           {isMaaSEntry(r)
                             ? `$${(r.pricePerInputToken * 1_000_000).toFixed(2)}/1M in`
                             : `$${r.pricePerHour.toFixed(2)}/hr`}
                         </Td>
-                        <Td dataLabel="Est. cost">
+                        <Td dataLabel={t('Est. cost')}>
                           <strong>${r.estimatedCost.toFixed(4)}</strong>
                         </Td>
                       </Tr>
@@ -161,8 +167,9 @@ export const UsageSummaryCard = ({ tenantId, period = 'current_month' }: UsageSu
 
             <StackItem>
               <span style={{ fontSize: '0.8em', color: 'var(--pf-t--global--color--200)' }}>
-                Metering source: instance-type-seconds (VMs) · host-type-seconds (clusters/BM) ·
-                BMaaS / storage / networking metering deferred. Cost = uptime × ($/hr ÷ 3600).
+                {t(
+                  'Metering source: instance-type-seconds (VMs) · host-type-seconds (clusters/BM) · BMaaS / storage / networking metering deferred. Cost = uptime × ($/hr ÷ 3600).',
+                )}
               </span>
             </StackItem>
           </Stack>

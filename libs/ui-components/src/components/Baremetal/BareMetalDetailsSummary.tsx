@@ -7,6 +7,7 @@ import type { BareMetalInstance, BareMetalInstanceCatalogItem } from '@osac/type
 import { BareMetalInstanceState } from '@osac/types';
 
 import { BareMetalStatusLabel } from './BareMetalStatusLabel';
+import { useTranslation } from '../../hooks/useTranslation';
 import { ResourceKpiHeader } from '../Resource/Header';
 
 interface BareMetalDetailsSummaryProps {
@@ -18,6 +19,7 @@ export const BareMetalDetailsSummary = ({
   instance,
   catalogItem,
 }: BareMetalDetailsSummaryProps) => {
+  const { t } = useTranslation();
   const state = instance.status?.state ?? BareMetalInstanceState.UNSPECIFIED;
 
   const rawPrice = catalogItem?.metadata?.labels?.['price_per_hour'];
@@ -29,25 +31,25 @@ export const BareMetalDetailsSummary = ({
 
   return (
     <ResourceKpiHeader
-      ariaLabel="Bare metal instance summary"
+      ariaLabel={t('Bare metal instance summary')}
       items={[
         {
-          title: 'Status',
+          title: t('Status'),
           icon: ServerIcon,
           value: <BareMetalStatusLabel state={state} />,
         },
         {
-          title: 'Catalog item',
+          title: t('Catalog item'),
           icon: TagIcon,
           value: catalogItem?.title ?? instance.spec?.catalogItem ?? '—',
         },
         {
-          title: 'Price',
+          title: t('Price'),
           icon: DollarSignIcon,
           value: priceValue,
         },
         {
-          title: 'Created',
+          title: t('Created'),
           icon: CalendarAltIcon,
           value: createdAt,
         },

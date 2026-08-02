@@ -8,6 +8,7 @@ import {
 } from '@patternfly/react-core';
 
 import type { ClusterWizardValues } from './fields';
+import { useTranslation } from '../../../../hooks/useTranslation';
 import OsacForm from '../../../Form/OsacForm';
 
 interface Props {
@@ -17,12 +18,17 @@ interface Props {
 }
 
 export const ClusterGeneralStep = ({ values, onChange, showValidationErrors }: Props) => {
+  const { t } = useTranslation();
   const nameEmpty = showValidationErrors && values.name.trim().length === 0;
   const pullSecretEmpty = showValidationErrors && values.pullSecret.trim().length === 0;
 
   return (
     <OsacForm>
-      <FormGroup label="Cluster name" isRequired fieldId="cluster-name">
+      <FormGroup
+        label={t('catalogProvision.cluster.fields.name')}
+        isRequired
+        fieldId="cluster-name"
+      >
         <TextInput
           id="cluster-name"
           value={values.name}
@@ -36,14 +42,18 @@ export const ClusterGeneralStep = ({ values, onChange, showValidationErrors }: P
           <HelperText id="cluster-name-helper">
             <HelperTextItem variant={nameEmpty ? 'error' : 'default'}>
               {nameEmpty
-                ? 'Cluster name is required.'
-                : 'Lowercase letters, numbers, and hyphens. Must start with a letter.'}
+                ? t('catalogProvision.cluster.validation.nameRequired')
+                : t('catalogProvision.cluster.fields.nameHelper')}
             </HelperTextItem>
           </HelperText>
         </FormHelperText>
       </FormGroup>
 
-      <FormGroup label="Pull secret" isRequired fieldId="cluster-pull-secret">
+      <FormGroup
+        label={t('catalogProvision.cluster.fields.pullSecret')}
+        isRequired
+        fieldId="cluster-pull-secret"
+      >
         <TextArea
           id="cluster-pull-secret"
           value={values.pullSecret}
@@ -58,16 +68,16 @@ export const ClusterGeneralStep = ({ values, onChange, showValidationErrors }: P
           <HelperText id="cluster-pull-secret-helper">
             <HelperTextItem variant={pullSecretEmpty ? 'error' : 'default'}>
               {pullSecretEmpty ? (
-                'Pull secret is required.'
+                t('catalogProvision.cluster.validation.pullSecretRequired')
               ) : (
                 <>
-                  Required for OCP image pulls. Obtain from{' '}
+                  {t('catalogProvision.cluster.fields.pullSecretHelper')}{' '}
                   <a
                     href="https://console.redhat.com/openshift/downloads"
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Red Hat console
+                    {t('catalogProvision.cluster.fields.pullSecretHelperLink')}
                   </a>
                   .
                 </>
@@ -77,7 +87,7 @@ export const ClusterGeneralStep = ({ values, onChange, showValidationErrors }: P
         </FormHelperText>
       </FormGroup>
 
-      <FormGroup label="SSH public key" fieldId="cluster-ssh-key">
+      <FormGroup label={t('catalogProvision.cluster.fields.sshKey')} fieldId="cluster-ssh-key">
         <TextArea
           id="cluster-ssh-key"
           value={values.sshPublicKey}
@@ -89,9 +99,7 @@ export const ClusterGeneralStep = ({ values, onChange, showValidationErrors }: P
         />
         <FormHelperText>
           <HelperText id="cluster-ssh-key-helper">
-            <HelperTextItem>
-              Optional. Public key installed on worker nodes for SSH access.
-            </HelperTextItem>
+            <HelperTextItem>{t('catalogProvision.cluster.fields.sshKeyHelper')}</HelperTextItem>
           </HelperText>
         </FormHelperText>
       </FormGroup>

@@ -37,21 +37,6 @@ const invalidateTemplatesQueries = async (qc: ReturnType<typeof useApiQueryClien
   await qc.invalidateQueries({ queryKey: apiQueryKey('v1/compute_instance_templates', null) });
 };
 
-export const useCreateComputeInstanceTemplate = () => {
-  const apiFetch = useApiFetch();
-  const qc = useApiQueryClient();
-  return useMutation({
-    mutationFn: (body: Omit<ComputeInstanceTemplate, 'id'>) =>
-      apiFetch<ComputeInstanceTemplate>('v1/compute_instance_templates', {
-        method: 'POST',
-        body,
-        decode: ComputeInstanceTemplateSchema,
-      }),
-    onSuccess: () => invalidateTemplatesQueries(qc),
-    retry: false,
-  });
-};
-
 export const usePatchComputeInstanceTemplate = () => {
   const apiFetch = useApiFetch();
   const qc = useApiQueryClient();
@@ -63,17 +48,6 @@ export const usePatchComputeInstanceTemplate = () => {
         body: patch,
         decode: ComputeInstanceTemplateSchema,
       }),
-    onSuccess: () => invalidateTemplatesQueries(qc),
-    retry: false,
-  });
-};
-
-export const useDeleteComputeInstanceTemplate = () => {
-  const apiFetch = useApiFetch();
-  const qc = useApiQueryClient();
-  return useMutation({
-    mutationFn: (id: string) =>
-      apiFetch<void>('v1/compute_instance_templates', { pathParams: [id], method: 'DELETE' }),
     onSuccess: () => invalidateTemplatesQueries(qc),
     retry: false,
   });

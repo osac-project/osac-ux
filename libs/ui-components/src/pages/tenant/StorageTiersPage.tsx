@@ -25,6 +25,7 @@ import type { StorageTier } from '../../api/v1/storage-tier';
 import { useStorageTiers } from '../../api/v1/storage-tier';
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const PROTOCOL_COLORS: Record<string, 'blue' | 'purple' | 'cyan'> = {
   nfs: 'blue',
@@ -51,6 +52,7 @@ function tierPrice(tier: StorageTier): string | undefined {
 }
 
 const StorageTierCard = ({ tier }: { tier: StorageTier }) => {
+  const { t } = useTranslation();
   const name = tier.spec.displayName ?? tier.metadata?.name ?? tier.id;
   const description = tier.metadata?.description;
   const price = tierPrice(tier);
@@ -66,12 +68,17 @@ const StorageTierCard = ({ tier }: { tier: StorageTier }) => {
           </FlexItem>
           <FlexItem>
             <Label color={tier.status.available ? 'green' : 'red'} isCompact>
-              {tier.status.available ? 'Available' : 'Unavailable'}
+              {tier.status.available ? t('Available') : t('Unavailable')}
             </Label>
           </FlexItem>
           {price && (
             <FlexItem>
-              <Label variant="filled" color="teal" isCompact aria-label="Price per GiB per month">
+              <Label
+                variant="filled"
+                color="teal"
+                isCompact
+                aria-label={t('Price per GiB per month')}
+              >
                 {price}
               </Label>
             </FlexItem>
@@ -114,16 +121,17 @@ const StorageTierCard = ({ tier }: { tier: StorageTier }) => {
 };
 
 export const StorageTiersPage = () => {
+  const { t } = useTranslation();
   const { data: tiers = [], isLoading, error } = useStorageTiers();
 
   return (
     <ListPage
-      title="Storage Tiers"
-      description="Available storage tiers you can use when creating volumes."
+      title={t('Storage Tiers')}
+      description={t('Available storage tiers you can use when creating volumes.')}
     >
       <ListPageBody isLoading={isLoading} error={error}>
         {tiers.length === 0 ? (
-          <Alert variant="info" isInline title="No storage tiers available" />
+          <Alert variant="info" isInline title={t('No storage tiers available')} />
         ) : (
           <Gallery
             hasGutter

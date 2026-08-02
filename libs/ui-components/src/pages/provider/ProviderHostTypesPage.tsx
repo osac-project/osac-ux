@@ -27,6 +27,12 @@ import { ActionsColumn, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/reac
 import type { HostType } from '@osac/types';
 
 import {
+  RESIDENCY_COLOR,
+  RESIDENCY_TAGS,
+  type ResidencyTag,
+  resourceResidency,
+} from '../../api/v1/compliance';
+import {
   hostTypePricePerHour,
   isGpuHostType,
   useDeleteHostType,
@@ -37,8 +43,10 @@ import { EditPriceModal } from '../../components/catalog/EditPriceModal';
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
 import { DeleteConfirmModal } from '../../components/shared/DeleteConfirmModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export const ProviderHostTypesPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: hostTypes = [], isLoading, error } = useHostTypes();
   const deleteHT = useDeleteHostType();
@@ -50,15 +58,21 @@ export const ProviderHostTypesPage = () => {
   const [search, setSearch] = useState('');
   const [gpuFilter, setGpuFilter] = useState<string[]>([]);
   const [gpuOpen, setGpuOpen] = useState(false);
+  const [residencyFilter, setResidencyFilter] = useState<ResidencyTag[]>([]);
+  const [residencyOpen, setResidencyOpen] = useState(false);
 
   const toggleGpu = (v: string) =>
     setGpuFilter((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
 
+  const toggleResidency = (v: ResidencyTag) =>
+    setResidencyFilter((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
+
   const clearAll = () => {
     setSearch('');
     setGpuFilter([]);
+    setResidencyFilter([]);
   };
-  const hasFilters = search !== '' || gpuFilter.length > 0;
+  const hasFilters = search !== '' || gpuFilter.length > 0 || residencyFilter.length > 0;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -79,23 +93,28 @@ export const ProviderHostTypesPage = () => {
           return false;
         }
       }
+      if (residencyFilter.length > 0 && !residencyFilter.includes(resourceResidency(ht))) {
+        return false;
+      }
       return true;
     });
-  }, [hostTypes, search, gpuFilter]);
+  }, [hostTypes, search, gpuFilter, residencyFilter]);
 
   return (
     <>
       <ListPage
-        title="Host Types"
-        description="Host types define hardware profiles used by cluster node sets and bare metal instances. Attach a price_per_hour label to enable metering-based cost estimates."
+        title={t('Host Types')}
+        description={t(
+          'Host types define hardware profiles used by cluster node sets and bare metal instances. Attach a price_per_hour label to enable metering-based cost estimates.',
+        )}
       >
         <ListPageBody isLoading={isLoading} error={error}>
           <Toolbar clearAllFilters={clearAll}>
             <ToolbarContent>
               <ToolbarItem>
                 <SearchInput
-                  aria-label="Search host types"
-                  placeholder="Search by name or title"
+                  aria-label={t('Search host types')}
+                  placeholder={t('Search by name or title')}
                   value={search}
                   onChange={(_e, v) => setSearch(v)}
                   onClear={() => setSearch('')}
@@ -108,7 +127,7 @@ export const ProviderHostTypesPage = () => {
                     toggleGpu(typeof v === 'string' ? v : (v as { key: string }).key)
                   }
                   deleteLabelGroup={() => setGpuFilter([])}
-                  categoryName="Type"
+                  categoryName={t('Type')}
                 >
                   <Select
                     isOpen={gpuOpen}
@@ -121,7 +140,7 @@ export const ProviderHostTypesPage = () => {
                         isExpanded={gpuOpen}
                         badge={gpuFilter.length || undefined}
                       >
-                        Type
+                        {t('Type')}
                       </MenuToggle>
                     )}
                   >
@@ -139,10 +158,51 @@ export const ProviderHostTypesPage = () => {
                     </SelectList>
                   </Select>
                 </ToolbarFilter>
+                <ToolbarFilter
+                  labels={residencyFilter}
+                  deleteLabel={(_g, v) =>
+                    toggleResidency(
+                      typeof v === 'string'
+                        ? (v as ResidencyTag)
+                        : (v as { key: ResidencyTag }).key,
+                    )
+                  }
+                  deleteLabelGroup={() => setResidencyFilter([])}
+                  categoryName={t('Residency')}
+                >
+                  <Select
+                    isOpen={residencyOpen}
+                    onOpenChange={setResidencyOpen}
+                    onSelect={(_e, v) => toggleResidency(v as ResidencyTag)}
+                    toggle={(ref) => (
+                      <MenuToggle
+                        ref={ref}
+                        onClick={() => setResidencyOpen(!residencyOpen)}
+                        isExpanded={residencyOpen}
+                        badge={residencyFilter.length || undefined}
+                      >
+                        {t('Residency')}
+                      </MenuToggle>
+                    )}
+                  >
+                    <SelectList>
+                      {RESIDENCY_TAGS.map((v) => (
+                        <SelectOption
+                          key={v}
+                          value={v}
+                          hasCheckbox
+                          isSelected={residencyFilter.includes(v)}
+                        >
+                          {v}
+                        </SelectOption>
+                      ))}
+                    </SelectList>
+                  </Select>
+                </ToolbarFilter>
               </ToolbarGroup>
               <ToolbarItem align={{ default: 'alignEnd' }}>
                 <Button variant="primary" onClick={() => navigate('/provider/host-types/new')}>
-                  Create host type
+                  {t('Create host type')}
                 </Button>
               </ToolbarItem>
             </ToolbarContent>
@@ -153,38 +213,39 @@ export const ProviderHostTypesPage = () => {
               alignItems={{ default: 'alignItemsCenter' }}
               style={{ gap: '0.5rem', padding: '1rem 0' }}
             >
-              <FlexItem>No host types match the current filters.</FlexItem>
+              <FlexItem>{t('No host types match the current filters.')}</FlexItem>
               <FlexItem>
                 <Button variant="link" isInline onClick={clearAll}>
-                  Clear filters
+                  {t('Clear filters')}
                 </Button>
               </FlexItem>
             </Flex>
           ) : hostTypes.length === 0 ? (
-            <Alert variant="info" isInline title="No host types defined" />
+            <Alert variant="info" isInline title={t('No host types defined')} />
           ) : (
-            <Table aria-label="Host types" variant="compact">
+            <Table aria-label={t('Host types')} variant="compact">
               <Thead>
                 <Tr>
-                  <Th>Name</Th>
-                  <Th>Title</Th>
-                  <Th>Tags</Th>
-                  <Th>Price / hr</Th>
-                  <Th aria-label="Actions" />
+                  <Th>{t('Name')}</Th>
+                  <Th>{t('Title')}</Th>
+                  <Th>{t('Tags')}</Th>
+                  <Th>{t('Residency')}</Th>
+                  <Th>{t('Price / hr')}</Th>
+                  <Th aria-label={t('Actions')} />
                 </Tr>
               </Thead>
               <Tbody>
                 {filtered.map((ht) => (
                   <Tr key={ht.id}>
-                    <Td dataLabel="Name">
+                    <Td dataLabel={t('Name')}>
                       <strong>{ht.metadata?.name ?? ht.id}</strong>
                     </Td>
-                    <Td dataLabel="Title">{ht.title || '—'}</Td>
-                    <Td dataLabel="Tags">
+                    <Td dataLabel={t('Title')}>{ht.title || '—'}</Td>
+                    <Td dataLabel={t('Tags')}>
                       <LabelGroup>
                         {isGpuHostType(ht) && (
                           <Label isCompact color="orange">
-                            GPU
+                            {t('GPU')}
                           </Label>
                         )}
                         {ht.metadata?.labels?.['gpu_model'] && (
@@ -194,16 +255,25 @@ export const ProviderHostTypesPage = () => {
                         )}
                       </LabelGroup>
                     </Td>
-                    <Td dataLabel="Price / hr">
+                    <Td dataLabel={t('Residency')}>
+                      <Label isCompact color={RESIDENCY_COLOR[resourceResidency(ht)]}>
+                        {resourceResidency(ht)}
+                      </Label>
+                    </Td>
+                    <Td dataLabel={t('Price / hr')}>
                       {hostTypePricePerHour(ht) !== null
                         ? `$${hostTypePricePerHour(ht)?.toFixed(2)}/hr`
                         : '—'}
                     </Td>
-                    <Td dataLabel="Actions" isActionCell>
+                    <Td dataLabel={t('Actions')} isActionCell>
                       <ActionsColumn
                         items={[
-                          { title: 'Edit price', onClick: () => setEditPriceTarget(ht) },
-                          { title: 'Delete', onClick: () => setPendingDelete(ht), isDanger: true },
+                          { title: t('Edit price'), onClick: () => setEditPriceTarget(ht) },
+                          {
+                            title: t('Delete'),
+                            onClick: () => setPendingDelete(ht),
+                            isDanger: true,
+                          },
                         ]}
                       />
                     </Td>
@@ -238,7 +308,7 @@ export const ProviderHostTypesPage = () => {
       {pendingDelete && (
         <DeleteConfirmModal
           resourceName={pendingDelete.title || pendingDelete.metadata?.name || pendingDelete.id}
-          resourceKind="host type"
+          resourceKind={t('host type')}
           onClose={() => setPendingDelete(null)}
           onConfirm={async () => {
             await deleteHT.mutateAsync(pendingDelete.id);

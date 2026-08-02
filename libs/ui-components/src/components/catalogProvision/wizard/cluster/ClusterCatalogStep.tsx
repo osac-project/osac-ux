@@ -17,6 +17,7 @@ import {
 import type { ClusterCatalogItem } from '@osac/types';
 
 import { useClusterCatalogItems } from '../../../../api/v1/cluster-catalog-item';
+import { useTranslation } from '../../../../hooks/useTranslation';
 import CatalogItemCard from '../../../catalog/CatalogItemCard';
 import { filterCatalogItemsBySearch } from '../../../catalog/catalogItemDisplay';
 import { clusterCatalogItemToProvisionItem } from '../../catalogProvisionItem';
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export const ClusterCatalogStep = ({ selectedCatalogItemId, onSelect }: Props) => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
 
   const {
@@ -52,11 +54,11 @@ export const ClusterCatalogStep = ({ selectedCatalogItemId, onSelect }: Props) =
         >
           <FlexItem flex={{ default: 'flex_1' }}>
             <SearchInput
-              placeholder="Search catalog items…"
+              placeholder={t('catalogProvision.catalog.searchPlaceholder')}
               value={search}
               onChange={(_event, value) => setSearch(value)}
               onClear={() => setSearch('')}
-              aria-label="Search cluster catalog items"
+              aria-label={t('catalogProvision.cluster.catalog.searchAria')}
             />
           </FlexItem>
         </Flex>
@@ -65,8 +67,8 @@ export const ClusterCatalogStep = ({ selectedCatalogItemId, onSelect }: Props) =
       <StackItem>
         <Content component="p">
           {catalogLoading
-            ? 'Loading catalog items…'
-            : `${filtered.length} cluster catalog item${filtered.length !== 1 ? 's' : ''}`}
+            ? t('catalogProvision.catalog.loading')
+            : t('catalogProvision.cluster.catalog.count', { count: filtered.length })}
         </Content>
       </StackItem>
 
@@ -74,13 +76,13 @@ export const ClusterCatalogStep = ({ selectedCatalogItemId, onSelect }: Props) =
         <StackItem>
           <Stack hasGutter>
             <StackItem>
-              <Alert variant="danger" title="Failed to load catalog items">
-                Check your network connection and try again.
+              <Alert variant="danger" title={t('catalogProvision.catalog.loadError')}>
+                {t('catalogProvision.catalog.loadErrorDetail')}
               </Alert>
             </StackItem>
             <StackItem>
               <Button variant="primary" onClick={() => void refetch()}>
-                Retry
+                {t('catalogProvision.actions.retry')}
               </Button>
             </StackItem>
           </Stack>
@@ -92,19 +94,19 @@ export const ClusterCatalogStep = ({ selectedCatalogItemId, onSelect }: Props) =
           hasGutter
           minWidths={{ default: '200px' }}
           role="radiogroup"
-          aria-label="Select a cluster catalog item"
+          aria-label={t('catalogProvision.cluster.catalog.selectAria')}
         >
           {catalogLoading && (
             <GalleryItem>
               <Bullseye>
-                <Spinner aria-label="Loading catalog items" />
+                <Spinner aria-label={t('catalogProvision.catalog.loading')} />
               </Bullseye>
             </GalleryItem>
           )}
 
           {!catalogLoading && !catalogError && filtered.length === 0 && (
             <GalleryItem>
-              <Content component="p">No catalog items found.</Content>
+              <Content component="p">{t('catalogProvision.cluster.catalog.empty')}</Content>
             </GalleryItem>
           )}
 

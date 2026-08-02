@@ -21,53 +21,64 @@ import {
   TabTitleText,
   Tabs,
   Title,
+  Tooltip,
 } from '@patternfly/react-core';
 import { ActionsColumn, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 
+import { tenantJurisdiction } from '../../api/v1/compliance';
 import { useIdentityProviders } from '../../api/v1/identity-provider';
 import { useDeleteTenant, useTenants } from '../../api/v1/tenant';
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const ORGS_TAB = 0;
 const IDP_TAB = 1;
+
+const JURISDICTION_COLOR = { EU: 'blue', US: 'purple', Unrestricted: 'grey' } as const;
 
 // ---------------------------------------------------------------------------
 // Identity Providers info tab
 // ---------------------------------------------------------------------------
 
 const IdpInfoTab = ({ onNavigate }: { onNavigate: () => void }) => {
+  const { t } = useTranslation();
   const { data: idps = [], isLoading } = useIdentityProviders();
   const { data: tenants = [] } = useTenants();
 
-  const tenantNameById = new Map(tenants.map((t) => [t.id, t.metadata?.name ?? t.id]));
+  const tenantNameById = new Map(tenants.map((tn) => [tn.id, tn.metadata?.name ?? tn.id]));
 
   return (
     <PageSection>
       <Title headingLevel="h3" size="md" style={{ marginBottom: '1rem' }}>
-        Configured Identity Providers
+        {t('Configured Identity Providers')}
       </Title>
       <Content component="p" style={{ marginBottom: '1rem' }}>
-        Identity providers (IdPs) are used for tenant user authentication. Each tenant can be linked
-        to an IdP for SSO login routing.
+        {t(
+          'Identity providers (IdPs) are used for tenant user authentication. Each tenant can be linked to an IdP for SSO login routing.',
+        )}
       </Content>
       {isLoading ? null : idps.length === 0 ? (
-        <Alert variant="info" isInline title="No identity providers configured">
-          Configure IdPs in the{' '}
+        <Alert variant="info" isInline title={t('No identity providers configured')}>
+          {t('Configure IdPs in the')}{' '}
           <Button variant="link" isInline onClick={onNavigate}>
-            Identity Providers
+            {t('Identity Providers')}
           </Button>{' '}
-          management page.
+          {t('management page.')}
         </Alert>
       ) : (
         <>
-          <Table aria-label="Identity providers" variant="compact" style={{ marginBottom: '1rem' }}>
+          <Table
+            aria-label={t('Identity providers')}
+            variant="compact"
+            style={{ marginBottom: '1rem' }}
+          >
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Type</Th>
-                <Th>Tenant</Th>
-                <Th>Enabled</Th>
+                <Th>{t('Name')}</Th>
+                <Th>{t('Type')}</Th>
+                <Th>{t('Tenant')}</Th>
+                <Th>{t('Enabled')}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -76,26 +87,26 @@ const IdpInfoTab = ({ onNavigate }: { onNavigate: () => void }) => {
                 const tenantName = tenantId ? tenantNameById.get(tenantId) : undefined;
                 return (
                   <Tr key={idp.id}>
-                    <Td dataLabel="Name">{idp.spec?.title ?? idp.metadata?.name ?? idp.id}</Td>
-                    <Td dataLabel="Type">
+                    <Td dataLabel={t('Name')}>{idp.spec?.title ?? idp.metadata?.name ?? idp.id}</Td>
+                    <Td dataLabel={t('Type')}>
                       <Label color="blue" isCompact>
                         {idp.spec?.config?.case?.toUpperCase() ?? '—'}
                       </Label>
                     </Td>
-                    <Td dataLabel="Tenant">
+                    <Td dataLabel={t('Tenant')}>
                       {tenantName ? (
                         <Label color="cyan" isCompact>
                           {tenantName}
                         </Label>
                       ) : (
                         <Label color="grey" isCompact variant="outline">
-                          Unassigned
+                          {t('Unassigned')}
                         </Label>
                       )}
                     </Td>
-                    <Td dataLabel="Enabled">
+                    <Td dataLabel={t('Enabled')}>
                       <Label color={idp.spec?.enabled ? 'green' : 'grey'} isCompact>
-                        {idp.spec?.enabled ? 'Enabled' : 'Disabled'}
+                        {idp.spec?.enabled ? t('Enabled') : t('Disabled')}
                       </Label>
                     </Td>
                   </Tr>
@@ -104,30 +115,30 @@ const IdpInfoTab = ({ onNavigate }: { onNavigate: () => void }) => {
             </Tbody>
           </Table>
           <Button variant="link" onClick={onNavigate}>
-            Manage identity providers →
+            {t('Manage identity providers →')}
           </Button>
         </>
       )}
 
       <div style={{ marginTop: '1.5rem' }}>
         <Title headingLevel="h4" size="sm" style={{ marginBottom: '0.5rem' }}>
-          Authentication architecture
+          {t('Authentication architecture')}
         </Title>
         <DescriptionList isHorizontal>
           <DescriptionListGroup>
-            <DescriptionListTerm>Token issuance</DescriptionListTerm>
+            <DescriptionListTerm>{t('Token issuance')}</DescriptionListTerm>
             <DescriptionListDescription>
-              Keycloak — one realm per tenant organization
+              {t('Keycloak — one realm per tenant organization')}
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
-            <DescriptionListTerm>Authorization</DescriptionListTerm>
+            <DescriptionListTerm>{t('Authorization')}</DescriptionListTerm>
             <DescriptionListDescription>
-              OPA Rego policies enforced via gRPC interceptors in the fulfillment service
+              {t('OPA Rego policies enforced via gRPC interceptors in the fulfillment service')}
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
-            <DescriptionListTerm>Supported IdP kinds</DescriptionListTerm>
+            <DescriptionListTerm>{t('Supported IdP kinds')}</DescriptionListTerm>
             <DescriptionListDescription>
               <LabelGroup>
                 {['OIDC', 'LDAP', 'SAML', 'AD'].map((k) => (
@@ -149,6 +160,7 @@ const IdpInfoTab = ({ onNavigate }: { onNavigate: () => void }) => {
 // ---------------------------------------------------------------------------
 
 const OrgsTab = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: tenants = [], isLoading, error } = useTenants();
   const { mutate: deleteTenant } = useDeleteTenant();
@@ -160,7 +172,7 @@ const OrgsTab = () => {
         <Alert
           variant="warning"
           isInline
-          title={`Delete tenant "${toDelete}"?`}
+          title={t('Delete tenant "{{id}}"?', { id: toDelete })}
           style={{ marginBottom: '1rem' }}
           actionLinks={
             <>
@@ -171,10 +183,10 @@ const OrgsTab = () => {
                   setToDelete(null);
                 }}
               >
-                Delete
+                {t('Delete')}
               </Button>
               <Button variant="link" onClick={() => setToDelete(null)}>
-                Cancel
+                {t('Cancel')}
               </Button>
             </>
           }
@@ -182,76 +194,91 @@ const OrgsTab = () => {
       )}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
         <Button variant="primary" size="sm" onClick={() => navigate('/provider/organizations/new')}>
-          Create tenant
+          {t('Create tenant')}
         </Button>
       </div>
       <ListPageBody isLoading={isLoading} error={error}>
         {tenants.length === 0 ? (
-          <Alert variant="info" isInline title="No tenants found">
-            No tenants are registered on this platform yet.
+          <Alert variant="info" isInline title={t('No tenants found')}>
+            {t('No tenants are registered on this platform yet.')}
           </Alert>
         ) : (
-          <Table aria-label="Tenant organizations" variant="compact">
+          <Table aria-label={t('Tenant organizations')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Domains</Th>
-                <Th>IP pools</Th>
-                <Th>Created</Th>
+                <Th>{t('Name')}</Th>
+                <Th>{t('Jurisdiction')}</Th>
+                <Th>{t('Domains')}</Th>
+                <Th>{t('IP pools')}</Th>
+                <Th>{t('Created')}</Th>
                 <Td />
               </Tr>
             </Thead>
             <Tbody>
-              {tenants.map((tenant) => (
-                <Tr key={tenant.id}>
-                  <Td dataLabel="Name">
-                    <strong>{tenant.metadata?.name ?? tenant.id}</strong>
-                  </Td>
-                  <Td dataLabel="Domains">
-                    {tenant.spec?.domains?.length ? (
-                      <LabelGroup>
-                        {tenant.spec.domains.map((d) => (
-                          <Label key={d} isCompact color="cyan">
-                            {d}
-                          </Label>
-                        ))}
-                      </LabelGroup>
-                    ) : (
-                      '—'
-                    )}
-                  </Td>
-                  <Td dataLabel="IP pools">
-                    <Label color="blue" isCompact variant="outline">
-                      Scoped via metadata.tenant
-                    </Label>
-                  </Td>
-                  <Td dataLabel="Created">
-                    {tenant.metadata?.creationTimestamp
-                      ? new Date(tenant.metadata.creationTimestamp).toLocaleDateString()
-                      : '—'}
-                  </Td>
-                  <Td isActionCell>
-                    <ActionsColumn
-                      items={[
-                        {
-                          title: 'Edit',
-                          onClick: (e) => {
-                            e.stopPropagation();
-                            navigate(`/provider/organizations/${tenant.id}/edit`);
+              {tenants.map((tenant) => {
+                const jurisdiction = tenantJurisdiction(tenant);
+                return (
+                  <Tr key={tenant.id}>
+                    <Td dataLabel={t('Name')}>
+                      <strong>{tenant.metadata?.name ?? tenant.id}</strong>
+                    </Td>
+                    <Td dataLabel={t('Jurisdiction')}>
+                      <Tooltip
+                        content={t(
+                          "Sovereignty/residency attribute on TenantSpec (REQ-CA-1). Determines which regions/domains this tenant's resources may be placed in.",
+                        )}
+                      >
+                        <Label isCompact color={JURISDICTION_COLOR[jurisdiction]}>
+                          {jurisdiction}
+                        </Label>
+                      </Tooltip>
+                    </Td>
+                    <Td dataLabel={t('Domains')}>
+                      {tenant.spec?.domains?.length ? (
+                        <LabelGroup>
+                          {tenant.spec.domains.map((d) => (
+                            <Label key={d} isCompact color="cyan">
+                              {d}
+                            </Label>
+                          ))}
+                        </LabelGroup>
+                      ) : (
+                        '—'
+                      )}
+                    </Td>
+                    <Td dataLabel={t('IP pools')}>
+                      <Label color="blue" isCompact variant="outline">
+                        {t('Scoped via metadata.tenant')}
+                      </Label>
+                    </Td>
+                    <Td dataLabel={t('Created')}>
+                      {tenant.metadata?.creationTimestamp
+                        ? new Date(tenant.metadata.creationTimestamp).toLocaleDateString()
+                        : '—'}
+                    </Td>
+                    <Td isActionCell>
+                      <ActionsColumn
+                        items={[
+                          {
+                            title: t('Edit'),
+                            onClick: (e) => {
+                              e.stopPropagation();
+                              navigate(`/provider/organizations/${tenant.id}/edit`);
+                            },
                           },
-                        },
-                        {
-                          title: 'Delete',
-                          onClick: (e) => {
-                            e.stopPropagation();
-                            setToDelete(tenant.id);
+                          {
+                            title: t('Delete'),
+                            onClick: (e) => {
+                              e.stopPropagation();
+                              setToDelete(tenant.id);
+                            },
                           },
-                        },
-                      ]}
-                    />
-                  </Td>
-                </Tr>
-              ))}
+                        ]}
+                      />
+                    </Td>
+                  </Tr>
+                );
+              })}
             </Tbody>
           </Table>
         )}
@@ -265,19 +292,23 @@ const OrgsTab = () => {
 // ---------------------------------------------------------------------------
 
 export const ProviderTenantOrgsPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(ORGS_TAB);
 
   return (
-    <ListPage title="Tenant organizations" description="All tenants registered on this platform.">
+    <ListPage
+      title={t('Tenant organizations')}
+      description={t('All tenants registered on this platform.')}
+    >
       <Tabs
         activeKey={activeTab}
         onSelect={(_e, k) => setActiveTab(k as number)}
-        aria-label="Organizations tabs"
+        aria-label={t('Organizations tabs')}
         style={{ marginBottom: '1rem' }}
       >
-        <Tab eventKey={ORGS_TAB} title={<TabTitleText>Organizations</TabTitleText>} />
-        <Tab eventKey={IDP_TAB} title={<TabTitleText>Identity Providers</TabTitleText>} />
+        <Tab eventKey={ORGS_TAB} title={<TabTitleText>{t('Organizations')}</TabTitleText>} />
+        <Tab eventKey={IDP_TAB} title={<TabTitleText>{t('Identity Providers')}</TabTitleText>} />
       </Tabs>
 
       <TabContent

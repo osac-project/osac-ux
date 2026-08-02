@@ -7,6 +7,7 @@ import type {
   ComputeInstanceCondition,
 } from '@osac/types';
 
+import { useTranslation } from '../../hooks/useTranslation';
 import {
   type ConditionResourceKind,
   displayValue,
@@ -28,31 +29,33 @@ export const ResourceConditionsTable = ({
   conditions,
   ariaLabel,
   conditionResourceKind,
-  emptyMessage = 'No conditions reported.',
+  emptyMessage,
 }: ResourceConditionsTableProps) => {
+  const { t } = useTranslation();
+
   if (conditions.length === 0) {
-    return <Content component="p">{emptyMessage}</Content>;
+    return <Content component="p">{emptyMessage ?? t('No conditions reported.')}</Content>;
   }
 
   return (
     <Table aria-label={ariaLabel} variant="compact">
       <Thead>
         <Tr>
-          <Th>Type</Th>
-          <Th>Status</Th>
-          <Th>Reason</Th>
-          <Th>Message</Th>
-          <Th>Last transition</Th>
+          <Th>{t('Type')}</Th>
+          <Th>{t('Status')}</Th>
+          <Th>{t('Reason')}</Th>
+          <Th>{t('Message')}</Th>
+          <Th>{t('Last transition')}</Th>
         </Tr>
       </Thead>
       <Tbody>
         {conditions.map((c, idx) => (
           <Tr key={`${c.type}-${idx}`}>
-            <Td dataLabel="Type">{humanizeConditionType(c.type, conditionResourceKind)}</Td>
-            <Td dataLabel="Status">{formatConditionStatusForDisplay(c.status)}</Td>
-            <Td dataLabel="Reason">{displayValue(c.reason)}</Td>
-            <Td dataLabel="Message">{displayValue(c.message)}</Td>
-            <Td dataLabel="Last transition">
+            <Td dataLabel={t('Type')}>{humanizeConditionType(c.type, conditionResourceKind)}</Td>
+            <Td dataLabel={t('Status')}>{formatConditionStatusForDisplay(c.status)}</Td>
+            <Td dataLabel={t('Reason')}>{displayValue(c.reason)}</Td>
+            <Td dataLabel={t('Message')}>{displayValue(c.message)}</Td>
+            <Td dataLabel={t('Last transition')}>
               <Timestamp value={c.lastTransitionTime} />
             </Td>
           </Tr>

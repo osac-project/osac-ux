@@ -16,6 +16,7 @@ import {
 } from '@patternfly/react-core';
 
 import { type LoadBalancerListener, useCreateLoadBalancer } from '../../api/v1/load-balancer';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 interface CreateLoadBalancerModalProps {
@@ -32,6 +33,7 @@ const defaultListener = (): LoadBalancerListener => ({
 });
 
 export const CreateLoadBalancerModal = ({ isOpen, onClose }: CreateLoadBalancerModalProps) => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [virtualNetwork, setVirtualNetwork] = useState('');
   const [subnet, setSubnet] = useState('');
@@ -67,19 +69,24 @@ export const CreateLoadBalancerModal = ({ isOpen, onClose }: CreateLoadBalancerM
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} variant="medium" aria-label="Create load balancer">
-      <ModalHeader title="Create load balancer" />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="medium"
+      aria-label={t('Create load balancer')}
+    >
+      <ModalHeader title={t('Create load balancer')} />
       <ModalBody>
         {error && (
-          <Alert variant="danger" isInline title="Error" style={{ marginBottom: '1rem' }}>
+          <Alert variant="danger" isInline title={t('Error')} style={{ marginBottom: '1rem' }}>
             {getErrorMessage(error)}
           </Alert>
         )}
         <Form onSubmit={handleSubmit} id="lb-create-form">
-          <FormGroup label="Name" isRequired fieldId="lb-name">
+          <FormGroup label={t('Name')} isRequired fieldId="lb-name">
             <TextInput id="lb-name" value={name} onChange={(_e, v) => setName(v)} isRequired />
           </FormGroup>
-          <FormGroup label="Virtual network" isRequired fieldId="lb-vnet">
+          <FormGroup label={t('Virtual network')} isRequired fieldId="lb-vnet">
             <TextInput
               id="lb-vnet"
               value={virtualNetwork}
@@ -88,7 +95,7 @@ export const CreateLoadBalancerModal = ({ isOpen, onClose }: CreateLoadBalancerM
               isRequired
             />
           </FormGroup>
-          <FormGroup label="Subnet" isRequired fieldId="lb-subnet">
+          <FormGroup label={t('Subnet')} isRequired fieldId="lb-subnet">
             <TextInput
               id="lb-subnet"
               value={subnet}
@@ -97,10 +104,10 @@ export const CreateLoadBalancerModal = ({ isOpen, onClose }: CreateLoadBalancerM
               isRequired
             />
           </FormGroup>
-          <FormGroup label="Description" fieldId="lb-desc">
+          <FormGroup label={t('Description')} fieldId="lb-desc">
             <TextInput id="lb-desc" value={description} onChange={(_e, v) => setDescription(v)} />
           </FormGroup>
-          <FormGroup label="Listeners" fieldId="lb-listeners">
+          <FormGroup label={t('Listeners')} fieldId="lb-listeners">
             {listeners.map((l, idx) => (
               <div
                 key={idx}
@@ -139,7 +146,7 @@ export const CreateLoadBalancerModal = ({ isOpen, onClose }: CreateLoadBalancerM
                   type="number"
                   value={l.port}
                   onChange={(_e, v) => updateListener(idx, 'port', parseInt(v, 10) || 0)}
-                  placeholder="Port"
+                  placeholder={t('Port')}
                   style={{ width: '100px' }}
                 />
                 <span>→</span>
@@ -147,7 +154,7 @@ export const CreateLoadBalancerModal = ({ isOpen, onClose }: CreateLoadBalancerM
                   type="number"
                   value={l.targetPort}
                   onChange={(_e, v) => updateListener(idx, 'targetPort', parseInt(v, 10) || 0)}
-                  placeholder="Target port"
+                  placeholder={t('Target port')}
                   style={{ width: '120px' }}
                 />
                 {listeners.length > 1 && (
@@ -164,7 +171,7 @@ export const CreateLoadBalancerModal = ({ isOpen, onClose }: CreateLoadBalancerM
               variant="link"
               onClick={() => setListeners((prev) => [...prev, defaultListener()])}
             >
-              + Add listener
+              {t('+ Add listener')}
             </Button>
           </FormGroup>
         </Form>
@@ -178,10 +185,10 @@ export const CreateLoadBalancerModal = ({ isOpen, onClose }: CreateLoadBalancerM
             isLoading={isPending}
             isDisabled={isPending || !isValid}
           >
-            Create
+            {t('Create')}
           </Button>
           <Button variant="link" onClick={onClose} isDisabled={isPending}>
-            Cancel
+            {t('Cancel')}
           </Button>
         </ActionGroup>
       </ModalFooter>

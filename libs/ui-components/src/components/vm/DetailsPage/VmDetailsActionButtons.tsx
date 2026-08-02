@@ -11,12 +11,14 @@ import { ComputeInstanceState } from '@osac/types';
 
 import { VmDeleteConfirmModal } from './VmDeleteConfirmModal';
 import { usePatchComputeInstance } from '../../../api/v1/compute-instance';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 interface VmDetailsActionButtonsProps {
   vm: ComputeInstance;
 }
 
 export const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const patchVm = usePatchComputeInstance();
@@ -53,7 +55,7 @@ export const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
             }
           }}
         >
-          Start
+          {t('Start')}
         </Button>
         <Button
           variant="secondary"
@@ -65,7 +67,7 @@ export const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
             }
           }}
         >
-          Stop
+          {t('Stop')}
         </Button>
         <Button
           variant="secondary"
@@ -77,7 +79,7 @@ export const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
             }
           }}
         >
-          Restart
+          {t('Restart')}
         </Button>
         <Button
           variant="danger"
@@ -89,7 +91,7 @@ export const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
             }
           }}
         >
-          Delete
+          {t('Delete')}
         </Button>
       </Flex>
     </>

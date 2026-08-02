@@ -23,9 +23,11 @@ import type { MenuToggleElement } from '@patternfly/react-core';
 
 import { useCreateVirtualNetwork, useNetworkClasses } from '../../api/v1/networking';
 import OsacForm from '../../components/Form/OsacForm';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 export const VirtualNetworkNewPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [name, setName] = React.useState('');
   const [networkClass, setNetworkClass] = React.useState('');
@@ -66,20 +68,20 @@ export const VirtualNetworkNewPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/networks')}>
-                Networks
+                {t('Networks')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Create virtual network</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Create virtual network')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Create virtual network
+            {t('Create virtual network')}
           </Title>
         </Stack>
       </PageSection>
 
       <PageSection hasBodyWrapper={false}>
         <OsacForm style={{ maxWidth: '480px' }} onSubmit={onSubmit} id="vnet-create-form">
-          <FormGroup label="Name" fieldId="vnet-name" isRequired>
+          <FormGroup label={t('Name')} fieldId="vnet-name" isRequired>
             <TextInput
               id="vnet-name"
               value={name}
@@ -89,7 +91,7 @@ export const VirtualNetworkNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Network class" fieldId="vnet-class" isRequired>
+          <FormGroup label={t('Network class')} fieldId="vnet-class" isRequired>
             <Select
               isOpen={classSelectOpen}
               selected={selectedClassId}
@@ -107,20 +109,20 @@ export const VirtualNetworkNewPage = () => {
                 >
                   {selectedClass
                     ? selectedClass.title || selectedClass.metadata?.name || selectedClass.id
-                    : 'Select network class'}
+                    : t('Select network class')}
                 </MenuToggle>
               )}
             >
               {networkClasses.map((nc) => (
                 <SelectOption key={nc.id} value={nc.id}>
                   {nc.title || nc.metadata?.name || nc.id}
-                  {nc.isDefault ? ' (default)' : ''}
+                  {nc.isDefault ? t(' (default)') : ''}
                 </SelectOption>
               ))}
             </Select>
           </FormGroup>
 
-          <FormGroup label="IPv4 CIDR (optional)" fieldId="vnet-cidr">
+          <FormGroup label={t('IPv4 CIDR (optional)')} fieldId="vnet-cidr">
             <TextInput
               id="vnet-cidr"
               value={ipv4Cidr}
@@ -130,7 +132,7 @@ export const VirtualNetworkNewPage = () => {
           </FormGroup>
 
           {createVNet.error && (
-            <Alert variant="danger" title="Failed to create virtual network" isInline>
+            <Alert variant="danger" title={t('Failed to create virtual network')} isInline>
               {getErrorMessage(createVNet.error)}
             </Alert>
           )}
@@ -143,10 +145,10 @@ export const VirtualNetworkNewPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !name.trim() || !selectedClassId}
             >
-              Create
+              {t('Create')}
             </Button>
             <Button variant="link" onClick={() => navigate('/networks')} isDisabled={isPending}>
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </OsacForm>

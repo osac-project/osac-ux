@@ -25,6 +25,7 @@ import {
 import type { MenuToggleElement } from '@patternfly/react-core';
 
 import { useCreateProject } from '../../api/v1/project';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 const ENV_OPTIONS = [
@@ -36,6 +37,7 @@ const ENV_OPTIONS = [
 type EnvOption = (typeof ENV_OPTIONS)[number]['value'];
 
 export const ProjectCreatePage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [env, setEnv] = useState<EnvOption>('development');
@@ -66,20 +68,20 @@ export const ProjectCreatePage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/projects')}>
-                Projects
+                {t('Projects')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>New project</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('New project')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            New project
+            {t('New project')}
           </Title>
         </Stack>
       </PageSection>
 
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '480px' }} id="project-create-form">
-          <FormGroup label="Name" fieldId="project-name" isRequired>
+          <FormGroup label={t('Name')} fieldId="project-name" isRequired>
             <TextInput
               id="project-name"
               value={name}
@@ -90,7 +92,7 @@ export const ProjectCreatePage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Environment type" fieldId="project-env" isRequired>
+          <FormGroup label={t('Environment type')} fieldId="project-env" isRequired>
             <Select
               isOpen={envSelectOpen}
               selected={env}
@@ -118,19 +120,19 @@ export const ProjectCreatePage = () => {
             </Select>
           </FormGroup>
 
-          <FormGroup label="Description" fieldId="project-desc">
+          <FormGroup label={t('Description')} fieldId="project-desc">
             <TextArea
               id="project-desc"
               value={description}
               onChange={(_e, v) => setDescription(v)}
-              placeholder="Describe the purpose of this project"
+              placeholder={t('Describe the purpose of this project')}
               rows={3}
               resizeOrientation="vertical"
             />
           </FormGroup>
 
           {error && (
-            <Alert variant="danger" isInline title="Failed to create project">
+            <Alert variant="danger" isInline title={t('Failed to create project')}>
               {getErrorMessage(error)}
             </Alert>
           )}
@@ -142,10 +144,10 @@ export const ProjectCreatePage = () => {
               isLoading={isPending}
               isDisabled={isPending || !name.trim()}
             >
-              Create project
+              {t('Create project')}
             </Button>
             <Button variant="link" onClick={() => navigate('/projects')} isDisabled={isPending}>
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

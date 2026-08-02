@@ -20,6 +20,10 @@ interface EditPriceModalProps {
   onClose: () => void;
   onSave: (price: string) => Promise<void>;
   error?: unknown;
+  /** Field label — defaults to hourly USD pricing. */
+  label?: string;
+  /** Placeholder shown in the input — defaults to "0.00". */
+  placeholder?: string;
 }
 
 export function EditPriceModal({
@@ -28,6 +32,8 @@ export function EditPriceModal({
   onClose,
   onSave,
   error,
+  label,
+  placeholder,
 }: EditPriceModalProps) {
   const { t } = useTranslation();
   const [price, setPrice] = useState(currentPrice);
@@ -61,7 +67,7 @@ export function EditPriceModal({
           </Alert>
         )}
         <Form>
-          <FormGroup label={t('Price per hour (USD)')} isRequired fieldId="price-per-hour">
+          <FormGroup label={label ?? t('Price per hour (USD)')} isRequired fieldId="price-per-hour">
             <TextInput
               id="price-per-hour"
               type="number"
@@ -69,8 +75,8 @@ export function EditPriceModal({
               step="0.01"
               value={price}
               onChange={(_e, val) => setPrice(val)}
-              placeholder="0.00"
-              aria-label={t('Price per hour')}
+              placeholder={placeholder ?? '0.00'}
+              aria-label={label ?? t('Price per hour')}
             />
           </FormGroup>
         </Form>

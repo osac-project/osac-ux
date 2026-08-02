@@ -20,6 +20,7 @@ import { useClusters } from '../../api/v1/cluster';
 import { ClustersTable } from '../../components/Cluster/ClustersTable';
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
@@ -31,6 +32,7 @@ const STATUS_FILTERS = [
 type ClusterStatusFilter = (typeof STATUS_FILTERS)[number]['value'];
 
 export const ClustersPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ClusterStatusFilter>('all');
@@ -53,11 +55,11 @@ export const ClustersPage = () => {
 
   return (
     <ListPage
-      title="Clusters"
-      description="OpenShift clusters provisioned for your organization."
+      title={t('Clusters')}
+      description={t('OpenShift clusters provisioned for your organization.')}
       actions={
         <Button variant="primary" onClick={() => navigate('/clusters/create')}>
-          Create cluster
+          {t('Create cluster')}
         </Button>
       }
     >
@@ -70,18 +72,18 @@ export const ClustersPage = () => {
         >
           <FlexItem>
             <SearchInput
-              placeholder="Search clusters by name…"
+              placeholder={t('Search clusters by name…')}
               value={search}
               onChange={(_e, v) => setSearch(v)}
               onClear={() => setSearch('')}
             />
           </FlexItem>
           <FlexItem>
-            <ToggleGroup aria-label="Filter clusters by status">
+            <ToggleGroup aria-label={t('Filter clusters by status')}>
               {STATUS_FILTERS.map((option) => (
                 <ToggleGroupItem
                   key={option.value}
-                  text={option.label}
+                  text={t(option.label)}
                   buttonId={`cluster-filter-status-${option.value}`}
                   isSelected={statusFilter === option.value}
                   onChange={() => setStatusFilter(option.value)}
@@ -92,16 +94,16 @@ export const ClustersPage = () => {
         </Flex>
 
         {filteredClusters.length === 0 ? (
-          <Alert variant="info" isInline title="No clusters found">
+          <Alert variant="info" isInline title={t('No clusters found')}>
             {search || statusFilter !== 'all' ? (
-              'No clusters match your filters.'
+              t('No clusters match your filters.')
             ) : (
               <>
-                No clusters are provisioned for your organization yet.{' '}
+                {t('No clusters are provisioned for your organization yet.')}{' '}
                 <Button variant="link" isInline onClick={() => navigate('/catalog')}>
-                  Browse catalog
+                  {t('Browse catalog')}
                 </Button>{' '}
-                to create one.
+                {t('to create one.')}
               </>
             )}
           </Alert>

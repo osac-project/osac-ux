@@ -1,6 +1,7 @@
 import React from 'react';
 import { Alert } from '@patternfly/react-core';
 
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 interface State {
@@ -8,6 +9,16 @@ interface State {
   error: Error;
   info: React.ErrorInfo;
 }
+
+const ErrorFallback = ({ error }: { error: Error }) => {
+  const { t } = useTranslation();
+  return (
+    <Alert variant="danger" title={t('Unexpected error occurred')} isInline>
+      {t('Please reload the page and try again')}
+      <details>{getErrorMessage(error)}</details>
+    </Alert>
+  );
+};
 
 class ErrorBoundary extends React.Component<React.PropsWithChildren, State> {
   state = {
@@ -31,14 +42,7 @@ class ErrorBoundary extends React.Component<React.PropsWithChildren, State> {
       return null;
     }
 
-    return hasError ? (
-      <Alert variant="danger" title="Unexpected error occurred" isInline>
-        Please reload the page and try again
-        <details>{getErrorMessage(error)}</details>
-      </Alert>
-    ) : (
-      children
-    );
+    return hasError ? <ErrorFallback error={error} /> : children;
   }
 }
 

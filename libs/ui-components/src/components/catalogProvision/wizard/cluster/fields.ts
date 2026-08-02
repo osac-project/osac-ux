@@ -1,3 +1,10 @@
+import {
+  type CatalogFieldDefinition,
+  fieldDefinitionDefaultToInputString,
+  resolvedFieldDefault,
+  templateParameterPathFromName,
+} from '../../catalogFieldDefinition';
+
 export interface ClusterWizardValues {
   catalogItemId: string;
   name: string;
@@ -8,6 +15,9 @@ export interface ClusterWizardValues {
   serviceCidr: string;
   /** Keyed by ClusterTemplateParameterDefinition.name, values are always strings (coerced on submit). */
   templateParameters: Record<string, string>;
+  /** New custom.* fields a Tenant Admin authored — keyed by catalog field_definitions `path`.
+   * Genuine template-declared parameters keep using `templateParameters` above. */
+  customParameters: Record<string, string>;
 }
 
 export const createEmptyClusterValues = (initialCatalogItemId = ''): ClusterWizardValues => ({
@@ -19,10 +29,31 @@ export const createEmptyClusterValues = (initialCatalogItemId = ''): ClusterWiza
   podCidr: '',
   serviceCidr: '',
   templateParameters: {},
+  customParameters: {},
 });
 
 export const DEFAULT_POD_CIDR = '10.128.0.0/14';
 export const DEFAULT_SERVICE_CIDR = '172.30.0.0/16';
+
+/**
+ * Seeds one templateParameters slot per template-declared parameter, using the catalog
+ * item's org-default field_definitions (`template_parameters.<name>`) when the Tenant
+ * Admin set one, else an empty string. Existing (already-typed) values win.
+ */
+export const seedClusterTemplateParameterDefaults = (
+  templateParameterNames: string[],
+  definitions: CatalogFieldDefinition[],
+  existing: Record<string, string>,
+): Record<string, string> => ({
+  ...Object.fromEntries(
+    templateParameterNames.map((name) => {
+      const def = definitions.find((d) => d.path === templateParameterPathFromName(name));
+      const resolved = def ? resolvedFieldDefault(def) : undefined;
+      return [name, resolved !== undefined ? fieldDefinitionDefaultToInputString(resolved) : ''];
+    }),
+  ),
+  ...existing,
+});
 
 /** Returns true when the name field is non-empty and valid. */
 export const isClusterNameValid = (name: string): boolean =>

@@ -21,9 +21,11 @@ import {
   useVirtualNetworks,
   virtualNetworkFilterForSubnetList,
 } from '../../../../api/v1/networking';
+import { readBillableComponents } from '../../../../api/v1/template-billing';
 import { useTranslation } from '../../../../hooks/useTranslation';
 import { catalogItemPrice } from '../../../catalog/catalogItemDisplay';
 import type { CatalogItemForDisplay } from '../../../catalog/catalogItemDisplay';
+import { PriceBreakdown } from '../../../catalog/PriceBreakdown';
 import type { ComputeInstanceWizardValues } from '../adapters/computeInstance/fields';
 import type { CatalogProvisionAdapter } from '../adapters/types';
 
@@ -61,9 +63,22 @@ export const ReviewStep = ({ adapter, catalogItem, values }: Props) => {
   const itemHourly = rawItemPrice ? parseFloat(rawItemPrice.replace(/[^0-9.]/g, '')) : 0;
   const itHourly = selectedInstanceType ? (instanceTypePricePerHour(selectedInstanceType) ?? 0) : 0;
   const hourly = itemHourly + itHourly;
-  const monthly = hourly * 730;
   const yearly = hourly * 8760;
   const showCost = hourly > 0;
+
+  // Itemized breakdown: the template's declared BillableComponents (e.g. base
+  // VM-hours) plus the selected instance type's rate as a distinct meter.
+  const templateComponents = catalogItem
+    ? readBillableComponents(
+        catalogItem as unknown as { metadata?: { annotations?: Record<string, string> } },
+      )
+    : [];
+  const breakdownComponents = [
+    ...templateComponents,
+    ...(itHourly > 0
+      ? [{ meterKey: 'instance-type', unit: 'hour', baseRate: itHourly.toFixed(4) }]
+      : []),
+  ];
 
   const sections = catalogItem
     ? adapter.getReviewSections(values, catalogItem, {
@@ -78,34 +93,37 @@ export const ReviewStep = ({ adapter, catalogItem, values }: Props) => {
 
   return (
     <>
-      {showCost && (
-        <Alert
-          variant="info"
-          isInline
-          title={t('Estimated cost (continuous 24/7 usage)')}
-          style={{ marginBottom: '1rem' }}
-        >
-          <Flex gap={{ default: 'gapMd' }} flexWrap={{ default: 'wrap' }}>
-            <FlexItem>
-              <Content component="small">{t('Hourly')}</Content>
-              <Label variant="filled" color="blue" isCompact style={{ marginLeft: '0.4rem' }}>
-                ${hourly.toFixed(2)}/hr
-              </Label>
-            </FlexItem>
-            <FlexItem>
-              <Content component="small">{t('Monthly')}</Content>
-              <Label variant="filled" color="blue" isCompact style={{ marginLeft: '0.4rem' }}>
-                ${monthly.toFixed(0)}/mo
-              </Label>
-            </FlexItem>
-            <FlexItem>
-              <Content component="small">{t('Yearly')}</Content>
-              <Label variant="filled" color="blue" isCompact style={{ marginLeft: '0.4rem' }}>
-                ${yearly.toFixed(0)}/yr
-              </Label>
-            </FlexItem>
-          </Flex>
-        </Alert>
+      {breakdownComponents.length > 0 ? (
+        <div style={{ marginBottom: '1rem' }}>
+          <PriceBreakdown
+            components={breakdownComponents}
+            title={t('Estimated cost (continuous 24/7 usage)')}
+          />
+        </div>
+      ) : (
+        showCost && (
+          <Alert
+            variant="info"
+            isInline
+            title={t('Estimated cost (continuous 24/7 usage)')}
+            style={{ marginBottom: '1rem' }}
+          >
+            <Flex gap={{ default: 'gapMd' }} flexWrap={{ default: 'wrap' }}>
+              <FlexItem>
+                <Content component="small">{t('Hourly')}</Content>
+                <Label variant="filled" color="blue" isCompact style={{ marginLeft: '0.4rem' }}>
+                  ${hourly.toFixed(2)}/hr
+                </Label>
+              </FlexItem>
+              <FlexItem>
+                <Content component="small">{t('Yearly')}</Content>
+                <Label variant="filled" color="blue" isCompact style={{ marginLeft: '0.4rem' }}>
+                  ${yearly.toFixed(0)}/yr
+                </Label>
+              </FlexItem>
+            </Flex>
+          </Alert>
+        )
       )}
       <DescriptionList isHorizontal isCompact>
         <DescriptionListGroup>

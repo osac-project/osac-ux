@@ -24,9 +24,11 @@ import {
 } from '@patternfly/react-core';
 
 import { useCreateTenant } from '../../api/v1/tenant';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 export const ProviderTenantNewPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
@@ -74,13 +76,13 @@ export const ProviderTenantNewPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/provider/organizations')}>
-                Organizations
+                {t('Organizations')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Create tenant</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Create tenant')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Create tenant
+            {t('Create tenant')}
           </Title>
         </Stack>
       </PageSection>
@@ -88,12 +90,12 @@ export const ProviderTenantNewPage = () => {
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '480px' }} id="create-tenant-form">
           {error && (
-            <Alert variant="danger" isInline title="Error">
+            <Alert variant="danger" isInline title={t('Error')}>
               {getErrorMessage(error)}
             </Alert>
           )}
 
-          <FormGroup label="Internal name" isRequired fieldId="tenant-name">
+          <FormGroup label={t('Internal name')} isRequired fieldId="tenant-name">
             <TextInput
               id="tenant-name"
               value={name}
@@ -104,12 +106,14 @@ export const ProviderTenantNewPage = () => {
             />
             <FormHelperText>
               <HelperText>
-                <HelperTextItem>DNS label (lowercase letters, digits, hyphens)</HelperTextItem>
+                <HelperTextItem>
+                  {t('DNS label (lowercase letters, digits, hyphens)')}
+                </HelperTextItem>
               </HelperText>
             </FormHelperText>
           </FormGroup>
 
-          <FormGroup label="Email domains" fieldId="tenant-domains">
+          <FormGroup label={t('Email domains')} fieldId="tenant-domains">
             {domains.length > 0 && (
               <LabelGroup style={{ marginBottom: '0.5rem' }}>
                 {domains.map((d) => (
@@ -129,12 +133,12 @@ export const ProviderTenantNewPage = () => {
               onChange={(_e, v) => setDomainInput(v)}
               onKeyDown={handleDomainKeyDown}
               onBlur={addDomain}
-              placeholder="example.com (press Enter to add)"
+              placeholder={t('example.com (press Enter to add)')}
             />
             <FormHelperText>
               <HelperText>
                 <HelperTextItem>
-                  Used for IdP login routing. Press Enter or comma to add each domain.
+                  {t('Used for IdP login routing. Press Enter or comma to add each domain.')}
                 </HelperTextItem>
               </HelperText>
             </FormHelperText>
@@ -148,14 +152,14 @@ export const ProviderTenantNewPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !isValid}
             >
-              Create
+              {t('Create')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate('/provider/organizations')}
               isDisabled={isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

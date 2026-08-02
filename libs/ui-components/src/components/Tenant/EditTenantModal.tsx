@@ -19,6 +19,7 @@ import {
 
 import type { Tenant } from '../../api/v1/tenant';
 import { usePatchTenant } from '../../api/v1/tenant';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 interface EditTenantModalProps {
@@ -28,6 +29,7 @@ interface EditTenantModalProps {
 }
 
 export const EditTenantModal = ({ tenant, isOpen, onClose }: EditTenantModalProps) => {
+  const { t } = useTranslation();
   const [domainInput, setDomainInput] = useState('');
   const [domains, setDomains] = useState<string[]>(tenant.spec?.domains ?? []);
 
@@ -60,16 +62,16 @@ export const EditTenantModal = ({ tenant, isOpen, onClose }: EditTenantModalProp
   const tenantName = tenant.metadata?.name ?? tenant.id;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label="Edit tenant">
-      <ModalHeader title={`Edit "${tenantName}"`} />
+    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label={t('Edit tenant')}>
+      <ModalHeader title={t('Edit "{{tenantName}}"', { tenantName })} />
       <ModalBody>
         {error && (
-          <Alert variant="danger" isInline title="Error" style={{ marginBottom: '1rem' }}>
+          <Alert variant="danger" isInline title={t('Error')} style={{ marginBottom: '1rem' }}>
             {getErrorMessage(error)}
           </Alert>
         )}
         <Form onSubmit={handleSubmit} id="edit-tenant-form">
-          <FormGroup label="Email domains" fieldId="edit-tenant-domains">
+          <FormGroup label={t('Email domains')} fieldId="edit-tenant-domains">
             {domains.length > 0 && (
               <LabelGroup style={{ marginBottom: '0.5rem' }}>
                 {domains.map((d) => (
@@ -89,12 +91,12 @@ export const EditTenantModal = ({ tenant, isOpen, onClose }: EditTenantModalProp
               onChange={(_e, v) => setDomainInput(v)}
               onKeyDown={handleDomainKeyDown}
               onBlur={addDomain}
-              placeholder="example.com (press Enter to add)"
+              placeholder={t('example.com (press Enter to add)')}
             />
             <FormHelperText>
               <HelperText>
                 <HelperTextItem>
-                  Used for IdP login routing. Press Enter or comma to add each domain.
+                  {t('Used for IdP login routing. Press Enter or comma to add each domain.')}
                 </HelperTextItem>
               </HelperText>
             </FormHelperText>
@@ -110,10 +112,10 @@ export const EditTenantModal = ({ tenant, isOpen, onClose }: EditTenantModalProp
             isLoading={isPending}
             isDisabled={isPending}
           >
-            Save
+            {t('Save')}
           </Button>
           <Button variant="link" onClick={onClose} isDisabled={isPending}>
-            Cancel
+            {t('Cancel')}
           </Button>
         </ActionGroup>
       </ModalFooter>

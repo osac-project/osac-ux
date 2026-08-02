@@ -1,9 +1,16 @@
 /**
  * flow: provider-admin
- * route: /provider/templates/vm/new
  * route: /provider/templates/vm/:id/edit
+ *
+ * VM template spec (title, description, image) is defined externally in
+ * osac-app / the AAP controller — this page shows it read-only. The default
+ * instance type is an exception: it's just a reference to a resource the
+ * Provider Admin already owns/prices (see /provider/instance-types), so it's
+ * editable here. The other editable surface is the Billing tab: published
+ * state, BillableComponents (pricing), and the per-tenant allow-list (sharing).
  */
-import React, { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ActionGroup,
@@ -11,108 +18,99 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   Button,
+  Content,
+  DescriptionList,
+  DescriptionListDescription,
+  DescriptionListGroup,
+  DescriptionListTerm,
   Form,
   FormGroup,
-  MenuToggle,
+  FormSelect,
+  FormSelectOption,
   PageSection,
-  Select,
-  SelectList,
-  SelectOption,
   Spinner,
   Stack,
-  TextArea,
-  TextInput,
+  Tab,
+  TabTitleText,
+  Tabs,
   Title,
 } from '@patternfly/react-core';
 
+import type { BillableComponent } from '../../api/v1/billing-types';
 import {
   useComputeInstanceTemplate,
-  useCreateComputeInstanceTemplate,
   usePatchComputeInstanceTemplate,
 } from '../../api/v1/compute-instance-templates';
-import { useInstanceTypes } from '../../api/v1/instance-types';
+import { formatInstanceTypeOptionLabel, useInstanceTypes } from '../../api/v1/instance-types';
+import {
+  buildTemplateMetadataPatch,
+  isTemplatePublished,
+  readAllowedTenants,
+  readBillableComponents,
+} from '../../api/v1/template-billing';
+import { TemplateBillingFieldsEditor } from '../../components/catalog/TemplateBillingFieldsEditor';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 const BACK = '/provider/templates?tab=vm';
 
 export const ProviderVmTemplateFormPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const isEdit = Boolean(id);
 
   const { data: existing, isLoading: loadingExisting } = useComputeInstanceTemplate(id ?? '');
   const { data: instanceTypes = [] } = useInstanceTypes();
 
-  const [name, setName] = useState('');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [instanceTypeId, setInstanceTypeId] = useState('');
-  const [imageRef, setImageRef] = useState('');
-  const [selectOpen, setSelectOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
-  const [hydrated, setHydrated] = useState(!isEdit);
+  const [hydrated, setHydrated] = useState(false);
+  const [activeTab, setActiveTab] = useState<'details' | 'billing'>('details');
+  const [published, setPublished] = useState(true);
+  const [billableComponents, setBillableComponents] = useState<BillableComponent[]>([]);
+  const [allowedTenants, setAllowedTenants] = useState<string[]>([]);
+  const [instanceTypeId, setInstanceTypeId] = useState('');
 
   useEffect(() => {
-    if (isEdit && existing && !hydrated) {
-      setName(existing.metadata?.name ?? '');
-      setTitle(existing.title ?? '');
-      setDescription(existing.description ?? '');
+    if (existing && !hydrated) {
+      setPublished(isTemplatePublished(existing));
+      setBillableComponents(readBillableComponents(existing));
+      setAllowedTenants(readAllowedTenants(existing));
       setInstanceTypeId(existing.specDefaults?.instanceType ?? '');
-      setImageRef(existing.specDefaults?.image?.sourceRef ?? '');
       setHydrated(true);
     }
-  }, [isEdit, existing, hydrated]);
+  }, [existing, hydrated]);
 
-  const create = useCreateComputeInstanceTemplate();
   const patch = usePatchComputeInstanceTemplate();
 
-  const mutationError = isEdit ? patch.error : create.error;
-  const selectedIt = instanceTypes.find((it) => it.id === instanceTypeId);
-  const isValid = isEdit ? Boolean(title.trim()) : Boolean(name.trim() && title.trim());
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!isValid) {
+    if (!existing) {
       return;
     }
     setIsPending(true);
-    create.reset();
     patch.reset();
     try {
-      if (isEdit && existing) {
-        await patch.mutateAsync({
-          id: existing.id,
-          patch: {
-            title: title.trim(),
-            description: description.trim(),
-            specDefaults: {
-              instanceType: instanceTypeId || undefined,
-              image: imageRef.trim() ? { sourceRef: imageRef.trim() } : undefined,
-            },
-          } as Parameters<typeof patch.mutateAsync>[0]['patch'],
-        });
-      } else {
-        await create.mutateAsync({
-          metadata: { name: name.trim() },
-          title: title.trim(),
-          description: description.trim(),
-          specDefaults: {
-            instanceType: instanceTypeId || undefined,
-            image: imageRef.trim() ? { sourceRef: imageRef.trim() } : undefined,
-          },
-          parameters: [],
-        } as never);
-      }
+      await patch.mutateAsync({
+        id: existing.id,
+        patch: {
+          metadata: buildTemplateMetadataPatch(existing, {
+            published,
+            billableComponents,
+            allowedTenants,
+          }),
+          specDefaults: { ...existing.specDefaults, instanceType: instanceTypeId },
+        } as never,
+      });
       navigate(BACK);
     } finally {
       setIsPending(false);
     }
   };
 
-  if (isEdit && loadingExisting) {
+  if (loadingExisting) {
     return (
       <PageSection hasBodyWrapper={false}>
-        <Spinner aria-label="Loading VM template" />
+        <Spinner aria-label={t('Loading VM template')} />
       </PageSection>
     );
   }
@@ -124,102 +122,107 @@ export const ProviderVmTemplateFormPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/provider/templates')}>
-                Templates
+                {t('Templates')}
               </Button>
             </BreadcrumbItem>
             <BreadcrumbItem isActive>
-              {isEdit
-                ? `Edit VM template — ${existing?.metadata?.name ?? id}`
-                : 'Create VM template'}
+              {t('View & publish — {{name}}', { name: existing?.metadata?.name ?? id })}
             </BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            {isEdit ? 'Edit VM template' : 'Create VM template'}
+            {t('View & publish VM template')}
           </Title>
         </Stack>
       </PageSection>
 
+      <PageSection hasBodyWrapper={false} style={{ paddingBottom: 0 }}>
+        <Tabs activeKey={activeTab} onSelect={(_e, k) => setActiveTab(k as 'details' | 'billing')}>
+          <Tab eventKey="details" title={<TabTitleText>{t('Details')}</TabTitleText>} />
+          <Tab eventKey="billing" title={<TabTitleText>{t('Billing')}</TabTitleText>} />
+        </Tabs>
+      </PageSection>
+
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '560px' }} id="vmt-form">
-          {!isEdit && (
-            <FormGroup label="Identifier (name)" fieldId="vmt-name" isRequired>
-              <TextInput
-                id="vmt-name"
-                value={name}
-                onChange={(_e, v) => setName(v)}
-                placeholder="rhel9-standard"
-                isRequired
-                autoFocus
-              />
-            </FormGroup>
+          {activeTab === 'billing' && (
+            <TemplateBillingFieldsEditor
+              published={published}
+              onPublishedChange={setPublished}
+              components={billableComponents}
+              onComponentsChange={setBillableComponents}
+              allowedTenants={allowedTenants}
+              onAllowedTenantsChange={setAllowedTenants}
+            />
           )}
 
-          <FormGroup label="Title" fieldId="vmt-title" isRequired>
-            <TextInput
-              id="vmt-title"
-              value={title}
-              onChange={(_e, v) => setTitle(v)}
-              placeholder="RHEL 9 Standard"
-              isRequired
-              autoFocus={isEdit}
-            />
-          </FormGroup>
-
-          <FormGroup label="Description" fieldId="vmt-description">
-            <TextArea
-              id="vmt-description"
-              value={description}
-              onChange={(_e, v) => setDescription(v)}
-              rows={3}
-            />
-          </FormGroup>
-
-          <FormGroup label="Default instance type" fieldId="vmt-instance-type">
-            <Select
-              isOpen={selectOpen}
-              onOpenChange={setSelectOpen}
-              selected={instanceTypeId}
-              onSelect={(_e, v) => {
-                setInstanceTypeId(v as string);
-                setSelectOpen(false);
-              }}
-              toggle={(ref) => (
-                <MenuToggle
-                  ref={ref}
-                  onClick={() => setSelectOpen(!selectOpen)}
-                  isExpanded={selectOpen}
+          {activeTab === 'details' && (
+            <>
+              <Content component="small" style={{ color: 'var(--pf-t--global--color--200)' }}>
+                {t('Defined in osac-app / AAP controller — read-only.')}
+              </Content>
+              <DescriptionList style={{ marginTop: '1rem' }}>
+                <DescriptionListGroup>
+                  <DescriptionListTerm>{t('Title')}</DescriptionListTerm>
+                  <DescriptionListDescription>{existing?.title || '—'}</DescriptionListDescription>
+                </DescriptionListGroup>
+                <DescriptionListGroup>
+                  <DescriptionListTerm>{t('Description')}</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    {existing?.description || '—'}
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
+              </DescriptionList>
+              <FormGroup
+                label={t('Default instance type')}
+                fieldId="vmt-instance-type"
+                style={{ marginTop: '1rem' }}
+              >
+                <FormSelect
+                  id="vmt-instance-type"
+                  value={instanceTypeId}
+                  onChange={(_e, v) => setInstanceTypeId(v)}
                 >
-                  {selectedIt?.metadata?.name ?? 'Select instance type'}
-                </MenuToggle>
-              )}
-            >
-              <SelectList>
-                <SelectOption value="">None</SelectOption>
-                {instanceTypes.map((it) => (
-                  <SelectOption key={it.id} value={it.id}>
-                    {it.metadata?.name ?? it.id}
-                  </SelectOption>
-                ))}
-              </SelectList>
-            </Select>
-          </FormGroup>
+                  <FormSelectOption value="" label={t('— None —')} />
+                  {instanceTypes.map((it) => (
+                    <FormSelectOption
+                      key={it.id}
+                      value={it.id}
+                      label={formatInstanceTypeOptionLabel(it)}
+                    />
+                  ))}
+                  {instanceTypeId && !instanceTypes.some((it) => it.id === instanceTypeId) && (
+                    <FormSelectOption value={instanceTypeId} label={instanceTypeId} />
+                  )}
+                </FormSelect>
+                <Content component="small" style={{ color: 'var(--pf-t--global--color--200)' }}>
+                  {t('Editable — references an Instance Type you manage under Instance Types.')}
+                </Content>
+              </FormGroup>
+              <DescriptionList style={{ marginTop: '1rem' }}>
+                <DescriptionListGroup>
+                  <DescriptionListTerm>{t('Default image')}</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    {existing?.specDefaults?.image?.sourceRef ? (
+                      <code style={{ fontSize: '0.9em' }}>
+                        {existing.specDefaults.image.sourceRef}
+                      </code>
+                    ) : (
+                      '—'
+                    )}
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
+              </DescriptionList>
+            </>
+          )}
 
-          <FormGroup label="Default image source ref" fieldId="vmt-image">
-            <TextInput
-              id="vmt-image"
-              value={imageRef}
-              onChange={(_e, v) => setImageRef(v)}
-              placeholder="quay.io/containerdisks/rhel:9.4"
-            />
-          </FormGroup>
-
-          {mutationError && (
+          {patch.error && (
             <Alert
               variant="danger"
-              title={isEdit ? 'Failed to update VM template' : 'Failed to create VM template'}
+              title={t('Failed to update VM template')}
               isInline
+              style={{ marginTop: '1rem' }}
             >
-              {getErrorMessage(mutationError)}
+              {getErrorMessage(patch.error)}
             </Alert>
           )}
 
@@ -229,12 +232,12 @@ export const ProviderVmTemplateFormPage = () => {
               type="submit"
               form="vmt-form"
               isLoading={isPending}
-              isDisabled={isPending || !isValid}
+              isDisabled={isPending}
             >
-              {isEdit ? 'Save' : 'Create'}
+              {t('Save')}
             </Button>
             <Button variant="link" onClick={() => navigate(BACK)} isDisabled={isPending}>
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

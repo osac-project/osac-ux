@@ -4,7 +4,7 @@ import './DashboardMetricCard.css';
 
 interface DashboardMetricCardProps {
   label: string;
-  value: number;
+  value: number | string;
 }
 
 export const DashboardMetricCard = ({ label, value }: DashboardMetricCardProps) => {

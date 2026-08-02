@@ -29,6 +29,7 @@ import type { ObjectStorageBucket } from '../../api/v1/object-storage';
 import { useDeleteObjectStorageBucket, useObjectStorageBuckets } from '../../api/v1/object-storage';
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const STATE_COLORS = {
   READY: 'green',
@@ -47,6 +48,7 @@ const BucketStateLabel = ({ state }: { state: ObjectStorageBucket['status']['sta
 );
 
 export const ObjectStoragePage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: buckets = [], isLoading, error } = useObjectStorageBuckets();
   const { mutate: deleteBucket } = useDeleteObjectStorageBucket();
@@ -103,21 +105,23 @@ export const ObjectStoragePage = () => {
 
   return (
     <ListPage
-      title="Storage Buckets"
-      description="S3-compatible object storage buckets for your organization."
+      title={t('Storage Buckets')}
+      description={t('S3-compatible object storage buckets for your organization.')}
     >
       {bucketToDelete && (
         <Alert
           variant="warning"
           isInline
-          title={`Delete bucket "${bucketToDelete.metadata?.name ?? bucketToDelete.id}"?`}
+          title={t('Delete bucket "{{name}}"?', {
+            name: bucketToDelete.metadata?.name ?? bucketToDelete.id,
+          })}
           actionLinks={
             <>
               <Button variant="danger" onClick={() => handleDelete(bucketToDelete)}>
-                Delete
+                {t('Delete')}
               </Button>
               <Button variant="link" onClick={() => setBucketToDelete(null)}>
-                Cancel
+                {t('Cancel')}
               </Button>
             </>
           }
@@ -129,8 +133,8 @@ export const ObjectStoragePage = () => {
           <ToolbarContent>
             <ToolbarItem variant="search-filter">
               <SearchInput
-                aria-label="Search buckets"
-                placeholder="Search by name or description"
+                aria-label={t('Search buckets')}
+                placeholder={t('Search by name or description')}
                 value={search}
                 onChange={(_e, v) => setSearch(v)}
                 onClear={() => setSearch('')}
@@ -142,7 +146,7 @@ export const ObjectStoragePage = () => {
                 chips={stateFilters}
                 deleteChip={(_g, v) => toggleState(v as StateFilter)}
                 deleteChipGroup={() => setStateFilters([])}
-                categoryName="State"
+                categoryName={t('State')}
               >
                 <Select
                   isOpen={stateOpen}
@@ -155,7 +159,7 @@ export const ObjectStoragePage = () => {
                       isExpanded={stateOpen}
                       badge={stateFilters.length || undefined}
                     >
-                      State
+                      {t('State')}
                     </MenuToggle>
                   )}
                 >
@@ -178,7 +182,7 @@ export const ObjectStoragePage = () => {
                 chips={versioningFilters}
                 deleteChip={(_g, v) => toggleVersioning(v as VersioningFilter)}
                 deleteChipGroup={() => setVersioningFilters([])}
-                categoryName="Versioning"
+                categoryName={t('Versioning')}
               >
                 <Select
                   isOpen={versioningOpen}
@@ -191,7 +195,7 @@ export const ObjectStoragePage = () => {
                       isExpanded={versioningOpen}
                       badge={versioningFilters.length || undefined}
                     >
-                      Versioning
+                      {t('Versioning')}
                     </MenuToggle>
                   )}
                 >
@@ -203,7 +207,7 @@ export const ObjectStoragePage = () => {
                         hasCheckbox
                         isSelected={versioningFilters.includes(v)}
                       >
-                        {v}
+                        {v === 'Enabled' ? t('Enabled') : t('Disabled')}
                       </SelectOption>
                     ))}
                   </SelectList>
@@ -213,7 +217,7 @@ export const ObjectStoragePage = () => {
 
             <ToolbarItem align={{ default: 'alignEnd' }}>
               <Button variant="primary" onClick={() => navigate('/bucket-storage/new')}>
-                Create bucket
+                {t('Create bucket')}
               </Button>
             </ToolbarItem>
           </ToolbarContent>
@@ -224,28 +228,28 @@ export const ObjectStoragePage = () => {
             alignItems={{ default: 'alignItemsCenter' }}
             style={{ gap: '0.5rem', padding: '1rem 0' }}
           >
-            <FlexItem>No buckets match the current filters.</FlexItem>
+            <FlexItem>{t('No buckets match the current filters.')}</FlexItem>
             <FlexItem>
               <Button variant="link" isInline onClick={clearAll}>
-                Clear filters
+                {t('Clear filters')}
               </Button>
             </FlexItem>
           </Flex>
         ) : buckets.length === 0 ? (
-          <Alert variant="info" isInline title="No buckets yet">
-            Create your first object storage bucket to get started.
+          <Alert variant="info" isInline title={t('No buckets yet')}>
+            {t('Create your first object storage bucket to get started.')}
           </Alert>
         ) : (
-          <Table aria-label="Object storage buckets" variant="compact">
+          <Table aria-label={t('Object storage buckets')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>State</Th>
-                <Th>Endpoint</Th>
-                <Th>Versioning</Th>
-                <Th>Used</Th>
-                <Th>Objects</Th>
-                <Th>Created</Th>
+                <Th>{t('Name')}</Th>
+                <Th>{t('State')}</Th>
+                <Th>{t('Endpoint')}</Th>
+                <Th>{t('Versioning')}</Th>
+                <Th>{t('Used')}</Th>
+                <Th>{t('Objects')}</Th>
+                <Th>{t('Created')}</Th>
                 <Td />
               </Tr>
             </Thead>
@@ -264,7 +268,7 @@ export const ObjectStoragePage = () => {
 
                 return (
                   <Tr key={bucket.id}>
-                    <Td dataLabel="Name">
+                    <Td dataLabel={t('Name')}>
                       <Button
                         variant="link"
                         isInline
@@ -273,16 +277,16 @@ export const ObjectStoragePage = () => {
                         {name}
                       </Button>
                     </Td>
-                    <Td dataLabel="State">
+                    <Td dataLabel={t('State')}>
                       <BucketStateLabel state={bucket.status.state} />
                     </Td>
-                    <Td dataLabel="Endpoint">
+                    <Td dataLabel={t('Endpoint')}>
                       {bucket.status.endpoint ? (
                         <ClipboardCopy
                           isReadOnly
                           variant="inline-compact"
-                          hoverTip="Copy"
-                          clickTip="Copied"
+                          hoverTip={t('Copy')}
+                          clickTip={t('Copied')}
                         >
                           {bucket.status.endpoint}
                         </ClipboardCopy>
@@ -290,27 +294,27 @@ export const ObjectStoragePage = () => {
                         '—'
                       )}
                     </Td>
-                    <Td dataLabel="Versioning">
+                    <Td dataLabel={t('Versioning')}>
                       <Label color={bucket.spec.versioning ? 'green' : 'grey'} isCompact>
-                        {bucket.spec.versioning ? 'Enabled' : 'Disabled'}
+                        {bucket.spec.versioning ? t('Enabled') : t('Disabled')}
                       </Label>
                     </Td>
-                    <Td dataLabel="Used">{usedLabel}</Td>
-                    <Td dataLabel="Objects">
+                    <Td dataLabel={t('Used')}>{usedLabel}</Td>
+                    <Td dataLabel={t('Objects')}>
                       {bucket.status.objectCount != null
                         ? bucket.status.objectCount.toLocaleString()
                         : '—'}
                     </Td>
-                    <Td dataLabel="Created">{created}</Td>
+                    <Td dataLabel={t('Created')}>{created}</Td>
                     <Td isActionCell>
                       <ActionsColumn
                         items={[
                           {
-                            title: 'View details',
+                            title: t('View details'),
                             onClick: () => navigate(`/bucket-storage/${bucket.id}`),
                           },
                           {
-                            title: 'Delete',
+                            title: t('Delete'),
                             onClick: () => setBucketToDelete(bucket),
                             isDanger: true,
                           },

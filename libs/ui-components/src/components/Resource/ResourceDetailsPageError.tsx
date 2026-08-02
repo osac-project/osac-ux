@@ -10,6 +10,8 @@ import {
 import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import SearchIcon from '@patternfly/react-icons/dist/esm/icons/search-icon';
 
+import { useTranslation } from '../../hooks/useTranslation';
+
 type ResourceDetailsPageErrorVariant = 'load-error' | 'not-found';
 
 interface ResourceDetailsPageErrorProps {
@@ -21,6 +23,7 @@ interface ResourceDetailsPageErrorProps {
 }
 
 const variantConfig = (
+  t: (key: string, options?: Record<string, unknown>) => string,
   resourceLabel: string,
 ): Record<
   ResourceDetailsPageErrorVariant,
@@ -34,14 +37,14 @@ const variantConfig = (
   'load-error': {
     icon: ExclamationTriangleIcon,
     status: 'danger',
-    title: `Could not load ${resourceLabel}`,
-    body: `Unable to load this ${resourceLabel} right now.`,
+    title: t('Could not load {{resourceLabel}}', { resourceLabel }),
+    body: t('Unable to load this {{resourceLabel}} right now.', { resourceLabel }),
   },
   'not-found': {
     icon: SearchIcon,
     status: 'warning',
-    title: `${resourceLabel.charAt(0).toUpperCase()}${resourceLabel.slice(1)} not found`,
-    body: `This ${resourceLabel} could not be found.`,
+    title: `${resourceLabel.charAt(0).toUpperCase()}${resourceLabel.slice(1)} ${t('not found')}`,
+    body: t('This {{resourceLabel}} could not be found.', { resourceLabel }),
   },
 });
 
@@ -52,8 +55,9 @@ export const ResourceDetailsPageError = ({
   variant,
   onRetry,
 }: ResourceDetailsPageErrorProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  const { icon: Icon, status, title, body } = variantConfig(resourceLabel)[variant];
+  const { icon: Icon, status, title, body } = variantConfig(t, resourceLabel)[variant];
 
   return (
     <PageSection hasBodyWrapper={false} isFilled>
@@ -63,14 +67,14 @@ export const ResourceDetailsPageError = ({
           <EmptyStateActions>
             {variant === 'load-error' && onRetry && (
               <Button variant="primary" onClick={onRetry}>
-                Retry
+                {t('Retry')}
               </Button>
             )}
             <Button
               variant={variant === 'load-error' && onRetry ? 'link' : 'primary'}
               onClick={() => navigate(parentTo)}
             >
-              Return to {parentLabel.toLowerCase()}
+              {t('Return to {{parentLabel}}', { parentLabel: parentLabel.toLowerCase() })}
             </Button>
           </EmptyStateActions>
         </EmptyStateFooter>

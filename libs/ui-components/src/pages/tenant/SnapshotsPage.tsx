@@ -34,6 +34,7 @@ import {
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
 import { DeleteConfirmModal } from '../../components/shared/DeleteConfirmModal';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 // ---------------------------------------------------------------------------
@@ -79,6 +80,7 @@ interface RestoreSnapshotModalProps {
 }
 
 const RestoreSnapshotModal = ({ snapshot, onClose }: RestoreSnapshotModalProps) => {
+  const { t } = useTranslation();
   const { data: vms = [] } = useComputeInstances();
   const [vmId, setVmId] = useState('');
   const [vmOpen, setVmOpen] = useState(false);
@@ -96,17 +98,17 @@ const RestoreSnapshotModal = ({ snapshot, onClose }: RestoreSnapshotModalProps) 
   };
 
   return (
-    <Modal isOpen onClose={onClose} variant="small" aria-label="Restore snapshot">
-      <ModalHeader title={`Restore snapshot "${snapName}"`} />
+    <Modal isOpen onClose={onClose} variant="small" aria-label={t('Restore snapshot')}>
+      <ModalHeader title={t('Restore snapshot "{{snapName}}"', { snapName })} />
       <ModalBody>
         <Stack hasGutter>
           <StackItem>
-            Select a target VM to restore this snapshot to disk{' '}
+            {t('Select a target VM to restore this snapshot to disk')}{' '}
             <strong>{diskLabel(snapshot.spec.diskIndex)}</strong>.
           </StackItem>
           {error && (
             <StackItem>
-              <Alert variant="danger" isInline title="Restore failed">
+              <Alert variant="danger" isInline title={t('Restore failed')}>
                 {getErrorMessage(error)}
               </Alert>
             </StackItem>
@@ -127,13 +129,15 @@ const RestoreSnapshotModal = ({ snapshot, onClose }: RestoreSnapshotModalProps) 
                   isExpanded={vmOpen}
                   style={{ width: '100%' }}
                 >
-                  {selectedVm ? (selectedVm.metadata?.name ?? selectedVm.id) : 'Select target VM'}
+                  {selectedVm
+                    ? (selectedVm.metadata?.name ?? selectedVm.id)
+                    : t('Select target VM')}
                 </MenuToggle>
               )}
             >
               {vms.length === 0 ? (
                 <SelectOption value="" isDisabled>
-                  No VMs available
+                  {t('No VMs available')}
                 </SelectOption>
               ) : (
                 vms.map((v) => (
@@ -153,10 +157,10 @@ const RestoreSnapshotModal = ({ snapshot, onClose }: RestoreSnapshotModalProps) 
           isLoading={isPending}
           isDisabled={isPending || !vmId}
         >
-          Restore
+          {t('Restore')}
         </Button>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
       </ModalFooter>
     </Modal>
@@ -168,6 +172,7 @@ const RestoreSnapshotModal = ({ snapshot, onClose }: RestoreSnapshotModalProps) 
 // ---------------------------------------------------------------------------
 
 export const SnapshotsPage = () => {
+  const { t } = useTranslation();
   const { data: snapshots = [], isLoading, error } = useAllVolumeSnapshots();
   const { data: vms = [] } = useComputeInstances();
   const { mutateAsync: deleteSnapshot } = useDeleteVolumeSnapshot('');
@@ -199,18 +204,18 @@ export const SnapshotsPage = () => {
 
   const selectedVmLabel =
     vmFilter === 'all'
-      ? 'All VMs'
+      ? t('All VMs')
       : (vms.find((v) => v.id === vmFilter)?.metadata?.name ?? vmFilter);
 
   return (
     <ListPage
-      title="Snapshots"
-      description="Manage volume snapshots across all your virtual machines."
+      title={t('Snapshots')}
+      description={t('Manage volume snapshots across all your virtual machines.')}
     >
       {snapshotToDelete && (
         <DeleteConfirmModal
           resourceName={snapshotToDelete.metadata?.name ?? snapshotToDelete.id}
-          resourceKind="snapshot"
+          resourceKind={t('snapshot')}
           onConfirm={async () => {
             await deleteSnapshot(snapshotToDelete.id);
             setSnapshotToDelete(null);
@@ -234,14 +239,14 @@ export const SnapshotsPage = () => {
         >
           <FlexItem>
             <SearchInput
-              placeholder="Search by name…"
+              placeholder={t('Search by name…')}
               value={search}
               onChange={(_e, v) => setSearch(v)}
               onClear={() => setSearch('')}
             />
           </FlexItem>
           <FlexItem>
-            <ToggleGroup aria-label="Filter by snapshot status">
+            <ToggleGroup aria-label={t('Filter by snapshot status')}>
               {STATUS_FILTERS.map((opt) => (
                 <ToggleGroupItem
                   key={opt.value}
@@ -272,7 +277,7 @@ export const SnapshotsPage = () => {
                 </MenuToggle>
               )}
             >
-              <SelectOption value="all">All VMs</SelectOption>
+              <SelectOption value="all">{t('All VMs')}</SelectOption>
               {uniqueVms.map((vmId) => (
                 <SelectOption key={vmId} value={vmId}>
                   {vmName(vmId)}
@@ -283,37 +288,37 @@ export const SnapshotsPage = () => {
         </Flex>
 
         {filtered.length === 0 ? (
-          <Alert variant="info" isInline title="No snapshots found">
+          <Alert variant="info" isInline title={t('No snapshots found')}>
             {search || statusFilter !== 'all' || vmFilter !== 'all'
-              ? 'No snapshots match your filters.'
-              : "No snapshots have been created yet. Go to a VM's Storage tab to create one."}
+              ? t('No snapshots match your filters.')
+              : t("No snapshots have been created yet. Go to a VM's Storage tab to create one.")}
           </Alert>
         ) : (
-          <Table aria-label="Volume snapshots" variant="compact">
+          <Table aria-label={t('Volume snapshots')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Source VM</Th>
-                <Th>Disk</Th>
-                <Th>Size</Th>
-                <Th>Status</Th>
-                <Th>Created</Th>
+                <Th>{t('Name')}</Th>
+                <Th>{t('Source VM')}</Th>
+                <Th>{t('Disk')}</Th>
+                <Th>{t('Size')}</Th>
+                <Th>{t('Status')}</Th>
+                <Th>{t('Created')}</Th>
                 <Td />
               </Tr>
             </Thead>
             <Tbody>
               {filtered.map((snap) => (
                 <Tr key={snap.id}>
-                  <Td dataLabel="Name">{snap.metadata?.name ?? snap.id}</Td>
-                  <Td dataLabel="Source VM">{vmName(snap.spec.sourceInstanceId)}</Td>
-                  <Td dataLabel="Disk">{diskLabel(snap.spec.diskIndex)}</Td>
-                  <Td dataLabel="Size">
+                  <Td dataLabel={t('Name')}>{snap.metadata?.name ?? snap.id}</Td>
+                  <Td dataLabel={t('Source VM')}>{vmName(snap.spec.sourceInstanceId)}</Td>
+                  <Td dataLabel={t('Disk')}>{diskLabel(snap.spec.diskIndex)}</Td>
+                  <Td dataLabel={t('Size')}>
                     {snap.status.sizeGib != null ? `${snap.status.sizeGib} GiB` : '—'}
                   </Td>
-                  <Td dataLabel="Status">
+                  <Td dataLabel={t('Status')}>
                     <SnapshotStateLabel state={snap.status.state} />
                   </Td>
-                  <Td dataLabel="Created">
+                  <Td dataLabel={t('Created')}>
                     {snap.metadata?.creationTimestamp
                       ? new Date(snap.metadata.creationTimestamp).toLocaleDateString()
                       : '—'}
@@ -322,7 +327,7 @@ export const SnapshotsPage = () => {
                     <ActionsColumn
                       items={[
                         {
-                          title: 'Restore',
+                          title: t('Restore'),
                           isDisabled: snap.status.state !== 'READY',
                           onClick: (e) => {
                             e.stopPropagation();
@@ -331,7 +336,7 @@ export const SnapshotsPage = () => {
                         },
                         { isSeparator: true },
                         {
-                          title: 'Delete',
+                          title: t('Delete'),
                           onClick: (e) => {
                             e.stopPropagation();
                             setSnapshotToDelete(snap);

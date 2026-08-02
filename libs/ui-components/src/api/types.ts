@@ -61,6 +61,10 @@ export type ApiRoute =
   | 'v1/ai_environments'
   | 'v1/model_catalog_items'
   | 'v1/model_accesses'
+  | 'v1/subscriptions'
+  | 'v1/maas_token_usage'
+  // Billing (@temp-api — REQ-BA-4, gated on M360-vs-Koku decision REQ-BA-3)
+  | 'v1/price_plans'
   // Private-only
   | 'v1/hubs'
   | 'v1/storage_backends';

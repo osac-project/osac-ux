@@ -14,6 +14,7 @@ import {
 } from '@patternfly/react-core';
 
 import { useCreateIdentityProvider } from '../../api/v1/identity-provider';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 interface IdentityProviderCreateModalProps {
@@ -25,6 +26,7 @@ export const IdentityProviderCreateModal = ({
   isOpen,
   onClose,
 }: IdentityProviderCreateModalProps) => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [title, setTitle] = useState('');
   const [clientId, setClientId] = useState('');
@@ -66,34 +68,39 @@ export const IdentityProviderCreateModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} variant="medium" aria-label="Add identity provider">
-      <ModalHeader title="Add identity provider (OIDC)" />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="medium"
+      aria-label={t('Add identity provider')}
+    >
+      <ModalHeader title={t('Add identity provider (OIDC)')} />
       <ModalBody>
         {error && (
-          <Alert variant="danger" isInline title="Error" style={{ marginBottom: '1rem' }}>
+          <Alert variant="danger" isInline title={t('Error')} style={{ marginBottom: '1rem' }}>
             {getErrorMessage(error)}
           </Alert>
         )}
         <Form onSubmit={handleSubmit} id="idp-create-form">
-          <FormGroup label="Internal name" isRequired fieldId="idp-name">
+          <FormGroup label={t('Internal name')} isRequired fieldId="idp-name">
             <TextInput
               id="idp-name"
               value={name}
               onChange={(_e, v) => setName(v)}
-              placeholder="my-oidc-provider"
+              placeholder={t('my-oidc-provider')}
               isRequired
             />
           </FormGroup>
-          <FormGroup label="Display title" isRequired fieldId="idp-title">
+          <FormGroup label={t('Display title')} isRequired fieldId="idp-title">
             <TextInput
               id="idp-title"
               value={title}
               onChange={(_e, v) => setTitle(v)}
-              placeholder="Corporate SSO"
+              placeholder={t('Corporate SSO')}
               isRequired
             />
           </FormGroup>
-          <FormGroup label="Issuer URL" isRequired fieldId="idp-issuer">
+          <FormGroup label={t('Issuer URL')} isRequired fieldId="idp-issuer">
             <TextInput
               id="idp-issuer"
               value={issuer}
@@ -102,7 +109,7 @@ export const IdentityProviderCreateModal = ({
               isRequired
             />
           </FormGroup>
-          <FormGroup label="Client ID" isRequired fieldId="idp-client-id">
+          <FormGroup label={t('Client ID')} isRequired fieldId="idp-client-id">
             <TextInput
               id="idp-client-id"
               value={clientId}
@@ -110,7 +117,7 @@ export const IdentityProviderCreateModal = ({
               isRequired
             />
           </FormGroup>
-          <FormGroup label="Client secret" isRequired fieldId="idp-client-secret">
+          <FormGroup label={t('Client secret')} isRequired fieldId="idp-client-secret">
             <TextInput
               id="idp-client-secret"
               type="password"
@@ -119,26 +126,26 @@ export const IdentityProviderCreateModal = ({
               isRequired
             />
           </FormGroup>
-          <FormGroup label="Authorization URL (optional override)" fieldId="idp-auth-url">
+          <FormGroup label={t('Authorization URL (optional override)')} fieldId="idp-auth-url">
             <TextInput
               id="idp-auth-url"
               value={authorizationUrl}
               onChange={(_e, v) => setAuthorizationUrl(v)}
-              placeholder="Derived from issuer if blank"
+              placeholder={t('Derived from issuer if blank')}
             />
           </FormGroup>
-          <FormGroup label="Token URL (optional override)" fieldId="idp-token-url">
+          <FormGroup label={t('Token URL (optional override)')} fieldId="idp-token-url">
             <TextInput
               id="idp-token-url"
               value={tokenUrl}
               onChange={(_e, v) => setTokenUrl(v)}
-              placeholder="Derived from issuer if blank"
+              placeholder={t('Derived from issuer if blank')}
             />
           </FormGroup>
           <FormGroup fieldId="idp-enabled">
             <Checkbox
               id="idp-enabled"
-              label="Enable immediately"
+              label={t('Enable immediately')}
               isChecked={enabled}
               onChange={(_e, v) => setEnabled(v)}
             />
@@ -154,10 +161,10 @@ export const IdentityProviderCreateModal = ({
             isLoading={isPending}
             isDisabled={isPending || !isValid}
           >
-            Add provider
+            {t('Add provider')}
           </Button>
           <Button variant="link" onClick={onClose} isDisabled={isPending}>
-            Cancel
+            {t('Cancel')}
           </Button>
         </ActionGroup>
       </ModalFooter>

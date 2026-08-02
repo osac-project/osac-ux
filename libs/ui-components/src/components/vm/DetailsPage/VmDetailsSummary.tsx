@@ -5,6 +5,7 @@ import MicrochipIcon from '@patternfly/react-icons/dist/esm/icons/microchip-icon
 
 import type { ComputeInstance } from '@osac/types';
 
+import { useTranslation } from '../../../hooks/useTranslation';
 import { ResourceKpiHeader } from '../../Resource/Header';
 
 interface VmDetailsSummaryProps {
@@ -12,6 +13,7 @@ interface VmDetailsSummaryProps {
 }
 
 export const VmDetailsSummary = ({ vm }: VmDetailsSummaryProps) => {
+  const { t } = useTranslation();
   const cores = vm.spec?.cores;
   const memoryGib = vm.spec?.memoryGib;
   const publicIp = vm.status?.publicIpAddress;
@@ -25,16 +27,20 @@ export const VmDetailsSummary = ({ vm }: VmDetailsSummaryProps) => {
 
   return (
     <ResourceKpiHeader
-      ariaLabel="Virtual machine summary"
+      ariaLabel={t('Virtual machine summary')}
       items={[
-        { title: 'vCPU', icon: MicrochipIcon, value: cores ?? '—' },
-        { title: 'Memory', icon: MemoryIcon, value: memoryGib != null ? `${memoryGib} GiB` : '—' },
+        { title: t('vCPU'), icon: MicrochipIcon, value: cores ?? '—' },
         {
-          title: 'Storage',
+          title: t('Memory'),
+          icon: MemoryIcon,
+          value: memoryGib != null ? `${memoryGib} GiB` : '—',
+        },
+        {
+          title: t('Storage'),
           icon: HddIcon,
           value: totalStorageGib > 0 ? `${totalStorageGib} GiB` : '—',
         },
-        { title: 'Public IP', icon: GlobeIcon, value: publicIp || '—' },
+        { title: t('Public IP'), icon: GlobeIcon, value: publicIp || '—' },
       ]}
     />
   );
