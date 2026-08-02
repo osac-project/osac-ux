@@ -15,6 +15,7 @@ import {
 import type { MenuToggleElement } from '@patternfly/react-core';
 
 import { resourceDisplayName, useCreateSubnet, useVirtualNetworks } from '../../api/v1/networking';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 import OsacForm from '../Form/OsacForm';
 
@@ -29,6 +30,7 @@ export const SubnetCreateModal = ({
   onClose,
   onSuccess,
 }: SubnetCreateModalProps) => {
+  const { t } = useTranslation();
   const [name, setName] = React.useState('');
   const [ipv4Cidr, setIpv4Cidr] = React.useState('');
   const [selectedVNetId, setSelectedVNetId] = React.useState(preselectedVNetId ?? '');
@@ -67,11 +69,11 @@ export const SubnetCreateModal = ({
       onClose={isPending ? undefined : onClose}
       aria-labelledby="subnet-create-title"
     >
-      <ModalHeader title="Create subnet" labelId="subnet-create-title" />
+      <ModalHeader title={t('Create subnet')} labelId="subnet-create-title" />
       <ModalBody>
         <OsacForm>
           {!preselectedVNetId && (
-            <FormGroup label="Virtual network" fieldId="subnet-vnet" isRequired>
+            <FormGroup label={t('Virtual network')} fieldId="subnet-vnet" isRequired>
               <Select
                 isOpen={vnetSelectOpen}
                 selected={selectedVNetId}
@@ -89,7 +91,7 @@ export const SubnetCreateModal = ({
                   >
                     {selectedVNet
                       ? resourceDisplayName(selectedVNet.metadata, selectedVNet.id)
-                      : 'Select virtual network'}
+                      : t('Select virtual network')}
                   </MenuToggle>
                 )}
               >
@@ -102,7 +104,7 @@ export const SubnetCreateModal = ({
             </FormGroup>
           )}
 
-          <FormGroup label="Name" fieldId="subnet-name" isRequired>
+          <FormGroup label={t('Name')} fieldId="subnet-name" isRequired>
             <TextInput
               id="subnet-name"
               value={name}
@@ -112,7 +114,7 @@ export const SubnetCreateModal = ({
             />
           </FormGroup>
 
-          <FormGroup label="IPv4 CIDR" fieldId="subnet-cidr" isRequired>
+          <FormGroup label={t('IPv4 CIDR')} fieldId="subnet-cidr" isRequired>
             <TextInput
               id="subnet-cidr"
               value={ipv4Cidr}
@@ -123,7 +125,7 @@ export const SubnetCreateModal = ({
           </FormGroup>
 
           {createSubnet.error && (
-            <Alert variant="danger" title="Failed to create subnet" isInline>
+            <Alert variant="danger" title={t('Failed to create subnet')} isInline>
               {getErrorMessage(createSubnet.error)}
             </Alert>
           )}
@@ -131,7 +133,7 @@ export const SubnetCreateModal = ({
       </ModalBody>
       <ModalFooter>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
         <Button
           variant="primary"
@@ -139,7 +141,7 @@ export const SubnetCreateModal = ({
           isDisabled={isPending || !name.trim() || !ipv4Cidr.trim() || !effectiveVNetId}
           isLoading={isPending}
         >
-          Create
+          {t('Create')}
         </Button>
       </ModalFooter>
     </Modal>

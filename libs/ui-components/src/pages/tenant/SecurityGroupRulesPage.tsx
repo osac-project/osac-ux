@@ -26,6 +26,7 @@ import {
 import type { SecurityRuleInput } from '../../api/v1/networking';
 import OsacForm from '../../components/Form/OsacForm';
 import { SecurityRulesFields } from '../../components/Network/SecurityRulesFields';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 const toRuleInput = (rule: {
@@ -41,6 +42,7 @@ const toRuleInput = (rule: {
 });
 
 export const SecurityGroupRulesPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id = '' } = useParams<{ id: string }>();
   const { data: sg, isLoading } = useSecurityGroup(id);
@@ -76,7 +78,7 @@ export const SecurityGroupRulesPage = () => {
   if (isLoading) {
     return (
       <PageSection hasBodyWrapper={false}>
-        <Spinner aria-label="Loading security group" />
+        <Spinner aria-label={t('Loading security group')} />
       </PageSection>
     );
   }
@@ -84,9 +86,9 @@ export const SecurityGroupRulesPage = () => {
   if (!sg) {
     return (
       <PageSection hasBodyWrapper={false}>
-        <Alert variant="warning" isInline title={`Security group not found: ${id}`}>
+        <Alert variant="warning" isInline title={t('Security group not found: {{id}}', { id })}>
           <Button variant="link" onClick={() => navigate('/networks?tab=security-groups')}>
-            Back to Security Groups
+            {t('Back to Security Groups')}
           </Button>
         </Alert>
       </PageSection>
@@ -104,13 +106,13 @@ export const SecurityGroupRulesPage = () => {
                 isInline
                 onClick={() => navigate('/networks?tab=security-groups')}
               >
-                Networks
+                {t('Networks')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>{sgName} — Rules</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('{{sgName}} — Rules', { sgName })}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Manage rules — {sgName}
+            {t('Manage rules — {{sgName}}', { sgName })}
           </Title>
         </Stack>
       </PageSection>
@@ -123,18 +125,18 @@ export const SecurityGroupRulesPage = () => {
           id="sg-rules-form"
         >
           <SecurityRulesFields
-            label="Inbound rules (ingress)"
+            label={t('Inbound rules (ingress)')}
             rules={ingress}
             onChange={setIngress}
           />
           <SecurityRulesFields
-            label="Outbound rules (egress)"
+            label={t('Outbound rules (egress)')}
             rules={egress}
             onChange={setEgress}
           />
 
           {patchSG.error && (
-            <Alert variant="danger" title="Failed to save rules" isInline>
+            <Alert variant="danger" title={t('Failed to save rules')} isInline>
               {getErrorMessage(patchSG.error)}
             </Alert>
           )}
@@ -147,14 +149,14 @@ export const SecurityGroupRulesPage = () => {
               isLoading={isPending}
               isDisabled={isPending}
             >
-              Save rules
+              {t('Save rules')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate('/networks?tab=security-groups')}
               isDisabled={isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </OsacForm>

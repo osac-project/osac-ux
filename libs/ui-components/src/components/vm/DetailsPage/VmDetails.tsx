@@ -47,8 +47,10 @@ import { formatResourceIdsForReview, resourceDisplayName } from '../../../api/v1
 import { useSecurityGroups, useSubnets, useVirtualNetworks } from '../../../api/v1/networking';
 import { useStorageTiers } from '../../../api/v1/storage-tier';
 import { useDeleteVolumeSnapshot, useVolumeSnapshots } from '../../../api/v1/volume-snapshot';
+import { useTranslation } from '../../../hooks/useTranslation';
 import { displayValue } from '../../../utils/detailFormatters';
 import { VmStatusLabel } from '../../../VmStatusLabel';
+import { ResourceUsageCard } from '../../metering/ResourceUsageCard';
 import { Timestamp } from '../../Primitives/Timestamp';
 import { ResourceConditionsTable } from '../../Resource/ResourceConditionsTable';
 import { ResourceDetailHeader } from '../../Resource/ResourceDetailHeader';
@@ -60,19 +62,25 @@ interface Props {
   vm: ComputeInstance;
 }
 
-const virtualNetworkLabel = (index: number, total: number): string => {
+const virtualNetworkLabel = (
+  t: (key: string, options?: Record<string, unknown>) => string,
+  index: number,
+  total: number,
+): string => {
   if (total === 1) {
-    return 'Virtual network';
+    return t('Virtual network');
   }
-  return `Virtual network ${index + 1}`;
+  return t('Virtual network {{number}}', { number: index + 1 });
 };
 
 const VM_DETAIL_OVERVIEW_TAB_ID = 'vm-detail-overview';
 const VM_DETAIL_NETWORKING_TAB_ID = 'vm-detail-networking';
 const VM_DETAIL_STORAGE_TAB_ID = 'vm-detail-storage';
 const VM_DETAIL_CONSOLE_TAB_ID = 'vm-detail-console';
+const VM_DETAIL_USAGE_TAB_ID = 'vm-detail-usage';
 
 export const VmDetails = ({ vm }: Props) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState(0);
   const [snapshotModalOpen, setSnapshotModalOpen] = useState(false);
   const [snapshotToDelete, setSnapshotToDelete] = useState<{ id: string; name: string } | null>(
@@ -156,7 +164,7 @@ export const VmDetails = ({ vm }: Props) => {
               <FlexItem>
                 <ResourceDetailHeader
                   parentTo="/vms"
-                  parentLabel="Virtual machines"
+                  parentLabel={t('Virtual machines')}
                   resourceName={vm.metadata?.name ?? vm.id}
                   titleAddon={<VmStatusLabel state={vm.status?.state} />}
                 />
@@ -180,12 +188,12 @@ export const VmDetails = ({ vm }: Props) => {
             >
               <Tab
                 eventKey={0}
-                title={<TabTitleText>Overview</TabTitleText>}
+                title={<TabTitleText>{t('Overview')}</TabTitleText>}
                 tabContentId={VM_DETAIL_OVERVIEW_TAB_ID}
               />
               <Tab
                 eventKey={1}
-                title={<TabTitleText>Networking</TabTitleText>}
+                title={<TabTitleText>{t('Networking')}</TabTitleText>}
                 tabContentId={VM_DETAIL_NETWORKING_TAB_ID}
               />
               <Tab
@@ -196,7 +204,7 @@ export const VmDetails = ({ vm }: Props) => {
                       alignItems={{ default: 'alignItemsCenter' }}
                       spaceItems={{ default: 'spaceItemsSm' }}
                     >
-                      <FlexItem>Storage</FlexItem>
+                      <FlexItem>{t('Storage')}</FlexItem>
                       {totalStorageGib + blockVolumesGib > 0 && (
                         <FlexItem>
                           <Badge isRead>{totalStorageGib + blockVolumesGib} GiB</Badge>
@@ -209,8 +217,13 @@ export const VmDetails = ({ vm }: Props) => {
               />
               <Tab
                 eventKey={3}
-                title={<TabTitleText>Console</TabTitleText>}
+                title={<TabTitleText>{t('Console')}</TabTitleText>}
                 tabContentId={VM_DETAIL_CONSOLE_TAB_ID}
+              />
+              <Tab
+                eventKey={4}
+                title={<TabTitleText>{t('Usage')}</TabTitleText>}
+                tabContentId={VM_DETAIL_USAGE_TAB_ID}
               />
             </Tabs>
           </StackItem>
@@ -230,24 +243,24 @@ export const VmDetails = ({ vm }: Props) => {
               <TabContentBody>
                 <Stack hasGutter>
                   <Card isFullHeight>
-                    <CardTitle>Overview</CardTitle>
+                    <CardTitle>{t('Overview')}</CardTitle>
                     <CardBody>
                       <DescriptionList isCompact columnModifier={{ default: '2Col', lg: '3Col' }}>
                         <DescriptionListGroup>
-                          <DescriptionListTerm>Name</DescriptionListTerm>
+                          <DescriptionListTerm>{t('Name')}</DescriptionListTerm>
                           <DescriptionListDescription>
                             {displayValue(vm.metadata?.name)}
                           </DescriptionListDescription>
                         </DescriptionListGroup>
                         <DescriptionListGroup>
-                          <DescriptionListTerm>Catalog</DescriptionListTerm>
+                          <DescriptionListTerm>{t('Catalog')}</DescriptionListTerm>
                           <DescriptionListDescription>
                             <VmDetailsCatalogValue catalogItemId={catalogItem} />
                           </DescriptionListDescription>
                         </DescriptionListGroup>
                         {instanceType && (
                           <DescriptionListGroup>
-                            <DescriptionListTerm>Instance type</DescriptionListTerm>
+                            <DescriptionListTerm>{t('Instance type')}</DescriptionListTerm>
                             <DescriptionListDescription>
                               {displayValue(instanceType)}
                             </DescriptionListDescription>
@@ -255,7 +268,7 @@ export const VmDetails = ({ vm }: Props) => {
                         )}
                         {imageRef && (
                           <DescriptionListGroup>
-                            <DescriptionListTerm>Image</DescriptionListTerm>
+                            <DescriptionListTerm>{t('Image')}</DescriptionListTerm>
                             <DescriptionListDescription>
                               {displayValue(imageRef)}
                             </DescriptionListDescription>
@@ -263,24 +276,24 @@ export const VmDetails = ({ vm }: Props) => {
                         )}
                         {isWindows !== undefined && (
                           <DescriptionListGroup>
-                            <DescriptionListTerm>OS</DescriptionListTerm>
+                            <DescriptionListTerm>{t('OS')}</DescriptionListTerm>
                             <DescriptionListDescription>
-                              {isWindows ? 'Windows' : 'Linux'}
+                              {isWindows ? t('Windows') : t('Linux')}
                             </DescriptionListDescription>
                           </DescriptionListGroup>
                         )}
                         <DescriptionListGroup>
-                          <DescriptionListTerm>Run strategy</DescriptionListTerm>
+                          <DescriptionListTerm>{t('Run strategy')}</DescriptionListTerm>
                           <DescriptionListDescription>
                             {displayValue(runStrategy)}
                           </DescriptionListDescription>
                         </DescriptionListGroup>
                         <DescriptionListGroup>
-                          <DescriptionListTerm>SSH key</DescriptionListTerm>
+                          <DescriptionListTerm>{t('SSH key')}</DescriptionListTerm>
                           <DescriptionListDescription>
                             {sshKey ? (
                               <Label color="blue" isCompact>
-                                Configured
+                                {t('Configured')}
                               </Label>
                             ) : (
                               '—'
@@ -288,11 +301,11 @@ export const VmDetails = ({ vm }: Props) => {
                           </DescriptionListDescription>
                         </DescriptionListGroup>
                         <DescriptionListGroup>
-                          <DescriptionListTerm>User data</DescriptionListTerm>
+                          <DescriptionListTerm>{t('User data')}</DescriptionListTerm>
                           <DescriptionListDescription>
                             {userData?.trim() ? (
                               <Label color="blue" isCompact>
-                                Cloud-init provided
+                                {t('Cloud-init provided')}
                               </Label>
                             ) : (
                               '—'
@@ -300,39 +313,39 @@ export const VmDetails = ({ vm }: Props) => {
                           </DescriptionListDescription>
                         </DescriptionListGroup>
                         <DescriptionListGroup>
-                          <DescriptionListTerm>Created</DescriptionListTerm>
+                          <DescriptionListTerm>{t('Created')}</DescriptionListTerm>
                           <DescriptionListDescription>
                             <Timestamp value={vm.metadata?.creationTimestamp} />
                           </DescriptionListDescription>
                         </DescriptionListGroup>
                         <DescriptionListGroup>
-                          <DescriptionListTerm>Last restarted</DescriptionListTerm>
+                          <DescriptionListTerm>{t('Last restarted')}</DescriptionListTerm>
                           <DescriptionListDescription>
                             <Timestamp value={lastRestartedAt} />
                           </DescriptionListDescription>
                         </DescriptionListGroup>
                         {restartRequestedAt && (
                           <DescriptionListGroup>
-                            <DescriptionListTerm>Restart requested</DescriptionListTerm>
+                            <DescriptionListTerm>{t('Restart requested')}</DescriptionListTerm>
                             <DescriptionListDescription>
                               <Timestamp value={restartRequestedAt} />
                             </DescriptionListDescription>
                           </DescriptionListGroup>
                         )}
                         <DescriptionListGroup>
-                          <DescriptionListTerm>Tenant</DescriptionListTerm>
+                          <DescriptionListTerm>{t('Tenant')}</DescriptionListTerm>
                           <DescriptionListDescription>
                             {displayValue(tenant)}
                           </DescriptionListDescription>
                         </DescriptionListGroup>
                         <DescriptionListGroup>
-                          <DescriptionListTerm>Creator</DescriptionListTerm>
+                          <DescriptionListTerm>{t('Creator')}</DescriptionListTerm>
                           <DescriptionListDescription>
                             {displayValue(creator)}
                           </DescriptionListDescription>
                         </DescriptionListGroup>
                         <DescriptionListGroup>
-                          <DescriptionListTerm>Version</DescriptionListTerm>
+                          <DescriptionListTerm>{t('Version')}</DescriptionListTerm>
                           <DescriptionListDescription>
                             {vm.metadata?.version != null ? String(vm.metadata.version) : '—'}
                           </DescriptionListDescription>
@@ -341,10 +354,10 @@ export const VmDetails = ({ vm }: Props) => {
                     </CardBody>
                   </Card>
                   <Card>
-                    <CardTitle>Conditions</CardTitle>
+                    <CardTitle>{t('Conditions')}</CardTitle>
                     <CardBody>
                       <ResourceConditionsTable
-                        ariaLabel="Virtual machine conditions"
+                        ariaLabel={t('Virtual machine conditions')}
                         conditions={conditions}
                         conditionResourceKind="compute_instance"
                       />
@@ -363,13 +376,13 @@ export const VmDetails = ({ vm }: Props) => {
             >
               <TabContentBody>
                 <Card isFullHeight>
-                  <CardTitle>Networking</CardTitle>
+                  <CardTitle>{t('Networking')}</CardTitle>
                   <CardBody>
                     {(assignedPublicIP || vm.status?.internalIpAddress) && (
                       <DescriptionList isHorizontal isCompact style={{ marginBottom: '1rem' }}>
                         {assignedPublicIP && (
                           <DescriptionListGroup>
-                            <DescriptionListTerm>Public IP</DescriptionListTerm>
+                            <DescriptionListTerm>{t('Public IP')}</DescriptionListTerm>
                             <DescriptionListDescription>
                               <Label color="blue" isCompact>
                                 {assignedPublicIP}
@@ -379,7 +392,7 @@ export const VmDetails = ({ vm }: Props) => {
                         )}
                         {vm.status?.internalIpAddress && (
                           <DescriptionListGroup>
-                            <DescriptionListTerm>Internal IP</DescriptionListTerm>
+                            <DescriptionListTerm>{t('Internal IP')}</DescriptionListTerm>
                             <DescriptionListDescription>
                               <Label color="teal" isCompact>
                                 {vm.status.internalIpAddress}
@@ -391,18 +404,18 @@ export const VmDetails = ({ vm }: Props) => {
                     )}
                     {networkAttachments.length > 0 ? (
                       networkLoading ? (
-                        <Skeleton screenreaderText="Loading network details" />
+                        <Skeleton screenreaderText={t('Loading network details')} />
                       ) : (
                         <Table
-                          aria-label="Virtual machine network attachments"
+                          aria-label={t('Virtual machine network attachments')}
                           variant="compact"
                           borders
                         >
                           <Thead>
                             <Tr>
-                              <Th>Virtual network</Th>
-                              <Th>Subnet</Th>
-                              <Th>Security groups</Th>
+                              <Th>{t('Virtual network')}</Th>
+                              <Th>{t('Subnet')}</Th>
+                              <Th>{t('Security groups')}</Th>
                             </Tr>
                           </Thead>
                           <Tbody>
@@ -414,7 +427,7 @@ export const VmDetails = ({ vm }: Props) => {
                               );
                               const vnName = virtualNetwork
                                 ? resourceDisplayName(virtualNetwork.metadata, virtualNetwork.id)
-                                : virtualNetworkLabel(index, networkAttachments.length);
+                                : virtualNetworkLabel(t, index, networkAttachments.length);
                               const subnetName = resourceDisplayName(
                                 subnet?.metadata,
                                 attachment.subnet,
@@ -425,9 +438,9 @@ export const VmDetails = ({ vm }: Props) => {
                               );
                               return (
                                 <Tr key={`network-attachment-${index}`}>
-                                  <Td dataLabel="Virtual network">{vnName}</Td>
-                                  <Td dataLabel="Subnet">{subnetName}</Td>
-                                  <Td dataLabel="Security groups">{sgNames}</Td>
+                                  <Td dataLabel={t('Virtual network')}>{vnName}</Td>
+                                  <Td dataLabel={t('Subnet')}>{subnetName}</Td>
+                                  <Td dataLabel={t('Security groups')}>{sgNames}</Td>
                                 </Tr>
                               );
                             })}
@@ -435,7 +448,9 @@ export const VmDetails = ({ vm }: Props) => {
                         </Table>
                       )
                     ) : (
-                      <SubtleContent component="p">No virtual networks configured.</SubtleContent>
+                      <SubtleContent component="p">
+                        {t('No virtual networks configured.')}
+                      </SubtleContent>
                     )}
                   </CardBody>
                 </Card>
@@ -454,7 +469,7 @@ export const VmDetails = ({ vm }: Props) => {
                   {/* Storage summary */}
                   <StackItem>
                     <Card>
-                      <CardTitle>Storage summary</CardTitle>
+                      <CardTitle>{t('Storage summary')}</CardTitle>
                       <CardBody>
                         <DescriptionList
                           isHorizontal
@@ -462,13 +477,13 @@ export const VmDetails = ({ vm }: Props) => {
                           columnModifier={{ default: '2Col', lg: '4Col' }}
                         >
                           <DescriptionListGroup>
-                            <DescriptionListTerm>Boot disk</DescriptionListTerm>
+                            <DescriptionListTerm>{t('Boot disk')}</DescriptionListTerm>
                             <DescriptionListDescription>
                               {bootDiskGib != null ? `${bootDiskGib} GiB` : '—'}
                             </DescriptionListDescription>
                           </DescriptionListGroup>
                           <DescriptionListGroup>
-                            <DescriptionListTerm>Additional disks</DescriptionListTerm>
+                            <DescriptionListTerm>{t('Additional disks')}</DescriptionListTerm>
                             <DescriptionListDescription>
                               {additionalDisks.length > 0
                                 ? `${additionalDisks.reduce((s, d) => s + (d.sizeGib ?? 0), 0)} GiB (${additionalDisks.length} disk${additionalDisks.length !== 1 ? 's' : ''})`
@@ -476,7 +491,7 @@ export const VmDetails = ({ vm }: Props) => {
                             </DescriptionListDescription>
                           </DescriptionListGroup>
                           <DescriptionListGroup>
-                            <DescriptionListTerm>Block volumes</DescriptionListTerm>
+                            <DescriptionListTerm>{t('Block volumes')}</DescriptionListTerm>
                             <DescriptionListDescription>
                               {attachedBlockVolumes.length > 0
                                 ? `${blockVolumesGib} GiB (${attachedBlockVolumes.length} volume${attachedBlockVolumes.length !== 1 ? 's' : ''})`
@@ -484,7 +499,7 @@ export const VmDetails = ({ vm }: Props) => {
                             </DescriptionListDescription>
                           </DescriptionListGroup>
                           <DescriptionListGroup>
-                            <DescriptionListTerm>Total allocated</DescriptionListTerm>
+                            <DescriptionListTerm>{t('Total allocated')}</DescriptionListTerm>
                             <DescriptionListDescription>
                               <strong>{totalStorageGib + blockVolumesGib} GiB</strong>
                             </DescriptionListDescription>
@@ -508,23 +523,23 @@ export const VmDetails = ({ vm }: Props) => {
                               <FlexItem>
                                 <HddIcon aria-hidden />
                               </FlexItem>
-                              <FlexItem>Boot volume</FlexItem>
+                              <FlexItem>{t('Boot volume')}</FlexItem>
                             </Flex>
                           </CardTitle>
                           <CardBody>
                             {bootDiskGib != null ? (
                               <DescriptionList isCompact>
                                 <DescriptionListGroup>
-                                  <DescriptionListTerm>Size</DescriptionListTerm>
+                                  <DescriptionListTerm>{t('Size')}</DescriptionListTerm>
                                   <DescriptionListDescription>
                                     {bootDiskGib} GiB
                                   </DescriptionListDescription>
                                 </DescriptionListGroup>
                                 <DescriptionListGroup>
-                                  <DescriptionListTerm>Type</DescriptionListTerm>
+                                  <DescriptionListTerm>{t('Type')}</DescriptionListTerm>
                                   <DescriptionListDescription>
                                     <Label color="grey" isCompact>
-                                      Root
+                                      {t('Root')}
                                     </Label>
                                   </DescriptionListDescription>
                                 </DescriptionListGroup>
@@ -533,7 +548,7 @@ export const VmDetails = ({ vm }: Props) => {
                                   const label = resolveStorageClass(d.storageClass);
                                   return label ? (
                                     <DescriptionListGroup>
-                                      <DescriptionListTerm>Storage tier</DescriptionListTerm>
+                                      <DescriptionListTerm>{t('Storage tier')}</DescriptionListTerm>
                                       <DescriptionListDescription>
                                         <Label
                                           color={
@@ -549,7 +564,7 @@ export const VmDetails = ({ vm }: Props) => {
                                 })()}
                               </DescriptionList>
                             ) : (
-                              <Content component="p">No boot disk configured.</Content>
+                              <Content component="p">{t('No boot disk configured.')}</Content>
                             )}
                           </CardBody>
                         </Card>
@@ -566,7 +581,7 @@ export const VmDetails = ({ vm }: Props) => {
                               <FlexItem>
                                 <HddIcon aria-hidden />
                               </FlexItem>
-                              <FlexItem>Additional volumes</FlexItem>
+                              <FlexItem>{t('Additional volumes')}</FlexItem>
                               {additionalDisks.length > 0 && (
                                 <FlexItem>
                                   <Badge isRead>{additionalDisks.length}</Badge>
@@ -576,12 +591,12 @@ export const VmDetails = ({ vm }: Props) => {
                           </CardTitle>
                           <CardBody>
                             {additionalDisks.length > 0 ? (
-                              <Table aria-label="Additional volumes" variant="compact">
+                              <Table aria-label={t('Additional volumes')} variant="compact">
                                 <Thead>
                                   <Tr>
                                     <Th>#</Th>
-                                    <Th>Size</Th>
-                                    <Th>Storage tier</Th>
+                                    <Th>{t('Size')}</Th>
+                                    <Th>{t('Storage tier')}</Th>
                                   </Tr>
                                 </Thead>
                                 <Tbody>
@@ -591,8 +606,8 @@ export const VmDetails = ({ vm }: Props) => {
                                     return (
                                       <Tr key={idx}>
                                         <Td dataLabel="#">{idx + 1}</Td>
-                                        <Td dataLabel="Size">{disk.sizeGib} GiB</Td>
-                                        <Td dataLabel="Storage tier">
+                                        <Td dataLabel={t('Size')}>{disk.sizeGib} GiB</Td>
+                                        <Td dataLabel={t('Storage tier')}>
                                           {label ? (
                                             <Label
                                               color={
@@ -613,7 +628,7 @@ export const VmDetails = ({ vm }: Props) => {
                               </Table>
                             ) : (
                               <SubtleContent component="p">
-                                No additional volumes attached.
+                                {t('No additional volumes attached.')}
                               </SubtleContent>
                             )}
                           </CardBody>
@@ -630,7 +645,7 @@ export const VmDetails = ({ vm }: Props) => {
                           alignItems={{ default: 'alignItemsCenter' }}
                           spaceItems={{ default: 'spaceItemsSm' }}
                         >
-                          <FlexItem>Block volumes</FlexItem>
+                          <FlexItem>{t('Block volumes')}</FlexItem>
                           {attachedBlockVolumes.length > 0 && (
                             <FlexItem>
                               <Badge isRead>{attachedBlockVolumes.length}</Badge>
@@ -640,14 +655,14 @@ export const VmDetails = ({ vm }: Props) => {
                       </CardTitle>
                       <CardBody>
                         {attachedBlockVolumes.length > 0 ? (
-                          <Table aria-label="Attached block volumes" variant="compact">
+                          <Table aria-label={t('Attached block volumes')} variant="compact">
                             <Thead>
                               <Tr>
-                                <Th>Name</Th>
-                                <Th>Size</Th>
-                                <Th>Storage tier</Th>
-                                <Th>State</Th>
-                                <Th aria-label="Actions" />
+                                <Th>{t('Name')}</Th>
+                                <Th>{t('Size')}</Th>
+                                <Th>{t('Storage tier')}</Th>
+                                <Th>{t('State')}</Th>
+                                <Th aria-label={t('Actions')} />
                               </Tr>
                             </Thead>
                             <Tbody>
@@ -663,11 +678,11 @@ export const VmDetails = ({ vm }: Props) => {
                                         : 'blue';
                                 return (
                                   <Tr key={vol.id}>
-                                    <Td dataLabel="Name">
+                                    <Td dataLabel={t('Name')}>
                                       <strong>{vol.metadata?.name ?? vol.id}</strong>
                                     </Td>
-                                    <Td dataLabel="Size">{vol.spec?.sizeGib} GiB</Td>
-                                    <Td dataLabel="Storage tier">
+                                    <Td dataLabel={t('Size')}>{vol.spec?.sizeGib} GiB</Td>
+                                    <Td dataLabel={t('Storage tier')}>
                                       {label ? (
                                         <Label
                                           color={
@@ -682,7 +697,7 @@ export const VmDetails = ({ vm }: Props) => {
                                         '—'
                                       )}
                                     </Td>
-                                    <Td dataLabel="State">
+                                    <Td dataLabel={t('State')}>
                                       <Label color={stateColor} isCompact>
                                         {vol.status?.state}
                                       </Label>
@@ -695,7 +710,7 @@ export const VmDetails = ({ vm }: Props) => {
                                         isDisabled={detachVolume.isPending}
                                         onClick={() => detachVolume.mutate(vol.id)}
                                       >
-                                        Detach
+                                        {t('Detach')}
                                       </Button>
                                     </Td>
                                   </Tr>
@@ -704,7 +719,9 @@ export const VmDetails = ({ vm }: Props) => {
                             </Tbody>
                           </Table>
                         ) : (
-                          <SubtleContent component="p">No block volumes attached.</SubtleContent>
+                          <SubtleContent component="p">
+                            {t('No block volumes attached.')}
+                          </SubtleContent>
                         )}
                       </CardBody>
                     </Card>
@@ -722,7 +739,7 @@ export const VmDetails = ({ vm }: Props) => {
                             alignItems={{ default: 'alignItemsCenter' }}
                             spaceItems={{ default: 'spaceItemsSm' }}
                           >
-                            <FlexItem>Snapshots</FlexItem>
+                            <FlexItem>{t('Snapshots')}</FlexItem>
                             {snapshots.length > 0 && (
                               <FlexItem>
                                 <Badge isRead>{snapshots.length}</Badge>
@@ -735,41 +752,41 @@ export const VmDetails = ({ vm }: Props) => {
                               size="sm"
                               onClick={() => setSnapshotModalOpen(true)}
                             >
-                              Take snapshot
+                              {t('Take snapshot')}
                             </Button>
                           </FlexItem>
                         </Flex>
                       </CardTitle>
                       <CardBody>
                         {snapshotsLoading ? (
-                          <Spinner size="md" aria-label="Loading snapshots" />
+                          <Spinner size="md" aria-label={t('Loading snapshots')} />
                         ) : snapshots.length > 0 ? (
-                          <Table aria-label="Snapshots" variant="compact">
+                          <Table aria-label={t('Snapshots')} variant="compact">
                             <Thead>
                               <Tr>
-                                <Th>Name</Th>
-                                <Th>Disk</Th>
-                                <Th>Size</Th>
-                                <Th>Status</Th>
-                                <Th>Created</Th>
-                                <Th aria-label="Actions" />
+                                <Th>{t('Name')}</Th>
+                                <Th>{t('Disk')}</Th>
+                                <Th>{t('Size')}</Th>
+                                <Th>{t('Status')}</Th>
+                                <Th>{t('Created')}</Th>
+                                <Th aria-label={t('Actions')} />
                               </Tr>
                             </Thead>
                             <Tbody>
                               {snapshots.map((snap) => (
                                 <Tr key={snap.id}>
-                                  <Td dataLabel="Name">{snap.metadata?.name ?? snap.id}</Td>
-                                  <Td dataLabel="Disk">
+                                  <Td dataLabel={t('Name')}>{snap.metadata?.name ?? snap.id}</Td>
+                                  <Td dataLabel={t('Disk')}>
                                     {snap.spec.diskIndex === 0
-                                      ? 'Boot'
-                                      : `Disk ${snap.spec.diskIndex}`}
+                                      ? t('Boot')
+                                      : t('Disk {{index}}', { index: snap.spec.diskIndex })}
                                   </Td>
-                                  <Td dataLabel="Size">
+                                  <Td dataLabel={t('Size')}>
                                     {snap.status.sizeGib != null
                                       ? `${snap.status.sizeGib} GiB`
                                       : '—'}
                                   </Td>
-                                  <Td dataLabel="Status">
+                                  <Td dataLabel={t('Status')}>
                                     <Label
                                       color={
                                         snap.status.state === 'READY'
@@ -785,17 +802,17 @@ export const VmDetails = ({ vm }: Props) => {
                                       {snap.status.state}
                                     </Label>
                                   </Td>
-                                  <Td dataLabel="Created">
+                                  <Td dataLabel={t('Created')}>
                                     {snap.metadata?.creationTimestamp
                                       ? new Date(
                                           snap.metadata.creationTimestamp,
                                         ).toLocaleDateString()
                                       : '—'}
                                   </Td>
-                                  <Td dataLabel="Actions" modifier="fitContent">
+                                  <Td dataLabel={t('Actions')} modifier="fitContent">
                                     <Button
                                       variant="plain"
-                                      aria-label="Delete snapshot"
+                                      aria-label={t('Delete snapshot')}
                                       isDanger
                                       onClick={() =>
                                         setSnapshotToDelete({
@@ -812,7 +829,7 @@ export const VmDetails = ({ vm }: Props) => {
                             </Tbody>
                           </Table>
                         ) : (
-                          <SubtleContent component="p">No snapshots yet.</SubtleContent>
+                          <SubtleContent component="p">{t('No snapshots yet.')}</SubtleContent>
                         )}
                       </CardBody>
                     </Card>
@@ -830,6 +847,22 @@ export const VmDetails = ({ vm }: Props) => {
             >
               <TabContentBody style={{ paddingTop: '1rem' }}>
                 <VmConsoleTab vmId={instanceId} vmName={vm.metadata?.name ?? instanceId} />
+              </TabContentBody>
+            </TabContent>
+
+            {/* ── Usage ── */}
+            <TabContent
+              eventKey={4}
+              id={VM_DETAIL_USAGE_TAB_ID}
+              activeKey={activeTab}
+              hidden={activeTab !== 4}
+            >
+              <TabContentBody>
+                <ResourceUsageCard
+                  resourceId={instanceId}
+                  tenantId={tenant}
+                  title={t('VM usage')}
+                />
               </TabContentBody>
             </TabContent>
           </GridItem>

@@ -116,7 +116,7 @@ describe('buildComputeInstanceCreatePayload ssh key', () => {
     const values = {
       ...createEmptyComputeInstanceValues(),
       catalogItemId: 'cat-locked',
-      metadata: { name: 'web-01' },
+      metadata: { name: 'web-01', labels: {} },
       spec: {
         ...createEmptyComputeInstanceValues().spec,
         sshKey: 'ssh-ed25519 locked',
@@ -139,7 +139,7 @@ describe('buildComputeInstanceCreatePayload ssh key', () => {
     const values = {
       ...createEmptyComputeInstanceValues(),
       catalogItemId: 'cat-editable',
-      metadata: { name: 'web-02' },
+      metadata: { name: 'web-02', labels: {} },
       spec: {
         ...createEmptyComputeInstanceValues().spec,
         sshKey: 'ssh-ed25519 default',
@@ -162,7 +162,7 @@ describe('buildComputeInstanceCreatePayload ssh key', () => {
     const values = {
       ...createEmptyComputeInstanceValues(),
       catalogItemId: 'cat-editable',
-      metadata: { name: 'web-02' },
+      metadata: { name: 'web-02', labels: {} },
       spec: {
         ...createEmptyComputeInstanceValues().spec,
         image: { sourceRef: 'quay.io/example/rhel9' },
@@ -178,5 +178,61 @@ describe('buildComputeInstanceCreatePayload ssh key', () => {
       id: 'cat-editable',
     } as ComputeInstanceCatalogItem);
     expect(vm.spec?.sshKey).toBeUndefined();
+  });
+});
+
+describe('buildComputeInstanceCreatePayload dynamic (custom.* / template_parameters.*) fields', () => {
+  it('emits custom__-prefixed keys for custom.* fields and bare names for template_parameters.* fields', () => {
+    const values = {
+      ...createEmptyComputeInstanceValues(),
+      catalogItemId: 'cat-dynamic',
+      metadata: { name: 'web-03', labels: {} },
+      spec: {
+        ...createEmptyComputeInstanceValues().spec,
+        image: { sourceRef: 'quay.io/example/rhel9' },
+        networking: {
+          virtualNetworkId: 'vn-1',
+          subnetId: 'subnet-1',
+          securityGroupIds: ['sg-1'],
+        },
+        dynamicParameters: {
+          'custom.rack_zone': 'us-east-1a',
+          'template_parameters.cluster_name': 'my-cluster',
+        },
+      },
+    };
+
+    const vm = buildComputeInstanceCreatePayload(values, {
+      id: 'cat-dynamic',
+    } as ComputeInstanceCatalogItem);
+
+    expect(vm.spec?.templateParameters).toEqual({
+      custom__rack_zone: 'us-east-1a',
+      cluster_name: 'my-cluster',
+    });
+  });
+
+  it('omits templateParameters entirely when all dynamic values are blank', () => {
+    const values = {
+      ...createEmptyComputeInstanceValues(),
+      catalogItemId: 'cat-dynamic',
+      metadata: { name: 'web-04', labels: {} },
+      spec: {
+        ...createEmptyComputeInstanceValues().spec,
+        image: { sourceRef: 'quay.io/example/rhel9' },
+        networking: {
+          virtualNetworkId: 'vn-1',
+          subnetId: 'subnet-1',
+          securityGroupIds: ['sg-1'],
+        },
+        dynamicParameters: { 'custom.rack_zone': '   ' },
+      },
+    };
+
+    const vm = buildComputeInstanceCreatePayload(values, {
+      id: 'cat-dynamic',
+    } as ComputeInstanceCatalogItem);
+
+    expect(vm.spec?.templateParameters).toBeUndefined();
   });
 });

@@ -30,6 +30,7 @@ import {
   useLoadBalancers,
   usePatchLoadBalancer,
 } from '../../api/v1/load-balancer';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 const PROTOCOLS = ['HTTP', 'HTTPS', 'TCP', 'UDP'] as const;
@@ -52,6 +53,7 @@ const ListenerRow = ({
   onChange: <K extends keyof LoadBalancerListener>(key: K, value: LoadBalancerListener[K]) => void;
   onRemove: () => void;
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
     <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
@@ -83,24 +85,24 @@ const ListenerRow = ({
         </SelectList>
       </Select>
       <TextInput
-        aria-label={`Listener ${index + 1} port`}
+        aria-label={t('Listener {{number}} port', { number: index + 1 })}
         type="number"
         value={listener.port}
         onChange={(_e, v) => onChange('port', parseInt(v, 10) || 0)}
-        placeholder="Port"
+        placeholder={t('Port')}
         style={{ width: '100px' }}
       />
       <span style={{ color: 'var(--pf-t--global--color--200)' }}>→</span>
       <TextInput
-        aria-label={`Listener ${index + 1} target port`}
+        aria-label={t('Listener {{number}} target port', { number: index + 1 })}
         type="number"
         value={listener.targetPort}
         onChange={(_e, v) => onChange('targetPort', parseInt(v, 10) || 0)}
-        placeholder="Target port"
+        placeholder={t('Target port')}
         style={{ width: '120px' }}
       />
       {total > 1 && (
-        <Button variant="plain" aria-label="Remove listener" onClick={onRemove}>
+        <Button variant="plain" aria-label={t('Remove listener')} onClick={onRemove}>
           ✕
         </Button>
       )}
@@ -109,6 +111,7 @@ const ListenerRow = ({
 };
 
 export const LoadBalancerFormPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const isEdit = Boolean(id);
@@ -179,22 +182,24 @@ export const LoadBalancerFormPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/load-balancers')}>
-                Load Balancers
+                {t('Load Balancers')}
               </Button>
             </BreadcrumbItem>
             <BreadcrumbItem isActive>
-              {isEdit ? `Edit ${existing?.metadata?.name ?? id}` : 'Create load balancer'}
+              {isEdit
+                ? t('Edit {{name}}', { name: existing?.metadata?.name ?? id })
+                : t('Create load balancer')}
             </BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            {isEdit ? 'Edit load balancer' : 'Create load balancer'}
+            {isEdit ? t('Edit load balancer') : t('Create load balancer')}
           </Title>
         </Stack>
       </PageSection>
 
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '560px' }} id="lb-form">
-          <FormGroup label="Name" isRequired fieldId="lb-name">
+          <FormGroup label={t('Name')} isRequired fieldId="lb-name">
             <TextInput
               id="lb-name"
               value={name}
@@ -205,7 +210,7 @@ export const LoadBalancerFormPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Virtual network" isRequired fieldId="lb-vnet">
+          <FormGroup label={t('Virtual network')} isRequired fieldId="lb-vnet">
             <TextInput
               id="lb-vnet"
               value={virtualNetwork}
@@ -216,7 +221,7 @@ export const LoadBalancerFormPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Subnet" isRequired fieldId="lb-subnet">
+          <FormGroup label={t('Subnet')} isRequired fieldId="lb-subnet">
             <TextInput
               id="lb-subnet"
               value={subnet}
@@ -227,16 +232,16 @@ export const LoadBalancerFormPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Description" fieldId="lb-desc">
+          <FormGroup label={t('Description')} fieldId="lb-desc">
             <TextInput
               id="lb-desc"
               value={description}
               onChange={(_e, v) => setDescription(v)}
-              placeholder="Optional description"
+              placeholder={t('Optional description')}
             />
           </FormGroup>
 
-          <FormGroup label="Listeners" fieldId="lb-listeners">
+          <FormGroup label={t('Listeners')} fieldId="lb-listeners">
             {listeners.map((l, idx) => (
               <ListenerRow
                 key={idx}
@@ -251,7 +256,7 @@ export const LoadBalancerFormPage = () => {
               variant="link"
               onClick={() => setListeners((prev) => [...prev, defaultListener()])}
             >
-              + Add listener
+              {t('+ Add listener')}
             </Button>
           </FormGroup>
 
@@ -259,7 +264,7 @@ export const LoadBalancerFormPage = () => {
             <Alert
               variant="danger"
               isInline
-              title={isEdit ? 'Failed to update' : 'Failed to create'}
+              title={isEdit ? t('Failed to update') : t('Failed to create')}
             >
               {getErrorMessage(mutationError)}
             </Alert>
@@ -273,14 +278,14 @@ export const LoadBalancerFormPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !isValid}
             >
-              {isEdit ? 'Save changes' : 'Create'}
+              {isEdit ? t('Save changes') : t('Create')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate('/load-balancers')}
               isDisabled={isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

@@ -3,6 +3,7 @@ import type { ComputeInstanceCatalogItem } from '@osac/types';
 import type { ComputeInstanceWizardValues } from './fields';
 import { VM_CREATE_RUN_STRATEGY } from './fields';
 import type { BuildComputeInstanceCreateBodyInput } from '../../../../../api/v1/compute-instance-wire';
+import { wireKeyForDynamicFieldPath } from '../../../catalogFieldDefinition';
 
 export const createEmptyComputeInstanceValues = (): ComputeInstanceWizardValues => ({
   catalogItemId: '',
@@ -23,6 +24,7 @@ export const createEmptyComputeInstanceValues = (): ComputeInstanceWizardValues 
     },
     additionalNetworkAttachments: [],
     projectId: '',
+    dynamicParameters: {},
   },
 });
 
@@ -79,6 +81,17 @@ export const buildComputeInstanceCreatePayload = (
   // Windows flag — proto-aligned: spec.is_windows
   if (values.spec.isWindows) {
     spec.isWindows = true;
+  }
+
+  // Dynamic (custom.* and template_parameters.*) fields — proto-aligned: spec.template_parameters
+  const templateParameters: Record<string, unknown> = {};
+  for (const [path, value] of Object.entries(values.spec.dynamicParameters)) {
+    if (value.trim()) {
+      templateParameters[wireKeyForDynamicFieldPath(path)] = value;
+    }
+  }
+  if (Object.keys(templateParameters).length > 0) {
+    spec.templateParameters = templateParameters;
   }
 
   // Build metadata with labels

@@ -22,9 +22,11 @@ import {
 import { type InstanceType, InstanceTypeState } from '@osac/types';
 
 import { useCreateInstanceType } from '../../api/v1/instance-types';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 export const ProviderInstanceTypeNewPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
@@ -76,20 +78,20 @@ export const ProviderInstanceTypeNewPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/provider/instance-types')}>
-                Instance Types
+                {t('Instance Types')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Create instance type</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Create instance type')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Create instance type
+            {t('Create instance type')}
           </Title>
         </Stack>
       </PageSection>
 
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '560px' }} id="it-create-form">
-          <FormGroup label="Identifier (name)" fieldId="it-name" isRequired>
+          <FormGroup label={t('Identifier (name)')} fieldId="it-name" isRequired>
             <TextInput
               id="it-name"
               value={name}
@@ -100,7 +102,7 @@ export const ProviderInstanceTypeNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="CPU cores" fieldId="it-cores" isRequired>
+          <FormGroup label={t('CPU cores')} fieldId="it-cores" isRequired>
             <TextInput
               id="it-cores"
               value={cores}
@@ -111,7 +113,7 @@ export const ProviderInstanceTypeNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Memory (GiB)" fieldId="it-memory" isRequired>
+          <FormGroup label={t('Memory (GiB)')} fieldId="it-memory" isRequired>
             <TextInput
               id="it-memory"
               value={memoryGib}
@@ -122,17 +124,17 @@ export const ProviderInstanceTypeNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Description" fieldId="it-description">
+          <FormGroup label={t('Description')} fieldId="it-description">
             <TextArea
               id="it-description"
               value={description}
               onChange={(_e, v) => setDescription(v)}
-              placeholder="Small general-purpose instance type…"
+              placeholder={t('Small general-purpose instance type…')}
               rows={3}
             />
           </FormGroup>
 
-          <FormGroup label="Price per hour (USD)" fieldId="it-price">
+          <FormGroup label={t('Price per hour (USD)')} fieldId="it-price">
             <TextInput
               id="it-price"
               value={pricePerHour}
@@ -143,7 +145,7 @@ export const ProviderInstanceTypeNewPage = () => {
           </FormGroup>
 
           {create.error && (
-            <Alert variant="danger" title="Failed to create instance type" isInline>
+            <Alert variant="danger" title={t('Failed to create instance type')} isInline>
               {getErrorMessage(create.error)}
             </Alert>
           )}
@@ -156,14 +158,14 @@ export const ProviderInstanceTypeNewPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !isValid}
             >
-              Create
+              {t('Create')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate('/provider/instance-types')}
               isDisabled={isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

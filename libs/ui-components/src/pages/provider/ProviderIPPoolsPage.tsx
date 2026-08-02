@@ -37,6 +37,7 @@ import {
 import { useTenants } from '../../api/v1/tenant';
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 const IP_FAMILY_LABELS: Record<number, string> = { 1: 'IPv4', 2: 'IPv6' };
@@ -49,13 +50,14 @@ type TenantFilter = 'Shared' | 'Assigned';
 // ---------------------------------------------------------------------------
 
 const AssignTenantModal = ({ pool, onClose }: { pool: ExternalIPPool; onClose: () => void }) => {
+  const { t } = useTranslation();
   const { data: tenants = [] } = useTenants();
   const patch = usePatchExternalIPPool();
   const [tenantId, setTenantId] = useState(pool.metadata?.tenant ?? '');
   const [tenantOpen, setTenantOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
 
-  const selectedName = tenants.find((t) => t.id === tenantId)?.metadata?.name ?? tenantId;
+  const selectedName = tenants.find((tn) => tn.id === tenantId)?.metadata?.name ?? tenantId;
   const unchanged = tenantId === (pool.metadata?.tenant ?? '');
 
   const onSave = async () => {
@@ -80,11 +82,11 @@ const AssignTenantModal = ({ pool, onClose }: { pool: ExternalIPPool; onClose: (
       aria-labelledby="assign-tenant-title"
     >
       <ModalHeader
-        title={`Assign tenant — ${pool.metadata?.name ?? pool.id}`}
+        title={t('Assign tenant — {{name}}', { name: pool.metadata?.name ?? pool.id })}
         labelId="assign-tenant-title"
       />
       <ModalBody>
-        <FormGroup label="Tenant" fieldId="at-tenant">
+        <FormGroup label={t('Tenant')} fieldId="at-tenant">
           <Select
             isOpen={tenantOpen}
             onOpenChange={setTenantOpen}
@@ -100,15 +102,15 @@ const AssignTenantModal = ({ pool, onClose }: { pool: ExternalIPPool; onClose: (
                 isExpanded={tenantOpen}
                 style={{ width: '100%' }}
               >
-                {tenantId ? selectedName : 'No tenant (shared)'}
+                {tenantId ? selectedName : t('No tenant (shared)')}
               </MenuToggle>
             )}
           >
             <SelectList>
-              <SelectOption value="">No tenant (shared)</SelectOption>
-              {tenants.map((t) => (
-                <SelectOption key={t.id} value={t.id}>
-                  {t.metadata?.name ?? t.id}
+              <SelectOption value="">{t('No tenant (shared)')}</SelectOption>
+              {tenants.map((tn) => (
+                <SelectOption key={tn.id} value={tn.id}>
+                  {tn.metadata?.name ?? tn.id}
                 </SelectOption>
               ))}
             </SelectList>
@@ -118,7 +120,7 @@ const AssignTenantModal = ({ pool, onClose }: { pool: ExternalIPPool; onClose: (
           <Alert
             variant="danger"
             isInline
-            title="Failed to update pool"
+            title={t('Failed to update pool')}
             style={{ marginTop: '1rem' }}
           >
             {getErrorMessage(patch.error)}
@@ -127,7 +129,7 @@ const AssignTenantModal = ({ pool, onClose }: { pool: ExternalIPPool; onClose: (
       </ModalBody>
       <ModalFooter>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
         <Button
           variant="primary"
@@ -135,7 +137,7 @@ const AssignTenantModal = ({ pool, onClose }: { pool: ExternalIPPool; onClose: (
           isDisabled={isPending || unchanged}
           isLoading={isPending}
         >
-          Save
+          {t('Save')}
         </Button>
       </ModalFooter>
     </Modal>
@@ -147,6 +149,7 @@ const AssignTenantModal = ({ pool, onClose }: { pool: ExternalIPPool; onClose: (
 // ---------------------------------------------------------------------------
 
 export const ProviderIPPoolsPage = () => {
+  const { t } = useTranslation();
   const { data: externalPools = [], isLoading, error } = useExternalIPPools();
   const { mutate: deletePool } = useDeleteExternalIPPool();
   const navigate = useNavigate();
@@ -205,7 +208,10 @@ export const ProviderIPPoolsPage = () => {
   const hasFilters = search || familyFilters.length > 0 || tenantFilters.length > 0;
 
   return (
-    <ListPage title="IP Pools" description="Manage external IP address pools available to tenants.">
+    <ListPage
+      title={t('IP Pools')}
+      description={t('Manage external IP address pools available to tenants.')}
+    >
       {assignTarget && (
         <AssignTenantModal pool={assignTarget} onClose={() => setAssignTarget(null)} />
       )}
@@ -214,8 +220,8 @@ export const ProviderIPPoolsPage = () => {
           <ToolbarContent>
             <ToolbarItem variant="search-filter">
               <SearchInput
-                aria-label="Search IP pools"
-                placeholder="Search by name, CIDR, or zone"
+                aria-label={t('Search IP pools')}
+                placeholder={t('Search by name, CIDR, or zone')}
                 value={search}
                 onChange={(_e, v) => setSearch(v)}
                 onClear={() => setSearch('')}
@@ -227,7 +233,7 @@ export const ProviderIPPoolsPage = () => {
                 labels={familyFilters}
                 deleteLabel={(_g, v) => toggleFamily(v as FamilyFilter)}
                 deleteLabelGroup={() => setFamilyFilters([])}
-                categoryName="IP family"
+                categoryName={t('IP family')}
               >
                 <Select
                   isOpen={familyOpen}
@@ -243,7 +249,7 @@ export const ProviderIPPoolsPage = () => {
                       isExpanded={familyOpen}
                       badge={familyFilters.length || undefined}
                     >
-                      IP family
+                      {t('IP family')}
                     </MenuToggle>
                   )}
                 >
@@ -266,7 +272,7 @@ export const ProviderIPPoolsPage = () => {
                 labels={tenantFilters}
                 deleteLabel={(_g, v) => toggleTenant(v as TenantFilter)}
                 deleteLabelGroup={() => setTenantFilters([])}
-                categoryName="Tenant"
+                categoryName={t('Tenant')}
               >
                 <Select
                   isOpen={tenantOpen}
@@ -282,19 +288,19 @@ export const ProviderIPPoolsPage = () => {
                       isExpanded={tenantOpen}
                       badge={tenantFilters.length || undefined}
                     >
-                      Tenant
+                      {t('Tenant')}
                     </MenuToggle>
                   )}
                 >
                   <SelectList>
-                    {(['Shared', 'Assigned'] as TenantFilter[]).map((t) => (
+                    {(['Shared', 'Assigned'] as TenantFilter[]).map((tf) => (
                       <SelectOption
-                        key={t}
-                        value={t}
+                        key={tf}
+                        value={tf}
                         hasCheckbox
-                        isSelected={tenantFilters.includes(t)}
+                        isSelected={tenantFilters.includes(tf)}
                       >
-                        {t}
+                        {tf}
                       </SelectOption>
                     ))}
                   </SelectList>
@@ -304,7 +310,7 @@ export const ProviderIPPoolsPage = () => {
 
             <ToolbarItem align={{ default: 'alignEnd' }}>
               <Button variant="primary" onClick={() => navigate('/provider/ip-pools/new')}>
-                Create pool
+                {t('Create pool')}
               </Button>
             </ToolbarItem>
           </ToolbarContent>
@@ -315,25 +321,25 @@ export const ProviderIPPoolsPage = () => {
             alignItems={{ default: 'alignItemsCenter' }}
             style={{ gap: '0.5rem', padding: '1rem 0' }}
           >
-            <FlexItem>No IP pools match the current filters.</FlexItem>
+            <FlexItem>{t('No IP pools match the current filters.')}</FlexItem>
             <FlexItem>
               <Button variant="link" isInline onClick={clearAll}>
-                Clear filters
+                {t('Clear filters')}
               </Button>
             </FlexItem>
           </Flex>
         ) : externalPools.length === 0 ? (
-          <Alert variant="info" isInline title="No pools configured" />
+          <Alert variant="info" isInline title={t('No pools configured')} />
         ) : (
-          <Table aria-label="IP pools" variant="compact">
+          <Table aria-label={t('IP pools')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>IP family</Th>
-                <Th>CIDR</Th>
-                <Th>Zone</Th>
-                <Th>Available</Th>
-                <Th>Tenant</Th>
+                <Th>{t('Name')}</Th>
+                <Th>{t('IP family')}</Th>
+                <Th>{t('CIDR')}</Th>
+                <Th>{t('Zone')}</Th>
+                <Th>{t('Available')}</Th>
+                <Th>{t('Tenant')}</Th>
                 <Td />
               </Tr>
             </Thead>
@@ -342,7 +348,7 @@ export const ProviderIPPoolsPage = () => {
                 const spec = pool.spec as typeof pool.spec & { cidr?: string; zone?: string };
                 return (
                   <Tr key={pool.id}>
-                    <Td dataLabel="Name">
+                    <Td dataLabel={t('Name')}>
                       <Button
                         variant="link"
                         isInline
@@ -351,42 +357,44 @@ export const ProviderIPPoolsPage = () => {
                         {pool.metadata?.name ?? pool.id}
                       </Button>
                     </Td>
-                    <Td dataLabel="IP family">
+                    <Td dataLabel={t('IP family')}>
                       <Label color="blue" isCompact>
                         {IP_FAMILY_LABELS[pool.spec?.ipFamily ?? 0] ?? '—'}
                       </Label>
                     </Td>
-                    <Td dataLabel="CIDR">
+                    <Td dataLabel={t('CIDR')}>
                       {spec?.cidr ? (
                         <code style={{ fontSize: '0.85em' }}>{spec.cidr}</code>
                       ) : (
                         <span style={{ color: 'var(--pf-t--global--color--200)' }}>—</span>
                       )}
                     </Td>
-                    <Td dataLabel="Zone">{spec?.zone ?? '—'}</Td>
-                    <Td dataLabel="Available">{String(pool.status?.available ?? '—')}</Td>
-                    <Td dataLabel="Tenant">
+                    <Td dataLabel={t('Zone')}>{spec?.zone ?? '—'}</Td>
+                    <Td dataLabel={t('Available')}>{String(pool.status?.available ?? '—')}</Td>
+                    <Td dataLabel={t('Tenant')}>
                       {pool.metadata?.tenant ? (
                         <Label color="purple" isCompact>
                           {pool.metadata.tenant}
                         </Label>
                       ) : (
-                        <span style={{ color: 'var(--pf-t--global--color--200)' }}>Shared</span>
+                        <span style={{ color: 'var(--pf-t--global--color--200)' }}>
+                          {t('Shared')}
+                        </span>
                       )}
                     </Td>
                     <Td isActionCell>
                       <ActionsColumn
                         items={[
                           {
-                            title: 'View details',
+                            title: t('View details'),
                             onClick: () => navigate(`/provider/ip-pools/external/${pool.id}`),
                           },
                           {
-                            title: 'Assign tenant',
+                            title: t('Assign tenant'),
                             onClick: () => setAssignTarget(pool),
                           },
                           {
-                            title: 'Delete',
+                            title: t('Delete'),
                             onClick: () => deletePool(pool.id),
                             isDanger: true,
                           },

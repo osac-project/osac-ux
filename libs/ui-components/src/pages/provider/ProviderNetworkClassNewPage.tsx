@@ -21,11 +21,13 @@ import {
 } from '@patternfly/react-core';
 
 import { useCreateNetworkClass } from '../../api/v1/networking';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 const BACK = '/provider/network-classes';
 
 export const ProviderNetworkClassNewPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const createNC = useCreateNetworkClass();
 
@@ -64,66 +66,66 @@ export const ProviderNetworkClassNewPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate(BACK)}>
-                Network Classes
+                {t('Network Classes')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Create network class</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Create network class')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Create network class
+            {t('Create network class')}
           </Title>
         </Stack>
       </PageSection>
 
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '560px' }} id="nc-form">
-          <FormGroup label="Identifier (name)" fieldId="nc-name" isRequired>
+          <FormGroup label={t('Identifier (name)')} fieldId="nc-name" isRequired>
             <TextInput
               id="nc-name"
               value={name}
               onChange={(_e, v) => setName(v)}
-              placeholder="udn-network"
+              placeholder={t('udn-network')}
               isRequired
               autoFocus
             />
           </FormGroup>
 
-          <FormGroup label="Title" fieldId="nc-title" isRequired>
+          <FormGroup label={t('Title')} fieldId="nc-title" isRequired>
             <TextInput
               id="nc-title"
               value={title}
               onChange={(_e, v) => setTitle(v)}
-              placeholder="UDN Network"
+              placeholder={t('UDN Network')}
               isRequired
             />
           </FormGroup>
 
-          <FormGroup label="Description" fieldId="nc-description">
+          <FormGroup label={t('Description')} fieldId="nc-description">
             <TextArea
               id="nc-description"
               value={description}
               onChange={(_e, v) => setDescription(v)}
-              placeholder="Describe this network class, its characteristics and limitations…"
+              placeholder={t('Describe this network class, its characteristics and limitations…')}
               rows={3}
             />
           </FormGroup>
 
-          <FormGroup label="Capabilities" fieldId="nc-capabilities">
+          <FormGroup label={t('Capabilities')} fieldId="nc-capabilities">
             <Checkbox
               id="nc-ipv4"
-              label="Supports IPv4"
+              label={t('Supports IPv4')}
               isChecked={supportsIpv4}
               onChange={(_e, v) => setSupportsIpv4(v)}
             />
             <Checkbox
               id="nc-ipv6"
-              label="Supports IPv6"
+              label={t('Supports IPv6')}
               isChecked={supportsIpv6}
               onChange={(_e, v) => setSupportsIpv6(v)}
             />
             <Checkbox
               id="nc-dualstack"
-              label="Supports dual-stack (IPv4 + IPv6)"
+              label={t('Supports dual-stack (IPv4 + IPv6)')}
               isChecked={supportsDualStack}
               onChange={(_e, v) => setSupportsDualStack(v)}
             />
@@ -132,14 +134,14 @@ export const ProviderNetworkClassNewPage = () => {
           <FormGroup fieldId="nc-default">
             <Checkbox
               id="nc-default"
-              label="Set as default network class"
+              label={t('Set as default network class')}
               isChecked={isDefault}
               onChange={(_e, v) => setIsDefault(v)}
             />
           </FormGroup>
 
           {createNC.error && (
-            <Alert variant="danger" title="Failed to create network class" isInline>
+            <Alert variant="danger" title={t('Failed to create network class')} isInline>
               {getErrorMessage(createNC.error)}
             </Alert>
           )}
@@ -152,10 +154,10 @@ export const ProviderNetworkClassNewPage = () => {
               isLoading={createNC.isPending}
               isDisabled={createNC.isPending || !isValid}
             >
-              Create
+              {t('Create')}
             </Button>
             <Button variant="link" onClick={() => navigate(BACK)} isDisabled={createNC.isPending}>
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

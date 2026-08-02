@@ -38,6 +38,7 @@ import { RoleBindingState } from '@osac/types';
 import { useDeleteRoleBinding, useRoleBindings, useRoles } from '../../api/v1/role-binding';
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const ROLES_TAB = 0;
 const BINDINGS_TAB = 1;
@@ -80,30 +81,31 @@ subject_roles := input.auth.identity.roles`;
 // ---------------------------------------------------------------------------
 
 const RolesTab = () => {
+  const { t } = useTranslation();
   const { data: roles = [], isLoading, error } = useRoles();
   return (
     <ListPageBody isLoading={isLoading} error={error}>
       {roles.length === 0 ? (
-        <Alert variant="info" isInline title="No roles defined" />
+        <Alert variant="info" isInline title={t('No roles defined')} />
       ) : (
-        <Table aria-label="Roles" variant="compact">
+        <Table aria-label={t('Roles')} variant="compact">
           <Thead>
             <Tr>
-              <Th>Title</Th>
-              <Th>ID</Th>
-              <Th>Description</Th>
+              <Th>{t('Title')}</Th>
+              <Th>{t('ID')}</Th>
+              <Th>{t('Description')}</Th>
             </Tr>
           </Thead>
           <Tbody>
             {roles.map((r) => (
               <Tr key={r.id}>
-                <Td dataLabel="Title">
+                <Td dataLabel={t('Title')}>
                   <strong>{r.spec?.title ?? r.id}</strong>
                 </Td>
-                <Td dataLabel="ID">
+                <Td dataLabel={t('ID')}>
                   <code style={{ fontSize: '0.85em' }}>{r.id}</code>
                 </Td>
-                <Td dataLabel="Description">{r.spec?.description ?? '—'}</Td>
+                <Td dataLabel={t('Description')}>{r.spec?.description ?? '—'}</Td>
               </Tr>
             ))}
           </Tbody>
@@ -128,6 +130,7 @@ const STATE_LABELS: Record<
 // ---------------------------------------------------------------------------
 
 const BindingsTab = () => {
+  const { t } = useTranslation();
   const { data: bindings = [], isLoading, error } = useRoleBindings();
   const { data: roles = [] } = useRoles();
   const { mutate: deleteBinding } = useDeleteRoleBinding();
@@ -186,7 +189,7 @@ const BindingsTab = () => {
         <Alert
           variant="warning"
           isInline
-          title="Delete this role binding?"
+          title={t('Delete this role binding?')}
           style={{ marginBottom: '1rem' }}
           actionLinks={
             <>
@@ -197,10 +200,10 @@ const BindingsTab = () => {
                   setToDelete(null);
                 }}
               >
-                Delete
+                {t('Delete')}
               </Button>
               <Button variant="link" onClick={() => setToDelete(null)}>
-                Cancel
+                {t('Cancel')}
               </Button>
             </>
           }
@@ -210,8 +213,8 @@ const BindingsTab = () => {
         <ToolbarContent>
           <ToolbarItem>
             <SearchInput
-              aria-label="Search bindings"
-              placeholder="Search by role or user"
+              aria-label={t('Search bindings')}
+              placeholder={t('Search by role or user')}
               value={search}
               onChange={(_e, v) => setSearch(v)}
               onClear={() => setSearch('')}
@@ -228,7 +231,7 @@ const BindingsTab = () => {
                 }
               }}
               deleteLabelGroup={() => setRoleFilters([])}
-              categoryName="Role"
+              categoryName={t('Role')}
             >
               <Select
                 isOpen={roleOpen}
@@ -241,7 +244,7 @@ const BindingsTab = () => {
                     isExpanded={roleOpen}
                     badge={roleFilters.length || undefined}
                   >
-                    Role
+                    {t('Role')}
                   </MenuToggle>
                 )}
               >
@@ -265,7 +268,7 @@ const BindingsTab = () => {
                 toggleState(typeof v === 'string' ? v : (v as { key: string }).key)
               }
               deleteLabelGroup={() => setStateFilters([])}
-              categoryName="State"
+              categoryName={t('State')}
             >
               <Select
                 isOpen={stateOpen}
@@ -278,7 +281,7 @@ const BindingsTab = () => {
                     isExpanded={stateOpen}
                     badge={stateFilters.length || undefined}
                   >
-                    State
+                    {t('State')}
                   </MenuToggle>
                 )}
               >
@@ -303,7 +306,7 @@ const BindingsTab = () => {
               size="sm"
               onClick={() => navigate('/admin/role-bindings/assign')}
             >
-              Assign role
+              {t('Assign role')}
             </Button>
           </ToolbarItem>
         </ToolbarContent>
@@ -315,24 +318,24 @@ const BindingsTab = () => {
             alignItems={{ default: 'alignItemsCenter' }}
             style={{ gap: '0.5rem', padding: '1rem 0' }}
           >
-            <FlexItem>No role bindings match the current filters.</FlexItem>
+            <FlexItem>{t('No role bindings match the current filters.')}</FlexItem>
             <FlexItem>
               <Button variant="link" isInline onClick={clearAll}>
-                Clear filters
+                {t('Clear filters')}
               </Button>
             </FlexItem>
           </Flex>
         ) : bindings.length === 0 ? (
-          <Alert variant="info" isInline title="No role bindings">
-            No roles have been assigned yet.
+          <Alert variant="info" isInline title={t('No role bindings')}>
+            {t('No roles have been assigned yet.')}
           </Alert>
         ) : (
-          <Table aria-label="Role bindings" variant="compact">
+          <Table aria-label={t('Role bindings')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Role</Th>
-                <Th>Users</Th>
-                <Th>State</Th>
+                <Th>{t('Role')}</Th>
+                <Th>{t('Users')}</Th>
+                <Th>{t('State')}</Th>
                 <Td />
               </Tr>
             </Thead>
@@ -342,8 +345,8 @@ const BindingsTab = () => {
                   rb.status?.state !== undefined ? STATE_LABELS[rb.status.state] : undefined;
                 return (
                   <Tr key={rb.id}>
-                    <Td dataLabel="Role">{roleTitleById(rb.spec?.role ?? '')}</Td>
-                    <Td dataLabel="Users">
+                    <Td dataLabel={t('Role')}>{roleTitleById(rb.spec?.role ?? '')}</Td>
+                    <Td dataLabel={t('Users')}>
                       {rb.spec?.users?.length ? (
                         <LabelGroup>
                           {rb.spec.users.map((u) => (
@@ -356,20 +359,20 @@ const BindingsTab = () => {
                         '—'
                       )}
                     </Td>
-                    <Td dataLabel="State">
+                    <Td dataLabel={t('State')}>
                       <Label color={stateInfo?.color ?? 'grey'} isCompact>
-                        {stateInfo?.label ?? 'Unknown'}
+                        {t(stateInfo?.label ?? 'Unknown')}
                       </Label>
                     </Td>
                     <Td isActionCell>
                       <ActionsColumn
                         items={[
                           {
-                            title: 'Edit',
+                            title: t('Edit'),
                             onClick: () => navigate(`/admin/role-bindings/${rb.id}`),
                           },
                           {
-                            title: 'Delete',
+                            title: t('Delete'),
                             onClick: () => setToDelete(rb.id),
                             isDanger: true,
                           },
@@ -391,76 +394,89 @@ const BindingsTab = () => {
 // Enforcement tab (static)
 // ---------------------------------------------------------------------------
 
-const EnforcementTab = () => (
-  <PageSection>
-    <Title headingLevel="h3" size="md" style={{ marginBottom: '0.75rem' }}>
-      Authorization enforcement
-    </Title>
-    <Content component="p" style={{ marginBottom: '1rem' }}>
-      Every API endpoint in the OSAC fulfillment service is protected by an in-process{' '}
-      <strong>OPA Rego</strong> policy evaluated by gRPC interceptors. The{' '}
-      <code>GrpcAuthnInterceptor</code> validates Keycloak-issued JWTs via the built-in JWKS cache;
-      the <code>GrpcAuthzInterceptor</code> runs the embedded Rego policy. Requests that do not
-      satisfy the policy are rejected with <code>PERMISSION_DENIED</code>. Authorino / Kuadrant
-      external auth was removed in <em>fulfillment-service#685</em>.
-    </Content>
+const EnforcementTab = () => {
+  const { t } = useTranslation();
+  return (
+    <PageSection>
+      <Title headingLevel="h3" size="md" style={{ marginBottom: '0.75rem' }}>
+        {t('Authorization enforcement')}
+      </Title>
+      <Content component="p" style={{ marginBottom: '1rem' }}>
+        {t('Every API endpoint in the OSAC fulfillment service is protected by an in-process')}{' '}
+        <strong>OPA Rego</strong> {t('policy evaluated by gRPC interceptors. The')}{' '}
+        <code>GrpcAuthnInterceptor</code>{' '}
+        {t('validates Keycloak-issued JWTs via the built-in JWKS cache; the')}{' '}
+        <code>GrpcAuthzInterceptor</code>{' '}
+        {t(
+          'runs the embedded Rego policy. Requests that do not satisfy the policy are rejected with',
+        )}{' '}
+        <code>PERMISSION_DENIED</code>
+        {'. '}
+        {t('Authorino / Kuadrant external auth was removed in')} <em>fulfillment-service#685</em>.
+      </Content>
 
-    <Title headingLevel="h4" size="sm" style={{ marginBottom: '0.5rem' }}>
-      Sample policy — role-based access control
-    </Title>
-    <pre
-      style={{
-        background: 'var(--pf-t--global--background--color--secondary--default)',
-        padding: '1rem',
-        borderRadius: '4px',
-        overflow: 'auto',
-        fontSize: '0.8em',
-        lineHeight: 1.5,
-      }}
-    >
-      {SAMPLE_REGO}
-    </pre>
-  </PageSection>
-);
+      <Title headingLevel="h4" size="sm" style={{ marginBottom: '0.5rem' }}>
+        {t('Sample policy — role-based access control')}
+      </Title>
+      <pre
+        style={{
+          background: 'var(--pf-t--global--background--color--secondary--default)',
+          padding: '1rem',
+          borderRadius: '4px',
+          overflow: 'auto',
+          fontSize: '0.8em',
+          lineHeight: 1.5,
+        }}
+      >
+        {SAMPLE_REGO}
+      </pre>
+    </PageSection>
+  );
+};
 
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
 export const AdminRoleBindingsPage = () => {
+  const { t } = useTranslation();
   const { data: roles = [] } = useRoles();
   const { data: bindings = [] } = useRoleBindings();
   const [activeTab, setActiveTab] = useState(BINDINGS_TAB);
 
   return (
     <ListPage
-      title="Role management"
-      description="View system roles and manage user role assignments."
+      title={t('Role management')}
+      description={t('View system roles and manage user role assignments.')}
     >
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <span>
-          <Badge isRead>{roles.length}</Badge> system roles
+          <Badge isRead>{roles.length}</Badge> {t('system roles')}
         </span>
         <span>
-          <Badge isRead>{bindings.length}</Badge> role bindings
+          <Badge isRead>{bindings.length}</Badge> {t('role bindings')}
         </span>
         <Label color="blue" isCompact>
-          Enforced by OPA
+          {t('Enforced by OPA')}
         </Label>
       </div>
 
       <Tabs
         activeKey={activeTab}
         onSelect={(_e, k) => setActiveTab(k as number)}
-        aria-label="Role management tabs"
+        aria-label={t('Role management tabs')}
         style={{ marginBottom: '1rem' }}
       >
-        <Tab eventKey={ROLES_TAB} title={<TabTitleText>Roles</TabTitleText>} />
+        <Tab eventKey={ROLES_TAB} title={<TabTitleText>{t('Roles')}</TabTitleText>} />
         <Tab
           eventKey={BINDINGS_TAB}
-          title={<TabTitleText>User → Role bindings ({bindings.length})</TabTitleText>}
+          title={
+            <TabTitleText>
+              {t('User → Role bindings ({{count}})', { count: bindings.length })}
+            </TabTitleText>
+          }
         />
-        <Tab eventKey={ENFORCEMENT_TAB} title={<TabTitleText>Enforcement</TabTitleText>} />
+        <Tab eventKey={ENFORCEMENT_TAB} title={<TabTitleText>{t('Enforcement')}</TabTitleText>} />
       </Tabs>
 
       <TabContent

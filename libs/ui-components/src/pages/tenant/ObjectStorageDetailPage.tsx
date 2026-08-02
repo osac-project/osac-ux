@@ -64,6 +64,7 @@ import {
 import { ResourceDetailsPageError } from '../../components/Resource/ResourceDetailsPageError';
 import { ResourceDetailsPageLoading } from '../../components/Resource/ResourceDetailsPageLoading';
 import { DeleteConfirmModal } from '../../components/shared/DeleteConfirmModal';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 const OVERVIEW_TAB_ID = 'bucket-detail-overview';
@@ -93,6 +94,7 @@ interface CreateAccessKeyModalProps {
 }
 
 const CreateAccessKeyModal = ({ bucketId, onClose }: CreateAccessKeyModalProps) => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [createdKey, setCreatedKey] = useState<BucketAccessKey | null>(null);
@@ -105,24 +107,25 @@ const CreateAccessKeyModal = ({ bucketId, onClose }: CreateAccessKeyModalProps) 
 
   if (createdKey) {
     return (
-      <Modal isOpen onClose={onClose} variant="medium" aria-label="Access key created">
-        <ModalHeader title="Access key created" />
+      <Modal isOpen onClose={onClose} variant="medium" aria-label={t('Access key created')}>
+        <ModalHeader title={t('Access key created')} />
         <ModalBody>
           <Stack hasGutter>
             <StackItem>
-              <Alert variant="warning" isInline title="Copy your secret now">
-                The secret access key is shown only once. Store it securely — it cannot be retrieved
-                later.
+              <Alert variant="warning" isInline title={t('Copy your secret now')}>
+                {t(
+                  'The secret access key is shown only once. Store it securely — it cannot be retrieved later.',
+                )}
               </Alert>
             </StackItem>
             <StackItem>
-              <FormGroup label="Access key ID" fieldId="created-key-id">
+              <FormGroup label={t('Access key ID')} fieldId="created-key-id">
                 <ClipboardCopy isReadOnly>{createdKey.status.accessKeyId}</ClipboardCopy>
               </FormGroup>
             </StackItem>
             {createdKey.status.secretAccessKey && (
               <StackItem>
-                <FormGroup label="Secret access key" fieldId="created-secret">
+                <FormGroup label={t('Secret access key')} fieldId="created-secret">
                   <ClipboardCopy isReadOnly>{createdKey.status.secretAccessKey}</ClipboardCopy>
                 </FormGroup>
               </StackItem>
@@ -131,7 +134,7 @@ const CreateAccessKeyModal = ({ bucketId, onClose }: CreateAccessKeyModalProps) 
         </ModalBody>
         <ModalFooter>
           <Button variant="primary" onClick={onClose}>
-            Done
+            {t('Done')}
           </Button>
         </ModalFooter>
       </Modal>
@@ -139,30 +142,30 @@ const CreateAccessKeyModal = ({ bucketId, onClose }: CreateAccessKeyModalProps) 
   }
 
   return (
-    <Modal isOpen onClose={onClose} variant="medium" aria-label="Create access key">
-      <ModalHeader title="Create access key" />
+    <Modal isOpen onClose={onClose} variant="medium" aria-label={t('Create access key')}>
+      <ModalHeader title={t('Create access key')} />
       <ModalBody>
         <Stack hasGutter>
           {error && (
             <StackItem>
-              <Alert variant="danger" isInline title="Failed to create key">
+              <Alert variant="danger" isInline title={t('Failed to create key')}>
                 {getErrorMessage(error)}
               </Alert>
             </StackItem>
           )}
           <StackItem>
-            <FormGroup label="Name" isRequired fieldId="key-name">
+            <FormGroup label={t('Name')} isRequired fieldId="key-name">
               <input
                 id="key-name"
                 className="pf-v6-c-form-control"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. ci-deploy-key"
+                placeholder={t('e.g. ci-deploy-key')}
               />
             </FormGroup>
           </StackItem>
           <StackItem>
-            <FormGroup label="Description" fieldId="key-description">
+            <FormGroup label={t('Description')} fieldId="key-description">
               <TextArea
                 id="key-description"
                 value={description}
@@ -181,10 +184,10 @@ const CreateAccessKeyModal = ({ bucketId, onClose }: CreateAccessKeyModalProps) 
           isLoading={isPending}
           isDisabled={isPending || !name.trim()}
         >
-          Create
+          {t('Create')}
         </Button>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
       </ModalFooter>
     </Modal>
@@ -196,6 +199,7 @@ const CreateAccessKeyModal = ({ bucketId, onClose }: CreateAccessKeyModalProps) 
 // ---------------------------------------------------------------------------
 
 const AccessKeysTab = ({ bucketId }: { bucketId: string }) => {
+  const { t } = useTranslation();
   const { data: keys = [], isLoading } = useBucketAccessKeys(bucketId);
   const { mutateAsync: deleteKey } = useDeleteBucketAccessKey(bucketId);
   const [createOpen, setCreateOpen] = useState(false);
@@ -209,7 +213,7 @@ const AccessKeysTab = ({ bucketId }: { bucketId: string }) => {
       {keyToDelete && (
         <DeleteConfirmModal
           resourceName={keyToDelete.metadata?.name ?? keyToDelete.id}
-          resourceKind="access key"
+          resourceKind={t('access key')}
           onConfirm={async () => {
             await deleteKey(keyToDelete.id);
             setKeyToDelete(null);
@@ -223,7 +227,7 @@ const AccessKeysTab = ({ bucketId }: { bucketId: string }) => {
           <Flex justifyContent={{ default: 'justifyContentFlexEnd' }}>
             <FlexItem>
               <Button variant="primary" icon={<PlusIcon />} onClick={() => setCreateOpen(true)}>
-                Create access key
+                {t('Create access key')}
               </Button>
             </FlexItem>
           </Flex>
@@ -232,33 +236,34 @@ const AccessKeysTab = ({ bucketId }: { bucketId: string }) => {
           <Card>
             <CardBody>
               {isLoading ? (
-                <Spinner size="md" aria-label="Loading access keys" />
+                <Spinner size="md" aria-label={t('Loading access keys')} />
               ) : keys.length === 0 ? (
-                <Alert variant="info" isInline title="No access keys">
-                  Create an access key to enable programmatic access to this bucket via
-                  S3-compatible APIs.
+                <Alert variant="info" isInline title={t('No access keys')}>
+                  {t(
+                    'Create an access key to enable programmatic access to this bucket via S3-compatible APIs.',
+                  )}
                 </Alert>
               ) : (
-                <Table aria-label="Bucket access keys" variant="compact">
+                <Table aria-label={t('Bucket access keys')} variant="compact">
                   <Thead>
                     <Tr>
-                      <Th>Name</Th>
-                      <Th>Access key ID</Th>
-                      <Th>Description</Th>
-                      <Th>Status</Th>
-                      <Th>Created</Th>
+                      <Th>{t('Name')}</Th>
+                      <Th>{t('Access key ID')}</Th>
+                      <Th>{t('Description')}</Th>
+                      <Th>{t('Status')}</Th>
+                      <Th>{t('Created')}</Th>
                       <Td />
                     </Tr>
                   </Thead>
                   <Tbody>
                     {keys.map((key) => (
                       <Tr key={key.id}>
-                        <Td dataLabel="Name">{key.metadata?.name ?? key.id}</Td>
-                        <Td dataLabel="Access key ID">
+                        <Td dataLabel={t('Name')}>{key.metadata?.name ?? key.id}</Td>
+                        <Td dataLabel={t('Access key ID')}>
                           <code>{key.status.accessKeyId}</code>
                         </Td>
-                        <Td dataLabel="Description">{key.spec.description || '—'}</Td>
-                        <Td dataLabel="Status">
+                        <Td dataLabel={t('Description')}>{key.spec.description || '—'}</Td>
+                        <Td dataLabel={t('Status')}>
                           <Label
                             color={key.status.state === 'ACTIVE' ? 'green' : 'orange'}
                             isCompact
@@ -266,7 +271,7 @@ const AccessKeysTab = ({ bucketId }: { bucketId: string }) => {
                             {key.status.state}
                           </Label>
                         </Td>
-                        <Td dataLabel="Created">
+                        <Td dataLabel={t('Created')}>
                           {key.metadata?.creationTimestamp
                             ? new Date(key.metadata.creationTimestamp).toLocaleDateString()
                             : '—'}
@@ -275,7 +280,7 @@ const AccessKeysTab = ({ bucketId }: { bucketId: string }) => {
                           <ActionsColumn
                             items={[
                               {
-                                title: 'Revoke',
+                                title: t('Revoke'),
                                 isDisabled: key.status.state === 'REVOKING',
                                 onClick: (e) => {
                                   e.stopPropagation();
@@ -303,6 +308,7 @@ const AccessKeysTab = ({ bucketId }: { bucketId: string }) => {
 // ---------------------------------------------------------------------------
 
 export const ObjectStorageDetailPage = () => {
+  const { t } = useTranslation();
   const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
@@ -343,7 +349,7 @@ export const ObjectStorageDetailPage = () => {
             <Breadcrumb>
               <BreadcrumbItem>
                 <Button variant="link" isInline onClick={() => navigate('/bucket-storage')}>
-                  Storage Buckets
+                  {t('Storage Buckets')}
                 </Button>
               </BreadcrumbItem>
               <BreadcrumbItem isActive>{name}</BreadcrumbItem>
@@ -370,7 +376,7 @@ export const ObjectStorageDetailPage = () => {
                       icon={<EditIcon />}
                       onClick={() => navigate(`/bucket-storage/${id}/edit`)}
                     >
-                      Edit
+                      {t('Edit')}
                     </Button>
                   </FlexItem>
                   <FlexItem>
@@ -380,7 +386,7 @@ export const ObjectStorageDetailPage = () => {
                       onClick={() => setDeleteConfirm(true)}
                       isDisabled={isDeleting}
                     >
-                      Delete
+                      {t('Delete')}
                     </Button>
                   </FlexItem>
                 </Flex>
@@ -392,14 +398,14 @@ export const ObjectStorageDetailPage = () => {
               <Alert
                 variant="warning"
                 isInline
-                title={`Delete bucket "${name}"? This action cannot be undone.`}
+                title={t('Delete bucket "{{name}}"? This action cannot be undone.', { name })}
                 actionLinks={
                   <>
                     <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>
-                      Delete
+                      {t('Delete')}
                     </Button>
                     <Button variant="link" onClick={() => setDeleteConfirm(false)}>
-                      Cancel
+                      {t('Cancel')}
                     </Button>
                   </>
                 }
@@ -412,18 +418,18 @@ export const ObjectStorageDetailPage = () => {
         <Tabs
           activeKey={activeTab}
           onSelect={(_e, key) => setActiveTab(key as number)}
-          aria-label="Bucket details tabs"
+          aria-label={t('Bucket details tabs')}
         >
           <Tab
             eventKey={0}
-            title={<TabTitleText>Overview</TabTitleText>}
+            title={<TabTitleText>{t('Overview')}</TabTitleText>}
             tabContentId={OVERVIEW_TAB_ID}
           />
           <Tab
             eventKey={1}
             title={
               <TabTitleText>
-                <KeyIcon /> Access keys
+                <KeyIcon /> {t('Access keys')}
               </TabTitleText>
             }
             tabContentId={ACCESS_KEYS_TAB_ID}
@@ -440,25 +446,25 @@ export const ObjectStorageDetailPage = () => {
           <TabContentBody>
             <Card>
               <CardTitle>
-                <DatabaseIcon aria-hidden /> Bucket details
+                <DatabaseIcon aria-hidden /> {t('Bucket details')}
               </CardTitle>
               <CardBody>
                 <DescriptionList columnModifier={{ default: '2Col' }} isCompact>
                   <DescriptionListGroup>
-                    <DescriptionListTerm>State</DescriptionListTerm>
+                    <DescriptionListTerm>{t('State')}</DescriptionListTerm>
                     <DescriptionListDescription>
                       <BucketStateLabel state={bucket.status.state} />
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                   <DescriptionListGroup>
-                    <DescriptionListTerm>Endpoint</DescriptionListTerm>
+                    <DescriptionListTerm>{t('Endpoint')}</DescriptionListTerm>
                     <DescriptionListDescription>
                       {bucket.status.endpoint ? (
                         <ClipboardCopy
                           isReadOnly
                           variant="inline-compact"
-                          hoverTip="Copy"
-                          clickTip="Copied"
+                          hoverTip={t('Copy')}
+                          clickTip={t('Copied')}
                         >
                           {bucket.status.endpoint}
                         </ClipboardCopy>
@@ -468,11 +474,11 @@ export const ObjectStorageDetailPage = () => {
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                   <DescriptionListGroup>
-                    <DescriptionListTerm>Used storage</DescriptionListTerm>
+                    <DescriptionListTerm>{t('Used storage')}</DescriptionListTerm>
                     <DescriptionListDescription>{usedLabel}</DescriptionListDescription>
                   </DescriptionListGroup>
                   <DescriptionListGroup>
-                    <DescriptionListTerm>Object count</DescriptionListTerm>
+                    <DescriptionListTerm>{t('Object count')}</DescriptionListTerm>
                     <DescriptionListDescription>
                       {bucket.status.objectCount != null
                         ? bucket.status.objectCount.toLocaleString()
@@ -480,35 +486,35 @@ export const ObjectStorageDetailPage = () => {
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                   <DescriptionListGroup>
-                    <DescriptionListTerm>Versioning</DescriptionListTerm>
+                    <DescriptionListTerm>{t('Versioning')}</DescriptionListTerm>
                     <DescriptionListDescription>
                       <Checkbox
                         id="bucket-versioning-ro"
                         isChecked={bucket.spec.versioning ?? false}
                         isDisabled
-                        aria-label="Versioning enabled"
+                        aria-label={t('Versioning enabled')}
                       />
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                   <DescriptionListGroup>
-                    <DescriptionListTerm>Quota</DescriptionListTerm>
+                    <DescriptionListTerm>{t('Quota')}</DescriptionListTerm>
                     <DescriptionListDescription>
-                      {bucket.spec.quotaGib != null ? `${bucket.spec.quotaGib} GiB` : 'No limit'}
+                      {bucket.spec.quotaGib != null ? `${bucket.spec.quotaGib} GiB` : t('No limit')}
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                   <DescriptionListGroup>
-                    <DescriptionListTerm>Description</DescriptionListTerm>
+                    <DescriptionListTerm>{t('Description')}</DescriptionListTerm>
                     <DescriptionListDescription>
                       {bucket.spec.description || '—'}
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                   <DescriptionListGroup>
-                    <DescriptionListTerm>Created</DescriptionListTerm>
+                    <DescriptionListTerm>{t('Created')}</DescriptionListTerm>
                     <DescriptionListDescription>{created}</DescriptionListDescription>
                   </DescriptionListGroup>
                   {bucket.metadata?.creator && (
                     <DescriptionListGroup>
-                      <DescriptionListTerm>Creator</DescriptionListTerm>
+                      <DescriptionListTerm>{t('Creator')}</DescriptionListTerm>
                       <DescriptionListDescription>
                         {bucket.metadata.creator}
                       </DescriptionListDescription>

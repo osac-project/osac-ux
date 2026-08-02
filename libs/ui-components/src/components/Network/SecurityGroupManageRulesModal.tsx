@@ -8,6 +8,7 @@ import { SecurityRulesFields } from './SecurityRulesFields';
 import type { SecurityRuleInput } from '../../api/v1/networking';
 import { usePatchSecurityGroup } from '../../api/v1/networking';
 import { resourceDisplayName } from '../../api/v1/networking';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 import OsacForm from '../Form/OsacForm';
 
@@ -32,6 +33,7 @@ export const SecurityGroupManageRulesModal = ({
   sg,
   onClose,
 }: SecurityGroupManageRulesModalProps) => {
+  const { t } = useTranslation();
   const [ingress, setIngress] = React.useState<SecurityRuleInput[]>(() =>
     (sg.spec?.ingress ?? []).map(toRuleInput),
   );
@@ -61,23 +63,23 @@ export const SecurityGroupManageRulesModal = ({
       aria-labelledby="sg-rules-title"
     >
       <ModalHeader
-        title={`Manage rules — ${resourceDisplayName(sg.metadata, sg.id)}`}
+        title={t('Manage rules — {{name}}', { name: resourceDisplayName(sg.metadata, sg.id) })}
         labelId="sg-rules-title"
       />
       <ModalBody>
         <OsacForm isResponsive={false}>
           <SecurityRulesFields
-            label="Inbound rules (ingress)"
+            label={t('Inbound rules (ingress)')}
             rules={ingress}
             onChange={setIngress}
           />
           <SecurityRulesFields
-            label="Outbound rules (egress)"
+            label={t('Outbound rules (egress)')}
             rules={egress}
             onChange={setEgress}
           />
           {patchSG.error && (
-            <Alert variant="danger" title="Failed to save rules" isInline>
+            <Alert variant="danger" title={t('Failed to save rules')} isInline>
               {getErrorMessage(patchSG.error)}
             </Alert>
           )}
@@ -85,10 +87,10 @@ export const SecurityGroupManageRulesModal = ({
       </ModalBody>
       <ModalFooter>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
         <Button variant="primary" onClick={onSave} isDisabled={isPending} isLoading={isPending}>
-          Save rules
+          {t('Save rules')}
         </Button>
       </ModalFooter>
     </Modal>

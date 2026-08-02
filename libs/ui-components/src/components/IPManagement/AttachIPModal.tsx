@@ -19,6 +19,7 @@ import {
   useCreateExternalIPAttachment,
   useCreatePublicIPAttachment,
 } from '../../api/v1/ip-management';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 type TargetCase = 'computeInstance' | 'cluster' | 'baremetalInstance';
@@ -37,6 +38,7 @@ const TARGET_TYPES: { label: string; value: TargetCase }[] = [
 ];
 
 export const AttachIPModal = ({ ipType, ipId, isOpen, onClose }: AttachIPModalProps) => {
+  const { t } = useTranslation();
   const [targetType, setTargetType] = useState<TargetCase>('computeInstance');
   const [targetId, setTargetId] = useState('');
   const [typeOpen, setTypeOpen] = useState(false);
@@ -65,17 +67,19 @@ export const AttachIPModal = ({ ipType, ipId, isOpen, onClose }: AttachIPModalPr
     onClose();
   };
 
+  const ipTypeLabel = ipType === 'public' ? t('public') : t('external');
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label="Attach IP">
-      <ModalHeader title={`Attach ${ipType === 'public' ? 'public' : 'external'} IP`} />
+    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label={t('Attach IP')}>
+      <ModalHeader title={t('Attach {{ipTypeLabel}} IP', { ipTypeLabel })} />
       <ModalBody>
         {error && (
-          <Alert variant="danger" isInline title="Error" style={{ marginBottom: '1rem' }}>
+          <Alert variant="danger" isInline title={t('Error')} style={{ marginBottom: '1rem' }}>
             {getErrorMessage(error)}
           </Alert>
         )}
         <Form onSubmit={handleSubmit} id="attach-ip-form">
-          <FormGroup label="Attach to" isRequired fieldId="attach-target-type">
+          <FormGroup label={t('Attach to')} isRequired fieldId="attach-target-type">
             <Select
               isOpen={typeOpen}
               onSelect={(_e, val) => {
@@ -86,18 +90,18 @@ export const AttachIPModal = ({ ipType, ipId, isOpen, onClose }: AttachIPModalPr
               selected={targetType}
               toggle={(ref) => (
                 <MenuToggle ref={ref} onClick={() => setTypeOpen(!typeOpen)} isExpanded={typeOpen}>
-                  {TARGET_TYPES.find((t) => t.value === targetType)?.label ?? 'Select type'}
+                  {t(TARGET_TYPES.find((tt) => tt.value === targetType)?.label ?? 'Select type')}
                 </MenuToggle>
               )}
             >
-              {TARGET_TYPES.map((t) => (
-                <SelectOption key={t.value} value={t.value}>
-                  {t.label}
+              {TARGET_TYPES.map((tt) => (
+                <SelectOption key={tt.value} value={tt.value}>
+                  {t(tt.label)}
                 </SelectOption>
               ))}
             </Select>
           </FormGroup>
-          <FormGroup label="Resource ID" isRequired fieldId="attach-target-id">
+          <FormGroup label={t('Resource ID')} isRequired fieldId="attach-target-id">
             <TextInput
               id="attach-target-id"
               value={targetId}
@@ -117,10 +121,10 @@ export const AttachIPModal = ({ ipType, ipId, isOpen, onClose }: AttachIPModalPr
             isLoading={isPending}
             isDisabled={isPending || !isValid}
           >
-            Attach
+            {t('Attach')}
           </Button>
           <Button variant="link" onClick={onClose} isDisabled={isPending}>
-            Cancel
+            {t('Cancel')}
           </Button>
         </ActionGroup>
       </ModalFooter>

@@ -56,6 +56,10 @@ export interface ComputeInstanceWizardValues {
     additionalNetworkAttachments: NetworkAttachmentValue[];
     /** @predicted: metadata.project — OSAC-1064 */
     projectId?: string;
+    /** Custom (`custom.*`) and Template-declared (`template_parameters.*`) dynamic
+     * field values, keyed by their catalog field_definitions `path` — see
+     * DynamicFieldsFormSection. */
+    dynamicParameters: Record<string, string>;
   };
 }
 

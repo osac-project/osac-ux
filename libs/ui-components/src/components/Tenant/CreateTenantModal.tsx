@@ -18,6 +18,7 @@ import {
 } from '@patternfly/react-core';
 
 import { useCreateTenant } from '../../api/v1/tenant';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 interface CreateTenantModalProps {
@@ -26,6 +27,7 @@ interface CreateTenantModalProps {
 }
 
 export const CreateTenantModal = ({ isOpen, onClose }: CreateTenantModalProps) => {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [domainInput, setDomainInput] = useState('');
   const [domains, setDomains] = useState<string[]>([]);
@@ -66,30 +68,32 @@ export const CreateTenantModal = ({ isOpen, onClose }: CreateTenantModalProps) =
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label="Create tenant">
-      <ModalHeader title="Create tenant" />
+    <Modal isOpen={isOpen} onClose={onClose} variant="small" aria-label={t('Create tenant')}>
+      <ModalHeader title={t('Create tenant')} />
       <ModalBody>
         {error && (
-          <Alert variant="danger" isInline title="Error" style={{ marginBottom: '1rem' }}>
+          <Alert variant="danger" isInline title={t('Error')} style={{ marginBottom: '1rem' }}>
             {getErrorMessage(error)}
           </Alert>
         )}
         <Form onSubmit={handleSubmit} id="create-tenant-form">
-          <FormGroup label="Internal name" isRequired fieldId="tenant-name">
+          <FormGroup label={t('Internal name')} isRequired fieldId="tenant-name">
             <TextInput
               id="tenant-name"
               value={name}
               onChange={(_e, v) => setName(v)}
-              placeholder="acme-corp"
+              placeholder={t('acme-corp')}
               isRequired
             />
             <FormHelperText>
               <HelperText>
-                <HelperTextItem>DNS label (lowercase letters, digits, hyphens)</HelperTextItem>
+                <HelperTextItem>
+                  {t('DNS label (lowercase letters, digits, hyphens)')}
+                </HelperTextItem>
               </HelperText>
             </FormHelperText>
           </FormGroup>
-          <FormGroup label="Email domains" fieldId="tenant-domains">
+          <FormGroup label={t('Email domains')} fieldId="tenant-domains">
             {domains.length > 0 && (
               <LabelGroup style={{ marginBottom: '0.5rem' }}>
                 {domains.map((d) => (
@@ -109,12 +113,12 @@ export const CreateTenantModal = ({ isOpen, onClose }: CreateTenantModalProps) =
               onChange={(_e, v) => setDomainInput(v)}
               onKeyDown={handleDomainKeyDown}
               onBlur={addDomain}
-              placeholder="example.com (press Enter to add)"
+              placeholder={t('example.com (press Enter to add)')}
             />
             <FormHelperText>
               <HelperText>
                 <HelperTextItem>
-                  Used for IdP login routing. Press Enter or comma to add each domain.
+                  {t('Used for IdP login routing. Press Enter or comma to add each domain.')}
                 </HelperTextItem>
               </HelperText>
             </FormHelperText>
@@ -130,10 +134,10 @@ export const CreateTenantModal = ({ isOpen, onClose }: CreateTenantModalProps) =
             isLoading={isPending}
             isDisabled={isPending || !isValid}
           >
-            Create
+            {t('Create')}
           </Button>
           <Button variant="link" onClick={onClose} isDisabled={isPending}>
-            Cancel
+            {t('Cancel')}
           </Button>
         </ActionGroup>
       </ModalFooter>

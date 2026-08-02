@@ -37,50 +37,42 @@ import {
 } from '@patternfly/react-core';
 import { ActionsColumn, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 
-import type {
-  BareMetalInstanceTemplate,
-  ClusterTemplate,
-  ComputeInstanceTemplate,
-} from '@osac/types';
-
-import {
-  useBareMetalInstanceTemplates,
-  useDeleteBareMetalInstanceTemplate,
-} from '../../api/v1/baremetal-instance-templates';
+import { useBareMetalInstanceTemplates } from '../../api/v1/baremetal-instance-templates';
 import {
   clusterTemplateNodeSetsSummary,
   isAiGridTemplate,
   useClusterTemplates,
-  useDeleteClusterTemplate,
 } from '../../api/v1/cluster-templates';
-import {
-  useComputeInstanceTemplates,
-  useDeleteComputeInstanceTemplate,
-} from '../../api/v1/compute-instance-templates';
+import { useComputeInstanceTemplates } from '../../api/v1/compute-instance-templates';
+import { isTemplatePublished, readAllowedTenants } from '../../api/v1/template-billing';
 import ListPageBody from '../../components/Page/ListPageBody';
-import { DeleteConfirmModal } from '../../components/shared/DeleteConfirmModal';
+import { useTranslation } from '../../hooks/useTranslation';
+
+type TFunc = (key: string, opts?: Record<string, unknown>) => string;
+
+const sharedWithLabel = (t: TFunc, allowedCount: number): string =>
+  allowedCount === 0 ? t('All tenants') : t('Shared: {{count}}', { count: allowedCount });
 
 // ── VM Tab ────────────────────────────────────────────────────────────────────
 
 const VmTab = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: templates = [], isLoading, error } = useComputeInstanceTemplates();
-  const deleteT = useDeleteComputeInstanceTemplate();
 
   const [search, setSearch] = useState('');
-  const [pendingDelete, setPendingDelete] = useState<ComputeInstanceTemplate | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) {
       return templates;
     }
-    return templates.filter((t) =>
+    return templates.filter((tpl) =>
       [
-        t.metadata?.name,
-        t.title,
-        t.specDefaults?.instanceType,
-        t.specDefaults?.image?.sourceRef,
+        tpl.metadata?.name,
+        tpl.title,
+        tpl.specDefaults?.instanceType,
+        tpl.specDefaults?.image?.sourceRef,
       ].some((v) => v?.toLowerCase().includes(q)),
     );
   }, [templates, search]);
@@ -92,11 +84,11 @@ const VmTab = () => {
           <ToolbarGroup>
             <ToolbarItem>
               <SearchInput
-                placeholder="Search by name, title, instance type or image…"
+                placeholder={t('Search by name, title, instance type or image…')}
                 value={search}
                 onChange={(_e, v) => setSearch(v)}
                 onClear={() => setSearch('')}
-                aria-label="Search VM templates"
+                aria-label={t('Search VM templates')}
                 style={{ minWidth: 320 }}
               />
             </ToolbarItem>
@@ -110,51 +102,62 @@ const VmTab = () => {
             variant="info"
             isInline
             title={
-              templates.length === 0 ? 'No VM templates defined' : 'No templates match the search'
+              templates.length === 0
+                ? t('No VM templates defined')
+                : t('No templates match the search')
             }
           />
         ) : (
-          <Table aria-label="VM templates" variant="compact">
+          <Table aria-label={t('VM templates')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Title</Th>
-                <Th>Default instance type</Th>
-                <Th>Default image</Th>
-                <Th aria-label="Actions" />
+                <Th>{t('Name')}</Th>
+                <Th>{t('Title')}</Th>
+                <Th>{t('Default instance type')}</Th>
+                <Th>{t('Default image')}</Th>
+                <Th>{t('Published')}</Th>
+                <Th>{t('Shared with')}</Th>
+                <Th aria-label={t('Actions')} />
               </Tr>
             </Thead>
             <Tbody>
-              {filtered.map((t) => (
-                <Tr key={t.id}>
-                  <Td dataLabel="Name">
-                    <strong>{t.metadata?.name ?? t.id}</strong>
+              {filtered.map((tpl) => (
+                <Tr key={tpl.id}>
+                  <Td dataLabel={t('Name')}>
+                    <strong>{tpl.metadata?.name ?? tpl.id}</strong>
                   </Td>
-                  <Td dataLabel="Title">{t.title || '—'}</Td>
-                  <Td dataLabel="Default instance type">
-                    {t.specDefaults?.instanceType ? (
+                  <Td dataLabel={t('Title')}>{tpl.title || '—'}</Td>
+                  <Td dataLabel={t('Default instance type')}>
+                    {tpl.specDefaults?.instanceType ? (
                       <Label isCompact color="blue">
-                        {t.specDefaults.instanceType}
+                        {tpl.specDefaults.instanceType}
                       </Label>
                     ) : (
                       '—'
                     )}
                   </Td>
-                  <Td dataLabel="Default image">
-                    {t.specDefaults?.image?.sourceRef ? (
-                      <code style={{ fontSize: '0.8em' }}>{t.specDefaults.image.sourceRef}</code>
+                  <Td dataLabel={t('Default image')}>
+                    {tpl.specDefaults?.image?.sourceRef ? (
+                      <code style={{ fontSize: '0.8em' }}>{tpl.specDefaults.image.sourceRef}</code>
                     ) : (
                       '—'
                     )}
+                  </Td>
+                  <Td dataLabel={t('Published')}>
+                    <Label isCompact color={isTemplatePublished(tpl) ? 'green' : 'grey'}>
+                      {isTemplatePublished(tpl) ? t('Published') : t('Draft')}
+                    </Label>
+                  </Td>
+                  <Td dataLabel={t('Shared with')}>
+                    <Label isCompact>{sharedWithLabel(t, readAllowedTenants(tpl).length)}</Label>
                   </Td>
                   <Td isActionCell>
                     <ActionsColumn
                       items={[
                         {
-                          title: 'Edit',
-                          onClick: () => navigate(`/provider/templates/vm/${t.id}/edit`),
+                          title: t('Publish & price'),
+                          onClick: () => navigate(`/provider/templates/vm/${tpl.id}/edit`),
                         },
-                        { title: 'Delete', onClick: () => setPendingDelete(t), isDanger: true },
                       ]}
                     />
                   </Td>
@@ -164,19 +167,6 @@ const VmTab = () => {
           </Table>
         )}
       </ListPageBody>
-
-      {pendingDelete && (
-        <DeleteConfirmModal
-          resourceName={pendingDelete.title || pendingDelete.metadata?.name || pendingDelete.id}
-          resourceKind="VM template"
-          onClose={() => setPendingDelete(null)}
-          onConfirm={async () => {
-            await deleteT.mutateAsync(pendingDelete.id);
-            setPendingDelete(null);
-          }}
-          error={deleteT.error}
-        />
-      )}
     </>
   );
 };
@@ -184,22 +174,22 @@ const VmTab = () => {
 // ── Cluster Tab ───────────────────────────────────────────────────────────────
 
 const ClusterTab = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data: templates = [], isLoading, error } = useClusterTemplates();
-  const deleteT = useDeleteClusterTemplate();
 
   const [search, setSearch] = useState('');
   const [filterAiGrid, setFilterAiGrid] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState<ClusterTemplate | null>(null);
 
   const filtered = useMemo(() => {
     let result = templates;
     if (filterAiGrid) {
-      result = result.filter((t) => isAiGridTemplate(t));
+      result = result.filter((tpl) => isAiGridTemplate(tpl));
     }
     const q = search.trim().toLowerCase();
     if (q) {
-      result = result.filter((t) =>
-        [t.metadata?.name, t.title, t.description].some((v) => v?.toLowerCase().includes(q)),
+      result = result.filter((tpl) =>
+        [tpl.metadata?.name, tpl.title, tpl.description].some((v) => v?.toLowerCase().includes(q)),
       );
     }
     return result;
@@ -217,25 +207,25 @@ const ClusterTab = () => {
           <ToolbarGroup>
             <ToolbarItem>
               <SearchInput
-                placeholder="Search by name or title…"
+                placeholder={t('Search by name or title…')}
                 value={search}
                 onChange={(_e, v) => setSearch(v)}
                 onClear={() => setSearch('')}
-                aria-label="Search cluster templates"
+                aria-label={t('Search cluster templates')}
                 style={{ minWidth: 280 }}
               />
             </ToolbarItem>
             <ToolbarFilter
-              labels={filterAiGrid ? ['AI Grid'] : []}
+              labels={filterAiGrid ? [t('AI Grid')] : []}
               deleteLabel={() => setFilterAiGrid(false)}
               deleteLabelGroup={() => setFilterAiGrid(false)}
-              categoryName="Workload"
+              categoryName={t('Workload')}
             >
               <MenuToggle
                 onClick={() => setFilterAiGrid((prev) => !prev)}
                 variant={filterAiGrid ? 'primary' : 'default'}
               >
-                {filterAiGrid ? 'AI Grid only' : 'All workloads'}
+                {filterAiGrid ? t('AI Grid only') : t('All workloads')}
               </MenuToggle>
             </ToolbarFilter>
           </ToolbarGroup>
@@ -249,47 +239,60 @@ const ClusterTab = () => {
             isInline
             title={
               templates.length === 0
-                ? 'No cluster templates defined'
-                : 'No templates match the filter'
+                ? t('No cluster templates defined')
+                : t('No templates match the filter')
             }
           />
         ) : (
-          <Table aria-label="Cluster templates" variant="compact">
+          <Table aria-label={t('Cluster templates')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Title</Th>
-                <Th>Node sets</Th>
-                <Th>Tags</Th>
-                <Th aria-label="Actions" />
+                <Th>{t('Name')}</Th>
+                <Th>{t('Title')}</Th>
+                <Th>{t('Node sets')}</Th>
+                <Th>{t('Tags')}</Th>
+                <Th>{t('Published')}</Th>
+                <Th>{t('Shared with')}</Th>
+                <Th aria-label={t('Actions')} />
               </Tr>
             </Thead>
             <Tbody>
-              {filtered.map((t) => (
-                <Tr key={t.id}>
-                  <Td dataLabel="Name">
-                    <strong>{t.metadata?.name ?? t.id}</strong>
+              {filtered.map((tpl) => (
+                <Tr key={tpl.id}>
+                  <Td dataLabel={t('Name')}>
+                    <strong>{tpl.metadata?.name ?? tpl.id}</strong>
                   </Td>
-                  <Td dataLabel="Title">{t.title || '—'}</Td>
-                  <Td dataLabel="Node sets">{clusterTemplateNodeSetsSummary(t)}</Td>
-                  <Td dataLabel="Tags">
+                  <Td dataLabel={t('Title')}>{tpl.title || '—'}</Td>
+                  <Td dataLabel={t('Node sets')}>{clusterTemplateNodeSetsSummary(tpl)}</Td>
+                  <Td dataLabel={t('Tags')}>
                     <LabelGroup>
-                      {isAiGridTemplate(t) && (
+                      {isAiGridTemplate(tpl) && (
                         <Label isCompact color="orange">
-                          AI Grid
+                          {t('AI Grid')}
                         </Label>
                       )}
-                      {t.metadata?.labels?.['gpu'] === 'true' && (
+                      {tpl.metadata?.labels?.['gpu'] === 'true' && (
                         <Label isCompact color="yellow">
-                          GPU
+                          {t('GPU')}
                         </Label>
                       )}
                     </LabelGroup>
                   </Td>
+                  <Td dataLabel={t('Published')}>
+                    <Label isCompact color={isTemplatePublished(tpl) ? 'green' : 'grey'}>
+                      {isTemplatePublished(tpl) ? t('Published') : t('Draft')}
+                    </Label>
+                  </Td>
+                  <Td dataLabel={t('Shared with')}>
+                    <Label isCompact>{sharedWithLabel(t, readAllowedTenants(tpl).length)}</Label>
+                  </Td>
                   <Td isActionCell>
                     <ActionsColumn
                       items={[
-                        { title: 'Delete', onClick: () => setPendingDelete(t), isDanger: true },
+                        {
+                          title: t('Publish & price'),
+                          onClick: () => navigate(`/provider/templates/cluster/${tpl.id}/edit`),
+                        },
                       ]}
                     />
                   </Td>
@@ -299,19 +302,6 @@ const ClusterTab = () => {
           </Table>
         )}
       </ListPageBody>
-
-      {pendingDelete && (
-        <DeleteConfirmModal
-          resourceName={pendingDelete.title || pendingDelete.metadata?.name || pendingDelete.id}
-          resourceKind="cluster template"
-          onClose={() => setPendingDelete(null)}
-          onConfirm={async () => {
-            await deleteT.mutateAsync(pendingDelete.id);
-            setPendingDelete(null);
-          }}
-          error={deleteT.error}
-        />
-      )}
     </>
   );
 };
@@ -319,17 +309,17 @@ const ClusterTab = () => {
 // ── BM Tab ────────────────────────────────────────────────────────────────────
 
 const BmTab = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data: templates = [], isLoading, error } = useBareMetalInstanceTemplates();
-  const deleteT = useDeleteBareMetalInstanceTemplate();
 
   const [search, setSearch] = useState('');
   const [hostTypeFilter, setHostTypeFilter] = useState<string[]>([]);
   const [hostTypeSelectOpen, setHostTypeSelectOpen] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState<BareMetalInstanceTemplate | null>(null);
 
   const hostTypeOptions = useMemo(() => {
     const values = templates
-      .map((t) => (t as { specDefaults?: { hostType?: string } }).specDefaults?.hostType)
+      .map((tpl) => (tpl as { specDefaults?: { hostType?: string } }).specDefaults?.hostType)
       .filter((v): v is string => Boolean(v));
     return [...new Set(values)];
   }, [templates]);
@@ -338,17 +328,17 @@ const BmTab = () => {
     let result = templates;
     const q = search.trim().toLowerCase();
     if (q) {
-      result = result.filter((t) =>
+      result = result.filter((tpl) =>
         [
-          t.metadata?.name,
-          t.title,
-          (t as { specDefaults?: { hostType?: string } }).specDefaults?.hostType,
+          tpl.metadata?.name,
+          tpl.title,
+          (tpl as { specDefaults?: { hostType?: string } }).specDefaults?.hostType,
         ].some((v) => v?.toLowerCase().includes(q)),
       );
     }
     if (hostTypeFilter.length > 0) {
-      result = result.filter((t) => {
-        const ht = (t as { specDefaults?: { hostType?: string } }).specDefaults?.hostType ?? '';
+      result = result.filter((tpl) => {
+        const ht = (tpl as { specDefaults?: { hostType?: string } }).specDefaults?.hostType ?? '';
         return hostTypeFilter.includes(ht);
       });
     }
@@ -367,11 +357,11 @@ const BmTab = () => {
           <ToolbarGroup>
             <ToolbarItem>
               <SearchInput
-                placeholder="Search by name, title or host type…"
+                placeholder={t('Search by name, title or host type…')}
                 value={search}
                 onChange={(_e, v) => setSearch(v)}
                 onClear={() => setSearch('')}
-                aria-label="Search BM templates"
+                aria-label={t('Search BM templates')}
                 style={{ minWidth: 280 }}
               />
             </ToolbarItem>
@@ -382,7 +372,7 @@ const BmTab = () => {
                   setHostTypeFilter((prev) => prev.filter((v) => v !== chip))
                 }
                 deleteLabelGroup={() => setHostTypeFilter([])}
-                categoryName="Host type"
+                categoryName={t('Host type')}
               >
                 <Select
                   isOpen={hostTypeSelectOpen}
@@ -399,7 +389,9 @@ const BmTab = () => {
                       onClick={() => setHostTypeSelectOpen((o) => !o)}
                       isExpanded={hostTypeSelectOpen}
                     >
-                      Host type{hostTypeFilter.length > 0 ? ` (${hostTypeFilter.length})` : ''}
+                      {hostTypeFilter.length > 0
+                        ? t('Host type ({{count}})', { count: hostTypeFilter.length })
+                        : t('Host type')}
                     </MenuToggle>
                   )}
                 >
@@ -429,40 +421,53 @@ const BmTab = () => {
             isInline
             title={
               templates.length === 0
-                ? 'No bare metal templates defined'
-                : 'No templates match the filter'
+                ? t('No bare metal templates defined')
+                : t('No templates match the filter')
             }
           />
         ) : (
-          <Table aria-label="BM templates" variant="compact">
+          <Table aria-label={t('BM templates')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Title</Th>
-                <Th>Default host type</Th>
-                <Th aria-label="Actions" />
+                <Th>{t('Name')}</Th>
+                <Th>{t('Title')}</Th>
+                <Th>{t('Default host type')}</Th>
+                <Th>{t('Published')}</Th>
+                <Th>{t('Shared with')}</Th>
+                <Th aria-label={t('Actions')} />
               </Tr>
             </Thead>
             <Tbody>
-              {filtered.map((t) => (
-                <Tr key={t.id}>
-                  <Td dataLabel="Name">
-                    <strong>{t.metadata?.name ?? t.id}</strong>
+              {filtered.map((tpl) => (
+                <Tr key={tpl.id}>
+                  <Td dataLabel={t('Name')}>
+                    <strong>{tpl.metadata?.name ?? tpl.id}</strong>
                   </Td>
-                  <Td dataLabel="Title">{t.title || '—'}</Td>
-                  <Td dataLabel="Default host type">
-                    {(t as { specDefaults?: { hostType?: string } }).specDefaults?.hostType ? (
+                  <Td dataLabel={t('Title')}>{tpl.title || '—'}</Td>
+                  <Td dataLabel={t('Default host type')}>
+                    {(tpl as { specDefaults?: { hostType?: string } }).specDefaults?.hostType ? (
                       <Label isCompact color="blue">
-                        {(t as { specDefaults?: { hostType?: string } }).specDefaults?.hostType}
+                        {(tpl as { specDefaults?: { hostType?: string } }).specDefaults?.hostType}
                       </Label>
                     ) : (
                       '—'
                     )}
                   </Td>
+                  <Td dataLabel={t('Published')}>
+                    <Label isCompact color={isTemplatePublished(tpl) ? 'green' : 'grey'}>
+                      {isTemplatePublished(tpl) ? t('Published') : t('Draft')}
+                    </Label>
+                  </Td>
+                  <Td dataLabel={t('Shared with')}>
+                    <Label isCompact>{sharedWithLabel(t, readAllowedTenants(tpl).length)}</Label>
+                  </Td>
                   <Td isActionCell>
                     <ActionsColumn
                       items={[
-                        { title: 'Delete', onClick: () => setPendingDelete(t), isDanger: true },
+                        {
+                          title: t('Publish & price'),
+                          onClick: () => navigate(`/provider/templates/bm/${tpl.id}/edit`),
+                        },
                       ]}
                     />
                   </Td>
@@ -472,19 +477,6 @@ const BmTab = () => {
           </Table>
         )}
       </ListPageBody>
-
-      {pendingDelete && (
-        <DeleteConfirmModal
-          resourceName={pendingDelete.title || pendingDelete.metadata?.name || pendingDelete.id}
-          resourceKind="BM template"
-          onClose={() => setPendingDelete(null)}
-          onConfirm={async () => {
-            await deleteT.mutateAsync(pendingDelete.id);
-            setPendingDelete(null);
-          }}
-          error={deleteT.error}
-        />
-      )}
     </>
   );
 };
@@ -492,6 +484,7 @@ const BmTab = () => {
 // ── Overview Tab ──────────────────────────────────────────────────────────────
 
 const OverviewTab = ({ onSwitchTab }: { onSwitchTab: (tab: string) => void }) => {
+  const { t } = useTranslation();
   const { data: vmTemplates = [] } = useComputeInstanceTemplates();
   const { data: clTemplates = [] } = useClusterTemplates();
   const { data: bmTemplates = [] } = useBareMetalInstanceTemplates();
@@ -499,23 +492,23 @@ const OverviewTab = ({ onSwitchTab }: { onSwitchTab: (tab: string) => void }) =>
   const sections = [
     {
       key: 'vm',
-      label: 'VM Templates',
+      label: t('VM Templates'),
       count: vmTemplates.length,
-      description: 'Define default image, instance type, and disk for compute instances.',
+      description: t('Defined in AAP/osac-app — publish and price them here for tenants.'),
       color: 'blue' as const,
     },
     {
       key: 'cluster',
-      label: 'Cluster Templates',
+      label: t('Cluster Templates'),
       count: clTemplates.length,
-      description: 'Define node sets, OCP release image, and defaults for managed clusters.',
+      description: t('Defined in AAP/osac-app — publish and price them here for tenants.'),
       color: 'purple' as const,
     },
     {
       key: 'bm',
-      label: 'BM Templates',
+      label: t('BM Templates'),
       count: bmTemplates.length,
-      description: 'Define host type and provisioning config for bare metal instances.',
+      description: t('Defined in AAP/osac-app — publish and price them here for tenants.'),
       color: 'orange' as const,
     },
   ];
@@ -557,7 +550,7 @@ const OverviewTab = ({ onSwitchTab }: { onSwitchTab: (tab: string) => void }) =>
                   {s.description}
                 </p>
                 <Label isCompact color={s.color} style={{ marginTop: '0.75rem' }}>
-                  {s.count} {s.count === 1 ? 'template' : 'templates'}
+                  {s.count} {s.count === 1 ? t('template') : t('templates')}
                 </Label>
               </CardBody>
             </Card>
@@ -573,6 +566,7 @@ const OverviewTab = ({ onSwitchTab }: { onSwitchTab: (tab: string) => void }) =>
 type TemplateTab = 'overview' | 'vm' | 'cluster' | 'bm';
 
 export const ProviderTemplatesPage = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab') as TemplateTab | null;
   const [activeTab, setActiveTab] = useState<TemplateTab>(tabParam ?? 'overview');
@@ -580,28 +574,32 @@ export const ProviderTemplatesPage = () => {
   return (
     <>
       <PageSection hasBodyWrapper={false}>
-        <Title headingLevel="h1">Templates</Title>
+        <Title headingLevel="h1">{t('Templates')}</Title>
       </PageSection>
 
       <PageSection hasBodyWrapper={false} style={{ paddingTop: 0 }}>
         <Tabs
           activeKey={activeTab}
           onSelect={(_e, k) => setActiveTab(k as TemplateTab)}
-          aria-label="Template tabs"
+          aria-label={t('Template tabs')}
         >
           <Tab
             eventKey="overview"
-            title={<TabTitleText>Overview</TabTitleText>}
-            aria-label="Overview tab"
+            title={<TabTitleText>{t('Overview')}</TabTitleText>}
+            aria-label={t('Overview tab')}
           >
             <TabContent id="tab-overview" style={{ padding: '1.5rem' }}>
               {activeTab === 'overview' && (
-                <OverviewTab onSwitchTab={(t) => setActiveTab(t as TemplateTab)} />
+                <OverviewTab onSwitchTab={(tab) => setActiveTab(tab as TemplateTab)} />
               )}
             </TabContent>
           </Tab>
 
-          <Tab eventKey="vm" title={<TabTitleText>VM</TabTitleText>} aria-label="VM templates tab">
+          <Tab
+            eventKey="vm"
+            title={<TabTitleText>{t('VM')}</TabTitleText>}
+            aria-label={t('VM templates tab')}
+          >
             <TabContent id="tab-vm" style={{ padding: '1.5rem' }}>
               {activeTab === 'vm' && <VmTab />}
             </TabContent>
@@ -609,15 +607,19 @@ export const ProviderTemplatesPage = () => {
 
           <Tab
             eventKey="cluster"
-            title={<TabTitleText>Cluster</TabTitleText>}
-            aria-label="Cluster templates tab"
+            title={<TabTitleText>{t('Cluster')}</TabTitleText>}
+            aria-label={t('Cluster templates tab')}
           >
             <TabContent id="tab-cluster" style={{ padding: '1.5rem' }}>
               {activeTab === 'cluster' && <ClusterTab />}
             </TabContent>
           </Tab>
 
-          <Tab eventKey="bm" title={<TabTitleText>BM</TabTitleText>} aria-label="BM templates tab">
+          <Tab
+            eventKey="bm"
+            title={<TabTitleText>{t('BM')}</TabTitleText>}
+            aria-label={t('BM templates tab')}
+          >
             <TabContent id="tab-bm" style={{ padding: '1.5rem' }}>
               {activeTab === 'bm' && <BmTab />}
             </TabContent>

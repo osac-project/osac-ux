@@ -23,6 +23,7 @@ import {
   useVirtualNetworks,
 } from '../../api/v1/networking';
 import type { SecurityRuleInput } from '../../api/v1/networking';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 import OsacForm from '../Form/OsacForm';
 
@@ -42,6 +43,7 @@ export const SecurityGroupCreateModal = ({
   onClose,
   onSuccess,
 }: SecurityGroupCreateModalProps) => {
+  const { t } = useTranslation();
   const [name, setName] = React.useState('');
   const [ingress, setIngress] = React.useState<SecurityRuleInput[]>([]);
   const [egress, setEgress] = React.useState<SecurityRuleInput[]>([defaultEgressRule()]);
@@ -82,11 +84,11 @@ export const SecurityGroupCreateModal = ({
       onClose={isPending ? undefined : onClose}
       aria-labelledby="sg-create-title"
     >
-      <ModalHeader title="Create security group" labelId="sg-create-title" />
+      <ModalHeader title={t('Create security group')} labelId="sg-create-title" />
       <ModalBody>
         <OsacForm isResponsive={false}>
           {!preselectedVNetId && (
-            <FormGroup label="Virtual network" fieldId="sg-vnet" isRequired>
+            <FormGroup label={t('Virtual network')} fieldId="sg-vnet" isRequired>
               <Select
                 isOpen={vnetSelectOpen}
                 selected={selectedVNetId}
@@ -104,7 +106,7 @@ export const SecurityGroupCreateModal = ({
                   >
                     {selectedVNet
                       ? resourceDisplayName(selectedVNet.metadata, selectedVNet.id)
-                      : 'Select virtual network'}
+                      : t('Select virtual network')}
                   </MenuToggle>
                 )}
               >
@@ -117,7 +119,7 @@ export const SecurityGroupCreateModal = ({
             </FormGroup>
           )}
 
-          <FormGroup label="Name" fieldId="sg-name" isRequired>
+          <FormGroup label={t('Name')} fieldId="sg-name" isRequired>
             <TextInput
               id="sg-name"
               value={name}
@@ -127,11 +129,11 @@ export const SecurityGroupCreateModal = ({
             />
           </FormGroup>
 
-          <SecurityRulesFields label="Ingress rules" rules={ingress} onChange={setIngress} />
-          <SecurityRulesFields label="Egress rules" rules={egress} onChange={setEgress} />
+          <SecurityRulesFields label={t('Ingress rules')} rules={ingress} onChange={setIngress} />
+          <SecurityRulesFields label={t('Egress rules')} rules={egress} onChange={setEgress} />
 
           {createSG.error && (
-            <Alert variant="danger" title="Failed to create security group" isInline>
+            <Alert variant="danger" title={t('Failed to create security group')} isInline>
               {getErrorMessage(createSG.error)}
             </Alert>
           )}
@@ -139,7 +141,7 @@ export const SecurityGroupCreateModal = ({
       </ModalBody>
       <ModalFooter>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
         <Button
           variant="primary"
@@ -147,7 +149,7 @@ export const SecurityGroupCreateModal = ({
           isDisabled={isPending || !name.trim() || !effectiveVNetId}
           isLoading={isPending}
         >
-          Create
+          {t('Create')}
         </Button>
       </ModalFooter>
     </Modal>

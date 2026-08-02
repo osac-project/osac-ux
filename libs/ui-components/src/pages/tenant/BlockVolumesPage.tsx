@@ -42,6 +42,7 @@ import { STORAGE_CLASS_COLORS, STORAGE_CLASS_LABELS } from '../../api/v1/compute
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
 import { DeleteConfirmModal } from '../../components/shared/DeleteConfirmModal';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 // ---------------------------------------------------------------------------
@@ -90,6 +91,7 @@ interface EditVolumeModalProps {
 }
 
 const EditVolumeModal = ({ volume, onClose }: EditVolumeModalProps) => {
+  const { t } = useTranslation();
   const [sizeGib, setSizeGib] = useState(volume.spec.sizeGib);
   const [description, setDescription] = useState(volume.metadata?.description ?? '');
   const { mutateAsync, isPending, error } = usePatchBlockVolume();
@@ -109,22 +111,24 @@ const EditVolumeModal = ({ volume, onClose }: EditVolumeModalProps) => {
     sizeGib !== volume.spec.sizeGib || description !== (volume.metadata?.description ?? '');
 
   return (
-    <Modal isOpen onClose={onClose} variant="medium" aria-label="Edit block volume">
-      <ModalHeader title={`Edit volume: ${volume.metadata?.name ?? volume.id}`} />
+    <Modal isOpen onClose={onClose} variant="medium" aria-label={t('Edit block volume')}>
+      <ModalHeader
+        title={t('Edit volume: {{name}}', { name: volume.metadata?.name ?? volume.id })}
+      />
       <ModalBody>
         <Stack hasGutter>
           {error && (
             <StackItem>
-              <Alert variant="danger" isInline title="Failed to update volume">
+              <Alert variant="danger" isInline title={t('Failed to update volume')}>
                 {getErrorMessage(error)}
               </Alert>
             </StackItem>
           )}
           <StackItem>
             <FormGroup
-              label="Size (GiB)"
+              label={t('Size (GiB)')}
               fieldId="edit-vol-size"
-              helperText="Size can only be increased."
+              helperText={t('Size can only be increased.')}
             >
               <NumberInput
                 id="edit-vol-size"
@@ -142,13 +146,13 @@ const EditVolumeModal = ({ volume, onClose }: EditVolumeModalProps) => {
             </FormGroup>
           </StackItem>
           <StackItem>
-            <FormGroup label="Description" fieldId="edit-vol-desc">
+            <FormGroup label={t('Description')} fieldId="edit-vol-desc">
               <TextArea
                 id="edit-vol-desc"
                 value={description}
                 onChange={(_e, v) => setDescription(v)}
                 rows={3}
-                placeholder="Optional description"
+                placeholder={t('Optional description')}
               />
             </FormGroup>
           </StackItem>
@@ -161,10 +165,10 @@ const EditVolumeModal = ({ volume, onClose }: EditVolumeModalProps) => {
           isLoading={isPending}
           isDisabled={isPending || !hasChanges}
         >
-          Save changes
+          {t('Save changes')}
         </Button>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
       </ModalFooter>
     </Modal>
@@ -181,6 +185,7 @@ interface AttachVolumeModalProps {
 }
 
 const AttachVolumeModal = ({ volume, onClose }: AttachVolumeModalProps) => {
+  const { t } = useTranslation();
   const { data: vms = [] } = useComputeInstances();
   const [vmId, setVmId] = useState('');
   const [vmOpen, setVmOpen] = useState(false);
@@ -196,13 +201,15 @@ const AttachVolumeModal = ({ volume, onClose }: AttachVolumeModalProps) => {
   };
 
   return (
-    <Modal isOpen onClose={onClose} variant="small" aria-label="Attach volume">
-      <ModalHeader title={`Attach "${volume.metadata?.name ?? volume.id}" to a VM`} />
+    <Modal isOpen onClose={onClose} variant="small" aria-label={t('Attach volume')}>
+      <ModalHeader
+        title={t('Attach "{{name}}" to a VM', { name: volume.metadata?.name ?? volume.id })}
+      />
       <ModalBody>
         <Stack hasGutter>
           {error && (
             <StackItem>
-              <Alert variant="danger" isInline title="Attach failed">
+              <Alert variant="danger" isInline title={t('Attach failed')}>
                 {getErrorMessage(error)}
               </Alert>
             </StackItem>
@@ -223,13 +230,13 @@ const AttachVolumeModal = ({ volume, onClose }: AttachVolumeModalProps) => {
                   isExpanded={vmOpen}
                   style={{ width: '100%' }}
                 >
-                  {selectedVm ? (selectedVm.metadata?.name ?? selectedVm.id) : 'Select VM'}
+                  {selectedVm ? (selectedVm.metadata?.name ?? selectedVm.id) : t('Select VM')}
                 </MenuToggle>
               )}
             >
               {vms.length === 0 ? (
                 <SelectOption value="" isDisabled>
-                  No VMs available
+                  {t('No VMs available')}
                 </SelectOption>
               ) : (
                 vms.map((v) => (
@@ -249,10 +256,10 @@ const AttachVolumeModal = ({ volume, onClose }: AttachVolumeModalProps) => {
           isLoading={isPending}
           isDisabled={isPending || !vmId}
         >
-          Attach
+          {t('Attach')}
         </Button>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
       </ModalFooter>
     </Modal>
@@ -264,6 +271,7 @@ const AttachVolumeModal = ({ volume, onClose }: AttachVolumeModalProps) => {
 // ---------------------------------------------------------------------------
 
 export const BlockVolumesPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: volumes = [], isLoading, error } = useBlockVolumes();
   const { mutateAsync: detachVolume } = useDetachBlockVolume();
@@ -286,11 +294,11 @@ export const BlockVolumesPage = () => {
 
   return (
     <ListPage
-      title="Block volumes"
-      description="Manage standalone block storage volumes for your virtual machines."
+      title={t('Block volumes')}
+      description={t('Manage standalone block storage volumes for your virtual machines.')}
       actions={
         <Button variant="primary" onClick={() => navigate('/storage/volumes/new')}>
-          Create volume
+          {t('Create volume')}
         </Button>
       }
     >
@@ -303,7 +311,7 @@ export const BlockVolumesPage = () => {
       {volumeToDelete && (
         <DeleteConfirmModal
           resourceName={volumeToDelete.metadata?.name ?? volumeToDelete.id}
-          resourceKind="volume"
+          resourceKind={t('volume')}
           onConfirm={async () => {
             await deleteVolume(volumeToDelete.id);
             setVolumeToDelete(null);
@@ -321,14 +329,14 @@ export const BlockVolumesPage = () => {
         >
           <FlexItem>
             <SearchInput
-              placeholder="Search by name…"
+              placeholder={t('Search by name…')}
               value={search}
               onChange={(_e, v) => setSearch(v)}
               onClear={() => setSearch('')}
             />
           </FlexItem>
           <FlexItem>
-            <ToggleGroup aria-label="Filter by volume status">
+            <ToggleGroup aria-label={t('Filter by volume status')}>
               {STATUS_FILTERS.map((opt) => (
                 <ToggleGroupItem
                   key={opt.value}
@@ -343,21 +351,21 @@ export const BlockVolumesPage = () => {
         </Flex>
 
         {filtered.length === 0 ? (
-          <Alert variant="info" isInline title="No volumes found">
+          <Alert variant="info" isInline title={t('No volumes found')}>
             {search || statusFilter !== 'all'
-              ? 'No volumes match your filters.'
-              : 'No block volumes created yet. Click "Create volume" to get started.'}
+              ? t('No volumes match your filters.')
+              : t('No block volumes created yet. Click "Create volume" to get started.')}
           </Alert>
         ) : (
-          <Table aria-label="Block volumes" variant="compact">
+          <Table aria-label={t('Block volumes')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Size</Th>
-                <Th>Storage class</Th>
-                <Th>Status</Th>
-                <Th>Attached to</Th>
-                <Th>Created</Th>
+                <Th>{t('Name')}</Th>
+                <Th>{t('Size')}</Th>
+                <Th>{t('Storage class')}</Th>
+                <Th>{t('Status')}</Th>
+                <Th>{t('Attached to')}</Th>
+                <Th>{t('Created')}</Th>
                 <Td />
               </Tr>
             </Thead>
@@ -366,9 +374,9 @@ export const BlockVolumesPage = () => {
                 const isAttached = vol.status.state === 'ATTACHED';
                 return (
                   <Tr key={vol.id}>
-                    <Td dataLabel="Name">{vol.metadata?.name ?? vol.id}</Td>
-                    <Td dataLabel="Size">{vol.spec.sizeGib} GiB</Td>
-                    <Td dataLabel="Storage class">
+                    <Td dataLabel={t('Name')}>{vol.metadata?.name ?? vol.id}</Td>
+                    <Td dataLabel={t('Size')}>{vol.spec.sizeGib} GiB</Td>
+                    <Td dataLabel={t('Storage class')}>
                       <Label
                         color={STORAGE_CLASS_COLORS[vol.spec.storageClass] ?? 'grey'}
                         isCompact
@@ -376,10 +384,10 @@ export const BlockVolumesPage = () => {
                         {STORAGE_CLASS_LABELS[vol.spec.storageClass] ?? vol.spec.storageClass}
                       </Label>
                     </Td>
-                    <Td dataLabel="Status">
+                    <Td dataLabel={t('Status')}>
                       <VolumeStateLabel state={vol.status.state} />
                     </Td>
-                    <Td dataLabel="Attached to">
+                    <Td dataLabel={t('Attached to')}>
                       {isAttached ? (
                         <Label color="blue" isCompact>
                           {vol.status.attachedToName ?? vol.status.attachedTo}
@@ -388,7 +396,7 @@ export const BlockVolumesPage = () => {
                         '—'
                       )}
                     </Td>
-                    <Td dataLabel="Created">
+                    <Td dataLabel={t('Created')}>
                       {vol.metadata?.creationTimestamp
                         ? new Date(vol.metadata.creationTimestamp).toLocaleDateString()
                         : '—'}
@@ -397,14 +405,14 @@ export const BlockVolumesPage = () => {
                       <ActionsColumn
                         items={[
                           {
-                            title: 'Edit',
+                            title: t('Edit'),
                             onClick: (e) => {
                               e.stopPropagation();
                               setVolumeToEdit(vol);
                             },
                           },
                           {
-                            title: 'Attach',
+                            title: t('Attach'),
                             isDisabled: isAttached || vol.status.state !== 'AVAILABLE',
                             onClick: (e) => {
                               e.stopPropagation();
@@ -412,7 +420,7 @@ export const BlockVolumesPage = () => {
                             },
                           },
                           {
-                            title: 'Detach',
+                            title: t('Detach'),
                             isDisabled: !isAttached,
                             onClick: async (e) => {
                               e.stopPropagation();
@@ -421,7 +429,7 @@ export const BlockVolumesPage = () => {
                           },
                           { isSeparator: true },
                           {
-                            title: 'Delete',
+                            title: t('Delete'),
                             isDisabled: isAttached,
                             onClick: (e) => {
                               e.stopPropagation();

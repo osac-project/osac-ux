@@ -50,35 +50,37 @@ import {
 } from '../../api/v1/ip-management';
 import { useOrganizations } from '../../api/v1/organization';
 import ListPageBody from '../../components/Page/ListPageBody';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 const IP_FAMILY_LABELS: Record<number, string> = { 1: 'IPv4', 2: 'IPv6' };
 
 const IPStateLabel = ({ state }: { state?: number }) => {
+  const { t } = useTranslation();
   if (state === 2) {
     return (
       <Label color="green" isCompact>
-        Allocated
+        {t('Allocated')}
       </Label>
     );
   }
   if (state === 1) {
     return (
       <Label color="orange" isCompact>
-        Pending
+        {t('Pending')}
       </Label>
     );
   }
   if (state === 3) {
     return (
       <Label color="red" isCompact>
-        Failed
+        {t('Failed')}
       </Label>
     );
   }
   return (
     <Label color="grey" isCompact>
-      Unknown
+      {t('Unknown')}
     </Label>
   );
 };
@@ -92,6 +94,7 @@ const TENANT_TAB = 2;
 // ---------------------------------------------------------------------------
 
 const AssignTenantModal = ({ pool, onClose }: { pool: ExternalIPPool; onClose: () => void }) => {
+  const { t } = useTranslation();
   const { data: orgs = [] } = useOrganizations();
   const patch = usePatchExternalIPPool();
   const [selected, setSelected] = useState<string>(pool.metadata?.tenant ?? '');
@@ -101,7 +104,7 @@ const AssignTenantModal = ({ pool, onClose }: { pool: ExternalIPPool; onClose: (
   const selectedOrg = orgs.find((o) => (o.metadata?.name ?? o.id) === selected);
   const displayName: string = selectedOrg
     ? String(selectedOrg.spec?.title ?? selectedOrg.metadata?.name ?? selectedOrg.id)
-    : selected || 'Select tenant';
+    : selected || t('Select tenant');
 
   const handleSave = async () => {
     await patch.mutateAsync({
@@ -119,11 +122,11 @@ const AssignTenantModal = ({ pool, onClose }: { pool: ExternalIPPool; onClose: (
       aria-labelledby="assign-tenant-title"
     >
       <ModalHeader
-        title={currentTenant ? 'Reassign tenant' : 'Assign tenant'}
+        title={currentTenant ? t('Reassign tenant') : t('Assign tenant')}
         labelId="assign-tenant-title"
       />
       <ModalBody>
-        <FormGroup label="Tenant organization" fieldId="assign-tenant-select" isRequired>
+        <FormGroup label={t('Tenant organization')} fieldId="assign-tenant-select" isRequired>
           <Select
             isOpen={open}
             onOpenChange={setOpen}
@@ -158,7 +161,7 @@ const AssignTenantModal = ({ pool, onClose }: { pool: ExternalIPPool; onClose: (
           <Alert
             variant="danger"
             isInline
-            title="Failed to assign tenant"
+            title={t('Failed to assign tenant')}
             style={{ marginTop: '1rem' }}
           >
             {getErrorMessage(patch.error)}
@@ -167,7 +170,7 @@ const AssignTenantModal = ({ pool, onClose }: { pool: ExternalIPPool; onClose: (
       </ModalBody>
       <ModalFooter>
         <Button variant="link" onClick={onClose} isDisabled={patch.isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
         <Button
           variant="primary"
@@ -175,7 +178,7 @@ const AssignTenantModal = ({ pool, onClose }: { pool: ExternalIPPool; onClose: (
           isDisabled={patch.isPending || !selected}
           isLoading={patch.isPending}
         >
-          {currentTenant ? 'Reassign' : 'Assign'}
+          {currentTenant ? t('Reassign') : t('Assign')}
         </Button>
       </ModalFooter>
     </Modal>
@@ -187,6 +190,7 @@ const AssignTenantModal = ({ pool, onClose }: { pool: ExternalIPPool; onClose: (
 // ---------------------------------------------------------------------------
 
 const TenantAssignmentsTab = ({ pool }: { pool: ExternalIPPool }) => {
+  const { t } = useTranslation();
   const { data: orgs = [] } = useOrganizations();
   const patch = usePatchExternalIPPool();
   const [assignOpen, setAssignOpen] = useState(false);
@@ -207,7 +211,12 @@ const TenantAssignmentsTab = ({ pool }: { pool: ExternalIPPool }) => {
     <>
       {assignOpen && <AssignTenantModal pool={pool} onClose={() => setAssignOpen(false)} />}
       {patch.error && (
-        <Alert variant="danger" isInline title="Operation failed" style={{ marginBottom: '1rem' }}>
+        <Alert
+          variant="danger"
+          isInline
+          title={t('Operation failed')}
+          style={{ marginBottom: '1rem' }}
+        >
           {getErrorMessage(patch.error)}
         </Alert>
       )}
@@ -215,16 +224,17 @@ const TenantAssignmentsTab = ({ pool }: { pool: ExternalIPPool }) => {
       {!currentTenant ? (
         <EmptyState>
           <Title headingLevel="h4" size="md">
-            No tenant assigned
+            {t('No tenant assigned')}
           </Title>
           <EmptyStateBody>
-            This pool is shared — any tenant can allocate IPs from it. Assign a tenant to restrict
-            it to a single organization.
+            {t(
+              'This pool is shared — any tenant can allocate IPs from it. Assign a tenant to restrict it to a single organization.',
+            )}
           </EmptyStateBody>
           <EmptyStateFooter>
             <EmptyStateActions>
               <Button variant="primary" onClick={() => setAssignOpen(true)}>
-                Assign tenant
+                {t('Assign tenant')}
               </Button>
             </EmptyStateActions>
           </EmptyStateFooter>
@@ -233,23 +243,23 @@ const TenantAssignmentsTab = ({ pool }: { pool: ExternalIPPool }) => {
         <>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
             <Button variant="secondary" size="sm" onClick={() => setAssignOpen(true)}>
-              Reassign tenant
+              {t('Reassign tenant')}
             </Button>
           </div>
-          <Table aria-label="Tenant assignments" variant="compact">
+          <Table aria-label={t('Tenant assignments')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Tenant</Th>
-                <Th>Organization ID</Th>
-                <Th aria-label="Actions" />
+                <Th>{t('Tenant')}</Th>
+                <Th>{t('Organization ID')}</Th>
+                <Th aria-label={t('Actions')} />
               </Tr>
             </Thead>
             <Tbody>
               <Tr>
-                <Td dataLabel="Tenant">
+                <Td dataLabel={t('Tenant')}>
                   <strong>{orgTitle ?? currentTenant}</strong>
                 </Td>
-                <Td dataLabel="Organization ID">
+                <Td dataLabel={t('Organization ID')}>
                   <code style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
                     {currentTenant}
                   </code>
@@ -258,11 +268,11 @@ const TenantAssignmentsTab = ({ pool }: { pool: ExternalIPPool }) => {
                   <ActionsColumn
                     items={[
                       {
-                        title: 'Reassign',
+                        title: t('Reassign'),
                         onClick: () => setAssignOpen(true),
                       },
                       {
-                        title: 'Remove assignment',
+                        title: t('Remove assignment'),
                         onClick: handleRemove,
                         isDanger: true,
                       },
@@ -283,6 +293,7 @@ const TenantAssignmentsTab = ({ pool }: { pool: ExternalIPPool }) => {
 // ---------------------------------------------------------------------------
 
 export const ProviderIPPoolDetailPage = () => {
+  const { t } = useTranslation();
   const { poolType, id } = useParams<{ poolType: string; id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(OVERVIEW_TAB);
@@ -315,9 +326,9 @@ export const ProviderIPPoolDetailPage = () => {
   if (!isLoading && !error && !pool) {
     return (
       <PageSection>
-        <Alert variant="warning" isInline title={`Pool not found: ${id}`}>
+        <Alert variant="warning" isInline title={t('Pool not found: {{id}}', { id })}>
           <Button variant="link" onClick={() => navigate(backPath)}>
-            Back to IP Pools
+            {t('Back to IP Pools')}
           </Button>
         </Alert>
       </PageSection>
@@ -329,7 +340,7 @@ export const ProviderIPPoolDetailPage = () => {
       <PageBreadcrumb>
         <Breadcrumb>
           <BreadcrumbItem onClick={() => navigate(backPath)} style={{ cursor: 'pointer' }}>
-            IP Pools
+            {t('IP Pools')}
           </BreadcrumbItem>
           <BreadcrumbItem isActive>{pool?.metadata?.name ?? id}</BreadcrumbItem>
         </Breadcrumb>
@@ -351,11 +362,13 @@ export const ProviderIPPoolDetailPage = () => {
                   {pool.metadata?.name ?? pool.id}
                 </span>
                 <Label color={isPublic ? 'blue' : 'cyan'} isCompact>
-                  {isPublic ? 'Public' : 'External'}
+                  {isPublic ? t('Public') : t('External')}
                 </Label>
                 {(pool as ExternalIPPool).metadata?.tenant && (
                   <Label color="purple" isCompact>
-                    Tenant: {(pool as ExternalIPPool).metadata?.tenant}
+                    {t('Tenant: {{tenant}}', {
+                      tenant: (pool as ExternalIPPool).metadata?.tenant,
+                    })}
                   </Label>
                 )}
               </div>
@@ -363,17 +376,21 @@ export const ProviderIPPoolDetailPage = () => {
               <Tabs
                 activeKey={activeTab}
                 onSelect={(_e, k) => setActiveTab(k as number)}
-                aria-label="Pool detail tabs"
+                aria-label={t('Pool detail tabs')}
               >
-                <Tab eventKey={OVERVIEW_TAB} title={<TabTitleText>Overview</TabTitleText>} />
+                <Tab eventKey={OVERVIEW_TAB} title={<TabTitleText>{t('Overview')}</TabTitleText>} />
                 <Tab
                   eventKey={ALLOCATIONS_TAB}
-                  title={<TabTitleText>Allocations ({ips.length})</TabTitleText>}
+                  title={
+                    <TabTitleText>
+                      {t('Allocations ({{count}})', { count: ips.length })}
+                    </TabTitleText>
+                  }
                 />
                 {!isPublic && (
                   <Tab
                     eventKey={TENANT_TAB}
-                    title={<TabTitleText>Tenant assignments</TabTitleText>}
+                    title={<TabTitleText>{t('Tenant assignments')}</TabTitleText>}
                   />
                 )}
               </Tabs>
@@ -392,46 +409,48 @@ export const ProviderIPPoolDetailPage = () => {
                         <CardBody>
                           <DescriptionList isHorizontal columnModifier={{ default: '2Col' }}>
                             <DescriptionListGroup>
-                              <DescriptionListTerm>Pool ID</DescriptionListTerm>
+                              <DescriptionListTerm>{t('Pool ID')}</DescriptionListTerm>
                               <DescriptionListDescription>
                                 <code>{pool.id}</code>
                               </DescriptionListDescription>
                             </DescriptionListGroup>
                             <DescriptionListGroup>
-                              <DescriptionListTerm>IP family</DescriptionListTerm>
+                              <DescriptionListTerm>{t('IP family')}</DescriptionListTerm>
                               <DescriptionListDescription>
                                 <Label color="blue" isCompact>
-                                  {IP_FAMILY_LABELS[pool.spec?.ipFamily ?? 0] ?? '—'}
+                                  {IP_FAMILY_LABELS[pool.spec?.ipFamily ?? 0]
+                                    ? t(IP_FAMILY_LABELS[pool.spec?.ipFamily ?? 0])
+                                    : '—'}
                                 </Label>
                               </DescriptionListDescription>
                             </DescriptionListGroup>
                             <DescriptionListGroup>
-                              <DescriptionListTerm>CIDR block</DescriptionListTerm>
+                              <DescriptionListTerm>{t('CIDR block')}</DescriptionListTerm>
                               <DescriptionListDescription>
                                 {spec?.cidr ? (
                                   <code>{spec.cidr}</code>
                                 ) : (
                                   <span style={{ color: 'var(--pf-t--global--color--200)' }}>
-                                    Not set
+                                    {t('Not set')}
                                   </span>
                                 )}
                               </DescriptionListDescription>
                             </DescriptionListGroup>
                             <DescriptionListGroup>
-                              <DescriptionListTerm>Zone</DescriptionListTerm>
+                              <DescriptionListTerm>{t('Zone')}</DescriptionListTerm>
                               <DescriptionListDescription>
                                 {spec?.zone ?? '—'}
                               </DescriptionListDescription>
                             </DescriptionListGroup>
                             <DescriptionListGroup>
-                              <DescriptionListTerm>Available addresses</DescriptionListTerm>
+                              <DescriptionListTerm>{t('Available addresses')}</DescriptionListTerm>
                               <DescriptionListDescription>
                                 {String(pool.status?.available ?? '—')}
                               </DescriptionListDescription>
                             </DescriptionListGroup>
                             {!isPublic && (
                               <DescriptionListGroup>
-                                <DescriptionListTerm>Assigned tenant</DescriptionListTerm>
+                                <DescriptionListTerm>{t('Assigned tenant')}</DescriptionListTerm>
                                 <DescriptionListDescription>
                                   {(pool as ExternalIPPool).metadata?.tenant ? (
                                     <Label color="purple" isCompact>
@@ -439,14 +458,14 @@ export const ProviderIPPoolDetailPage = () => {
                                     </Label>
                                   ) : (
                                     <span style={{ color: 'var(--pf-t--global--color--200)' }}>
-                                      Not scoped (shared)
+                                      {t('Not scoped (shared)')}
                                     </span>
                                   )}
                                 </DescriptionListDescription>
                               </DescriptionListGroup>
                             )}
                             <DescriptionListGroup>
-                              <DescriptionListTerm>Created</DescriptionListTerm>
+                              <DescriptionListTerm>{t('Created')}</DescriptionListTerm>
                               <DescriptionListDescription>
                                 {pool.metadata?.creationTimestamp
                                   ? new Date(pool.metadata.creationTimestamp).toLocaleString()
@@ -454,11 +473,11 @@ export const ProviderIPPoolDetailPage = () => {
                               </DescriptionListDescription>
                             </DescriptionListGroup>
                             <DescriptionListGroup>
-                              <DescriptionListTerm>Pool type</DescriptionListTerm>
+                              <DescriptionListTerm>{t('Pool type')}</DescriptionListTerm>
                               <DescriptionListDescription>
                                 {isPublic
-                                  ? 'Public (tenant workload IPs)'
-                                  : 'External (cluster/infra IPs)'}
+                                  ? t('Public (tenant workload IPs)')
+                                  : t('External (cluster/infra IPs)')}
                               </DescriptionListDescription>
                             </DescriptionListGroup>
                           </DescriptionList>
@@ -477,38 +496,44 @@ export const ProviderIPPoolDetailPage = () => {
               >
                 <TabContentBody style={{ paddingTop: '1rem' }}>
                   {ips.length === 0 ? (
-                    <Alert variant="info" isInline title="No IPs allocated from this pool yet." />
+                    <Alert
+                      variant="info"
+                      isInline
+                      title={t('No IPs allocated from this pool yet.')}
+                    />
                   ) : (
-                    <Table aria-label="Pool allocations" variant="compact">
+                    <Table aria-label={t('Pool allocations')} variant="compact">
                       <Thead>
                         <Tr>
-                          <Th>Address</Th>
-                          <Th>State</Th>
-                          <Th>Attached</Th>
-                          <Th>Pool ref</Th>
+                          <Th>{t('Address')}</Th>
+                          <Th>{t('State')}</Th>
+                          <Th>{t('Attached')}</Th>
+                          <Th>{t('Pool ref')}</Th>
                         </Tr>
                       </Thead>
                       <Tbody>
                         {ips.map((ip) => (
                           <Tr key={ip.id}>
-                            <Td dataLabel="Address">
+                            <Td dataLabel={t('Address')}>
                               <strong>{ip.status?.address || '—'}</strong>
                             </Td>
-                            <Td dataLabel="State">
+                            <Td dataLabel={t('State')}>
                               <IPStateLabel state={ip.status?.state} />
                             </Td>
-                            <Td dataLabel="Attached">
+                            <Td dataLabel={t('Attached')}>
                               {ip.status?.attached ? (
                                 <Label color="green" isCompact>
-                                  Yes
+                                  {t('Yes')}
                                 </Label>
                               ) : (
                                 <Label color="grey" isCompact>
-                                  No
+                                  {t('No')}
                                 </Label>
                               )}
                             </Td>
-                            <Td dataLabel="Pool ref">{ip.status?.pool || ip.spec?.pool || '—'}</Td>
+                            <Td dataLabel={t('Pool ref')}>
+                              {ip.status?.pool || ip.spec?.pool || '—'}
+                            </Td>
                           </Tr>
                         ))}
                       </Tbody>

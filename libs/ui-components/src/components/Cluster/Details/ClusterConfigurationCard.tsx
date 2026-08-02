@@ -15,6 +15,7 @@ import {
 import type { Cluster } from '@osac/types';
 
 import { useClusterCatalogItem } from '../../../api/v1/cluster-catalog-item';
+import { useTranslation } from '../../../hooks/useTranslation';
 import { displayValue } from '../../../utils/detailFormatters';
 import { Timestamp } from '../../Primitives/Timestamp';
 
@@ -38,6 +39,7 @@ function parseOcpVersion(releaseImage?: string): string | undefined {
 }
 
 export const ClusterConfigurationCard = ({ cluster }: ClusterConfigurationCardProps) => {
+  const { t } = useTranslation();
   const catalogItemId = cluster.spec?.catalogItem;
   const { data: catalogItem, isLoading: isCatalogItemLoading } =
     useClusterCatalogItem(catalogItemId);
@@ -46,11 +48,11 @@ export const ClusterConfigurationCard = ({ cluster }: ClusterConfigurationCardPr
 
   return (
     <Card isFullHeight>
-      <CardTitle>Cluster configuration</CardTitle>
+      <CardTitle>{t('Cluster configuration')}</CardTitle>
       <CardBody>
         <DescriptionList isCompact columnModifier={{ default: '2Col', lg: '3Col' }}>
           <DescriptionListGroup>
-            <DescriptionListTerm>Catalog item</DescriptionListTerm>
+            <DescriptionListTerm>{t('Catalog item')}</DescriptionListTerm>
             <DescriptionListDescription>
               {isCatalogItemLoading ? (
                 <Skeleton width="150px" />
@@ -60,7 +62,7 @@ export const ClusterConfigurationCard = ({ cluster }: ClusterConfigurationCardPr
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
-            <DescriptionListTerm>OCP version</DescriptionListTerm>
+            <DescriptionListTerm>{t('OCP version')}</DescriptionListTerm>
             <DescriptionListDescription>
               {ocpVersion ? (
                 <Flex
@@ -87,19 +89,19 @@ export const ClusterConfigurationCard = ({ cluster }: ClusterConfigurationCardPr
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
-            <DescriptionListTerm>Created</DescriptionListTerm>
+            <DescriptionListTerm>{t('Created')}</DescriptionListTerm>
             <DescriptionListDescription>
               <Timestamp value={cluster.metadata?.creationTimestamp} />
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
-            <DescriptionListTerm>Creator</DescriptionListTerm>
+            <DescriptionListTerm>{t('Creator')}</DescriptionListTerm>
             <DescriptionListDescription>
               {displayValue(cluster.metadata?.creator)}
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
-            <DescriptionListTerm>API URL</DescriptionListTerm>
+            <DescriptionListTerm>{t('API URL')}</DescriptionListTerm>
             <DescriptionListDescription>
               {cluster.status?.apiUrl ? (
                 <a href={cluster.status.apiUrl} target="_blank" rel="noopener noreferrer">
@@ -111,7 +113,7 @@ export const ClusterConfigurationCard = ({ cluster }: ClusterConfigurationCardPr
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
-            <DescriptionListTerm>Console URL</DescriptionListTerm>
+            <DescriptionListTerm>{t('Console URL')}</DescriptionListTerm>
             <DescriptionListDescription>
               {cluster.status?.consoleUrl ? (
                 <a href={cluster.status.consoleUrl} target="_blank" rel="noopener noreferrer">

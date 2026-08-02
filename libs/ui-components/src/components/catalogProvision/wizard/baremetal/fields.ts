@@ -14,6 +14,9 @@ export interface BareMetalWizardValues {
   runStrategy: number;
   sshPublicKey: string;
   userData: string;
+  /** Custom (`custom.*`) and Template-declared (`template_parameters.*`) dynamic field
+   * values, keyed by their catalog field_definitions `path` — see DynamicFieldsFormSection. */
+  dynamicParameters: Record<string, string>;
 }
 
 export const createEmptyBareMetalValues = (initialCatalogItemId = ''): BareMetalWizardValues => ({
@@ -22,6 +25,7 @@ export const createEmptyBareMetalValues = (initialCatalogItemId = ''): BareMetal
   runStrategy: BM_RUN_STRATEGY_ALWAYS,
   sshPublicKey: '',
   userData: '',
+  dynamicParameters: {},
 });
 
 /** Returns true when the step has sufficient data to advance. */

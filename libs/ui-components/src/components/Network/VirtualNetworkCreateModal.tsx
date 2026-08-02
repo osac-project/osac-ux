@@ -15,6 +15,7 @@ import {
 import type { MenuToggleElement } from '@patternfly/react-core';
 
 import { useCreateVirtualNetwork, useNetworkClasses } from '../../api/v1/networking';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 import OsacForm from '../Form/OsacForm';
 
@@ -27,6 +28,7 @@ export const VirtualNetworkCreateModal = ({
   onClose,
   onSuccess,
 }: VirtualNetworkCreateModalProps) => {
+  const { t } = useTranslation();
   const [name, setName] = React.useState('');
   const [networkClass, setNetworkClass] = React.useState('');
   const [ipv4Cidr, setIpv4Cidr] = React.useState('');
@@ -66,10 +68,10 @@ export const VirtualNetworkCreateModal = ({
       onClose={isPending ? undefined : onClose}
       aria-labelledby="vnet-create-title"
     >
-      <ModalHeader title="Create virtual network" labelId="vnet-create-title" />
+      <ModalHeader title={t('Create virtual network')} labelId="vnet-create-title" />
       <ModalBody>
         <OsacForm>
-          <FormGroup label="Name" fieldId="vnet-name" isRequired>
+          <FormGroup label={t('Name')} fieldId="vnet-name" isRequired>
             <TextInput
               id="vnet-name"
               value={name}
@@ -79,7 +81,7 @@ export const VirtualNetworkCreateModal = ({
             />
           </FormGroup>
 
-          <FormGroup label="Network class" fieldId="vnet-class" isRequired>
+          <FormGroup label={t('Network class')} fieldId="vnet-class" isRequired>
             <Select
               isOpen={classSelectOpen}
               selected={selectedClassId}
@@ -97,20 +99,20 @@ export const VirtualNetworkCreateModal = ({
                 >
                   {selectedClass
                     ? selectedClass.title || selectedClass.metadata?.name || selectedClass.id
-                    : 'Select network class'}
+                    : t('Select network class')}
                 </MenuToggle>
               )}
             >
               {networkClasses.map((nc) => (
                 <SelectOption key={nc.id} value={nc.id}>
                   {nc.title || nc.metadata?.name || nc.id}
-                  {nc.isDefault ? ' (default)' : ''}
+                  {nc.isDefault ? ` (${t('default')})` : ''}
                 </SelectOption>
               ))}
             </Select>
           </FormGroup>
 
-          <FormGroup label="IPv4 CIDR (optional)" fieldId="vnet-cidr">
+          <FormGroup label={t('IPv4 CIDR (optional)')} fieldId="vnet-cidr">
             <TextInput
               id="vnet-cidr"
               value={ipv4Cidr}
@@ -120,7 +122,7 @@ export const VirtualNetworkCreateModal = ({
           </FormGroup>
 
           {createVNet.error && (
-            <Alert variant="danger" title="Failed to create virtual network" isInline>
+            <Alert variant="danger" title={t('Failed to create virtual network')} isInline>
               {getErrorMessage(createVNet.error)}
             </Alert>
           )}
@@ -128,7 +130,7 @@ export const VirtualNetworkCreateModal = ({
       </ModalBody>
       <ModalFooter>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
         <Button
           variant="primary"
@@ -136,7 +138,7 @@ export const VirtualNetworkCreateModal = ({
           isDisabled={isPending || !name.trim() || !selectedClassId}
           isLoading={isPending}
         >
-          Create
+          {t('Create')}
         </Button>
       </ModalFooter>
     </Modal>

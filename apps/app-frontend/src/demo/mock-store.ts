@@ -268,7 +268,23 @@ const computeInstanceTemplates = [
       runStrategy: 'Always',
       instanceType: 'instance-type-small',
     },
-    parameters: [],
+    parameters: [
+      {
+        name: 'ssh_public_key',
+        title: 'SSH Public Key',
+        description:
+          'Public SSH key injected at first boot via cloud-init. Required by the Ansible provisioning role.',
+        required: true,
+        type: 'type.googleapis.com/google.protobuf.StringValue',
+      },
+      {
+        name: 'user_data',
+        title: 'Cloud-init user data',
+        description: 'Optional cloud-init YAML script for additional first-boot configuration.',
+        required: false,
+        type: 'type.googleapis.com/google.protobuf.StringValue',
+      },
+    ],
   },
   {
     id: 'ci-template-fedora',
@@ -283,7 +299,16 @@ const computeInstanceTemplates = [
       runStrategy: 'Always',
       instanceType: 'instance-type-medium',
     },
-    parameters: [],
+    parameters: [
+      {
+        name: 'ssh_public_key',
+        title: 'SSH Public Key',
+        description:
+          'Public SSH key injected at first boot via cloud-init. Required by the Ansible provisioning role.',
+        required: true,
+        type: 'type.googleapis.com/google.protobuf.StringValue',
+      },
+    ],
   },
   {
     id: 'ci-template-windows-server',
@@ -298,7 +323,16 @@ const computeInstanceTemplates = [
       runStrategy: 'Always',
       instanceType: 'instance-type-large',
     },
-    parameters: [],
+    parameters: [
+      {
+        name: 'admin_password',
+        title: 'Administrator Password',
+        description:
+          'Local Administrator account password set via cloudbase-init at first boot. Must meet Windows complexity requirements.',
+        required: true,
+        type: 'type.googleapis.com/google.protobuf.StringValue',
+      },
+    ],
   },
 ];
 
@@ -607,7 +641,24 @@ const clusterTemplates = [
       releaseImage: 'quay.io/openshift-release-dev/ocp-release:4.16.0-x86_64',
       network: { podCidr: '10.128.0.0/14', serviceCidr: '172.30.0.0/16' },
     },
-    parameters: [],
+    parameters: [
+      {
+        name: 'ssh_public_key',
+        title: 'SSH Public Key',
+        description:
+          'SSH key added to all cluster nodes. Required for node access and Ansible-based lifecycle operations.',
+        required: true,
+        type: 'type.googleapis.com/google.protobuf.StringValue',
+      },
+      {
+        name: 'pull_secret',
+        title: 'Pull Secret',
+        description:
+          'OpenShift pull secret JSON from console.redhat.com. Required to pull cluster images from registry.redhat.io.',
+        required: true,
+        type: 'type.googleapis.com/google.protobuf.StringValue',
+      },
+    ],
   },
   {
     id: 'cluster-template-ocp417',
@@ -622,7 +673,24 @@ const clusterTemplates = [
       releaseImage: 'quay.io/openshift-release-dev/ocp-release:4.17.0-x86_64',
       network: { podCidr: '10.128.0.0/14', serviceCidr: '172.30.0.0/16' },
     },
-    parameters: [],
+    parameters: [
+      {
+        name: 'ssh_public_key',
+        title: 'SSH Public Key',
+        description:
+          'SSH key added to all cluster nodes. Required for node access and Ansible-based lifecycle operations.',
+        required: true,
+        type: 'type.googleapis.com/google.protobuf.StringValue',
+      },
+      {
+        name: 'pull_secret',
+        title: 'Pull Secret',
+        description:
+          'OpenShift pull secret JSON from console.redhat.com. Required to pull cluster images from registry.redhat.io.',
+        required: true,
+        type: 'type.googleapis.com/google.protobuf.StringValue',
+      },
+    ],
   },
   {
     id: 'cluster-template-ai-grid',
@@ -1155,7 +1223,16 @@ const baremetalInstanceTemplates = [
     title: 'Standard Bare Metal',
     description: 'Standard bare metal provisioning template with default host type.',
     specDefaults: { hostType: 'host-type-standard' },
-    parameters: [],
+    parameters: [
+      {
+        name: 'ssh_public_key',
+        title: 'SSH Public Key',
+        description:
+          'Public SSH key injected onto the host at provisioning time. Required for node access.',
+        required: true,
+        type: 'type.googleapis.com/google.protobuf.StringValue',
+      },
+    ],
   },
   {
     id: 'bm-template-gpu',
@@ -1165,7 +1242,16 @@ const baremetalInstanceTemplates = [
     title: 'GPU Bare Metal',
     description: 'GPU-accelerated bare metal provisioning template using IBM MI300X host type.',
     specDefaults: { hostType: 'host-type-ibm-mi300x' },
-    parameters: [],
+    parameters: [
+      {
+        name: 'ssh_public_key',
+        title: 'SSH Public Key',
+        description:
+          'Public SSH key injected onto the host at provisioning time. Required for node access.',
+        required: true,
+        type: 'type.googleapis.com/google.protobuf.StringValue',
+      },
+    ],
   },
 ];
 
@@ -1259,12 +1345,23 @@ const hostTypes = [
 const tenants = [
   {
     id: 'tenant-001',
-    metadata: metadata('demo-tenant', 'Demo tenant organization'),
+    metadata: metadata('demo-tenant', 'Demo tenant organization', {
+      labels: {
+        'osac.io/price-plan-ref': 'plan-standard',
+        'osac.io/billing-model': 'PAY_AS_YOU_GO',
+      },
+    }),
     spec: { domains: ['example.com'] },
   },
   {
     id: 'tenant-002',
-    metadata: metadata('acme', 'Acme Corporation'),
+    metadata: metadata('acme', 'Acme Corporation', {
+      labels: {
+        'osac.io/price-plan-ref': 'plan-reseller-a',
+        'osac.io/affiliate-id': 'acme-reseller-001',
+        'osac.io/billing-model': 'PREPAID',
+      },
+    }),
     spec: { domains: ['acme.com'] },
   },
 ];
@@ -1843,6 +1940,92 @@ const modelAccesses = [
   },
 ];
 
+const subscriptions = [
+  {
+    id: 'sub-001',
+    metadata: { name: 'rag-team-llama', creationTimestamp: ts(1440), tenant: DEMO_TENANT_ID },
+    spec: {
+      modelCatalogItemId: 'maas-catalog-llama-3-2-3b',
+      groupAccess: ['rag-engineers'],
+      rateLimit: 120,
+      tokenQuota: 5_000_000,
+      idpRef: 'tenant-oidc',
+    },
+    status: { state: 'ACTIVE' },
+  },
+  {
+    id: 'sub-002',
+    metadata: { name: 'code-assist-granite', creationTimestamp: ts(360), tenant: DEMO_TENANT_ID },
+    spec: {
+      modelCatalogItemId: 'maas-catalog-granite-3-3-8b',
+      groupAccess: ['platform-engineers', 'sre'],
+      rateLimit: 60,
+      tokenQuota: 2_000_000,
+      idpRef: 'tenant-oidc',
+    },
+    status: { state: 'ACTIVE' },
+  },
+];
+
+const maasTokenUsage = [
+  {
+    id: 'usage-001',
+    tenantId: DEMO_TENANT_ID,
+    tenantName: 'Acme Corp',
+    subscriptionId: 'sub-001',
+    subscriptionName: 'rag-team-llama',
+    period: '2026-07',
+    inputTokens: 3_240_500,
+    outputTokens: 812_300,
+    cacheTokens: 1_105_900,
+  },
+  {
+    id: 'usage-002',
+    tenantId: DEMO_TENANT_ID,
+    tenantName: 'Acme Corp',
+    subscriptionId: 'sub-002',
+    subscriptionName: 'code-assist-granite',
+    period: '2026-07',
+    inputTokens: 980_200,
+    outputTokens: 415_600,
+    cacheTokens: 220_100,
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Billing: Price Plans (@temp-api — REQ-BA-4, gated on REQ-BA-3 M360-vs-Koku)
+// ---------------------------------------------------------------------------
+
+const pricePlans = [
+  {
+    id: 'plan-standard',
+    metadata: { name: 'standard', creationTimestamp: ts(4320) },
+    title: 'Standard',
+    description: 'Default pay-as-you-go rates. No markup applied.',
+    tier: 'standard',
+    isDefault: true,
+    rateOverrides: {},
+  },
+  {
+    id: 'plan-reseller-a',
+    metadata: { name: 'reseller-tier-a', creationTimestamp: ts(2880) },
+    title: 'Reseller — Tier A',
+    description: '12% markup on compute meters for reseller partners. Maps to a Koku Cost Model.',
+    tier: 'reseller',
+    isDefault: false,
+    rateOverrides: { 'vm-hours': '0.056', 'cluster-hours': '0.448', 'gpu-hours': '5.04' },
+  },
+  {
+    id: 'plan-gov-standard',
+    metadata: { name: 'gov-standard', creationTimestamp: ts(1440) },
+    title: 'Government — Standard',
+    description: 'Fixed-rate government contract pricing with GPU discount.',
+    tier: 'gov',
+    isDefault: false,
+    rateOverrides: { 'gpu-hours': '3.60' },
+  },
+];
+
 // ---------------------------------------------------------------------------
 // Capabilities
 // ---------------------------------------------------------------------------
@@ -1907,6 +2090,10 @@ export const mockStore: MockStore = {
   'v1/ai_environments': [...aiEnvironments],
   'v1/model_catalog_items': [...modelCatalogItems],
   'v1/model_accesses': [...modelAccesses],
+  'v1/subscriptions': [...subscriptions],
+  'v1/maas_token_usage': [...maasTokenUsage],
+  // Billing (@temp-api)
+  'v1/price_plans': [...pricePlans],
   // Private-only
   'v1/hubs': [...hubs],
   'v1/storage_backends': [...storageBackends],

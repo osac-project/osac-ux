@@ -12,6 +12,7 @@ import {
 
 import CatalogItemCard from './CatalogItemCard';
 import type { CatalogItemForDisplay, CatalogItemKind } from './catalogItemDisplay';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 interface CatalogItemListSectionProps {
@@ -33,6 +34,7 @@ export const CatalogItemListSection = ({
   isLoading = false,
   error = null,
 }: CatalogItemListSectionProps) => {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(true);
 
   if (!isLoading && !error && items.length === 0) {
@@ -51,7 +53,7 @@ export const CatalogItemListSection = ({
         >
           {isLoading && (
             <Bullseye>
-              <Spinner aria-label={`Loading ${title}`} />
+              <Spinner aria-label={t('Loading {{title}}', { title })} />
             </Bullseye>
           )}
           {error && (

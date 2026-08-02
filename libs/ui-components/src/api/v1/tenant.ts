@@ -54,8 +54,13 @@ export const usePatchTenant = () => {
   const apiFetch = useApiFetch();
   const qc = useApiQueryClient();
   return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: { spec: { domains: string[] } } }) =>
-      apiFetch<Tenant>('v1/tenants', { pathParams: [id], method: 'PATCH', body: patch }),
+    mutationFn: ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: Partial<Pick<Tenant, 'metadata' | 'spec'>>;
+    }) => apiFetch<Tenant>('v1/tenants', { pathParams: [id], method: 'PATCH', body: patch }),
     onSuccess: () => invalidate(qc),
     retry: false,
   });

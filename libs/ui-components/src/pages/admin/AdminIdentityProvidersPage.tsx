@@ -35,6 +35,7 @@ import {
 } from '../../api/v1/identity-provider';
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
+import { useTranslation } from '../../hooks/useTranslation';
 
 type IdpType = 'OIDC' | 'LDAP';
 
@@ -49,6 +50,7 @@ const PHASE_LABELS: Record<
 };
 
 export const AdminIdentityProvidersPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: providers = [], isLoading, error } = useIdentityProviders();
   const { mutate: deleteProvider } = useDeleteIdentityProvider();
@@ -125,14 +127,16 @@ export const AdminIdentityProvidersPage = () => {
 
   return (
     <ListPage
-      title="Identity providers"
-      description="Configure OIDC and LDAP providers for user authentication."
+      title={t('Identity providers')}
+      description={t('Configure OIDC and LDAP providers for user authentication.')}
     >
       {toDelete && (
         <Alert
           variant="warning"
           isInline
-          title={`Delete identity provider "${toDelete.spec?.title ?? toDelete.id}"?`}
+          title={t('Delete identity provider "{{name}}"?', {
+            name: toDelete.spec?.title ?? toDelete.id,
+          })}
           style={{ marginBottom: '1rem' }}
           actionLinks={
             <>
@@ -143,10 +147,10 @@ export const AdminIdentityProvidersPage = () => {
                   setToDelete(null);
                 }}
               >
-                Delete
+                {t('Delete')}
               </Button>
               <Button variant="link" onClick={() => setToDelete(null)}>
-                Cancel
+                {t('Cancel')}
               </Button>
             </>
           }
@@ -157,8 +161,8 @@ export const AdminIdentityProvidersPage = () => {
           <ToolbarContent>
             <ToolbarItem>
               <SearchInput
-                aria-label="Search identity providers"
-                placeholder="Search by name"
+                aria-label={t('Search identity providers')}
+                placeholder={t('Search by name')}
                 value={search}
                 onChange={(_e, v) => setSearch(v)}
                 onClear={() => setSearch('')}
@@ -171,7 +175,7 @@ export const AdminIdentityProvidersPage = () => {
                   toggleType((typeof v === 'string' ? v : (v as { key: string }).key) as IdpType)
                 }
                 deleteLabelGroup={() => setTypeFilters([])}
-                categoryName="Type"
+                categoryName={t('Type')}
               >
                 <Select
                   isOpen={typeOpen}
@@ -184,7 +188,7 @@ export const AdminIdentityProvidersPage = () => {
                       isExpanded={typeOpen}
                       badge={typeFilters.length || undefined}
                     >
-                      Type
+                      {t('Type')}
                     </MenuToggle>
                   )}
                 >
@@ -208,7 +212,7 @@ export const AdminIdentityProvidersPage = () => {
                   togglePhase(typeof v === 'string' ? v : (v as { key: string }).key)
                 }
                 deleteLabelGroup={() => setPhaseFilters([])}
-                categoryName="Phase"
+                categoryName={t('Phase')}
               >
                 <Select
                   isOpen={phaseOpen}
@@ -221,7 +225,7 @@ export const AdminIdentityProvidersPage = () => {
                       isExpanded={phaseOpen}
                       badge={phaseFilters.length || undefined}
                     >
-                      Phase
+                      {t('Phase')}
                     </MenuToggle>
                   )}
                 >
@@ -245,7 +249,7 @@ export const AdminIdentityProvidersPage = () => {
                   toggleEnabled(typeof v === 'string' ? v : (v as { key: string }).key)
                 }
                 deleteLabelGroup={() => setEnabledFilters([])}
-                categoryName="Status"
+                categoryName={t('Status')}
               >
                 <Select
                   isOpen={enabledOpen}
@@ -258,7 +262,7 @@ export const AdminIdentityProvidersPage = () => {
                       isExpanded={enabledOpen}
                       badge={enabledFilters.length || undefined}
                     >
-                      Status
+                      {t('Status')}
                     </MenuToggle>
                   )}
                 >
@@ -290,26 +294,26 @@ export const AdminIdentityProvidersPage = () => {
             alignItems={{ default: 'alignItemsCenter' }}
             style={{ gap: '0.5rem', padding: '1rem 0' }}
           >
-            <FlexItem>No identity providers match the current filters.</FlexItem>
+            <FlexItem>{t('No identity providers match the current filters.')}</FlexItem>
             <FlexItem>
               <Button variant="link" isInline onClick={clearAll}>
-                Clear filters
+                {t('Clear filters')}
               </Button>
             </FlexItem>
           </Flex>
         ) : providers.length === 0 ? (
-          <Alert variant="info" isInline title="No identity providers configured">
-            Add an OIDC or LDAP provider to enable SSO for your users.
+          <Alert variant="info" isInline title={t('No identity providers configured')}>
+            {t('Add an OIDC or LDAP provider to enable SSO for your users.')}
           </Alert>
         ) : (
-          <Table aria-label="Identity providers" variant="compact">
+          <Table aria-label={t('Identity providers')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Type</Th>
-                <Th>Phase</Th>
-                <Th>Health</Th>
-                <Th>Enabled</Th>
+                <Th>{t('Name')}</Th>
+                <Th>{t('Type')}</Th>
+                <Th>{t('Phase')}</Th>
+                <Th>{t('Health')}</Th>
+                <Th>{t('Enabled')}</Th>
                 <Td />
               </Tr>
             </Thead>
@@ -320,10 +324,10 @@ export const AdminIdentityProvidersPage = () => {
                 const health = provider.status?.health?.status;
                 return (
                   <Tr key={provider.id}>
-                    <Td dataLabel="Name">
+                    <Td dataLabel={t('Name')}>
                       {provider.spec?.title ?? provider.metadata?.name ?? provider.id}
                     </Td>
-                    <Td dataLabel="Type">
+                    <Td dataLabel={t('Type')}>
                       <Label color="blue" isCompact>
                         {provider.spec?.config?.case === 'oidc'
                           ? 'OIDC'
@@ -332,25 +336,25 @@ export const AdminIdentityProvidersPage = () => {
                             : '—'}
                       </Label>
                     </Td>
-                    <Td dataLabel="Phase">
+                    <Td dataLabel={t('Phase')}>
                       {phaseInfo ? (
                         <Label color={phaseInfo.color} isCompact>
-                          {phaseInfo.label}
+                          {t(phaseInfo.label)}
                         </Label>
                       ) : (
                         <Label color="grey" isCompact>
-                          Unknown
+                          {t('Unknown')}
                         </Label>
                       )}
                     </Td>
-                    <Td dataLabel="Health">
+                    <Td dataLabel={t('Health')}>
                       {health === IdentityProviderHealthStatus.HEALTHY ? (
                         <Label color="green" isCompact>
-                          Healthy
+                          {t('Healthy')}
                         </Label>
                       ) : health === IdentityProviderHealthStatus.UNHEALTHY ? (
                         <Label color="red" isCompact>
-                          Unhealthy
+                          {t('Unhealthy')}
                         </Label>
                       ) : (
                         <Label color="grey" isCompact>
@@ -358,23 +362,27 @@ export const AdminIdentityProvidersPage = () => {
                         </Label>
                       )}
                     </Td>
-                    <Td dataLabel="Enabled">
+                    <Td dataLabel={t('Enabled')}>
                       <Switch
                         id={`idp-enabled-${provider.id}`}
                         isChecked={provider.spec?.enabled ?? false}
                         onChange={(_e, checked) => handleToggleEnabled(provider, checked)}
-                        aria-label="Toggle identity provider"
+                        aria-label={t('Toggle identity provider')}
                       />
                     </Td>
                     <Td isActionCell>
                       <ActionsColumn
                         items={[
                           {
-                            title: 'Edit',
+                            title: t('Edit'),
                             onClick: () =>
                               navigate(`/admin/identity-providers/${provider.id}/edit`),
                           },
-                          { title: 'Delete', onClick: () => setToDelete(provider), isDanger: true },
+                          {
+                            title: t('Delete'),
+                            onClick: () => setToDelete(provider),
+                            isDanger: true,
+                          },
                         ]}
                       />
                     </Td>

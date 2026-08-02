@@ -25,6 +25,7 @@ import { ActionsColumn, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/reac
 
 import { type InstanceType, InstanceTypeState } from '@osac/types';
 
+import { RESIDENCY_COLOR, resourceResidency } from '../../api/v1/compliance';
 import {
   formatInstanceTypeSizing,
   instanceTypeName,
@@ -37,6 +38,7 @@ import { EditPriceModal } from '../../components/catalog/EditPriceModal';
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
 import { DeleteConfirmModal } from '../../components/shared/DeleteConfirmModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const STATE_LABELS: Record<number, { label: string; color: 'green' | 'orange' | 'red' | 'grey' }> =
   {
@@ -46,6 +48,7 @@ const STATE_LABELS: Record<number, { label: string; color: 'green' | 'orange' | 
   };
 
 export const ProviderInstanceTypesPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: instanceTypes = [], isLoading, error } = useInstanceTypes({}, { enabled: true });
   const deleteIT = useDeleteInstanceType();
@@ -90,16 +93,18 @@ export const ProviderInstanceTypesPage = () => {
   return (
     <>
       <ListPage
-        title="Instance Types"
-        description="Instance types define VM CPU/RAM bundles. Attach a price_per_hour label to enable metering-based cost estimates (OSAC-985, VMaaS instance-type-seconds billing dimension)."
+        title={t('Instance Types')}
+        description={t(
+          'Instance types define VM CPU/RAM bundles. Attach a price_per_hour label to enable metering-based cost estimates (OSAC-985, VMaaS instance-type-seconds billing dimension).',
+        )}
       >
         <ListPageBody isLoading={isLoading} error={error}>
           <Toolbar clearAllFilters={clearAll}>
             <ToolbarContent>
               <ToolbarItem>
                 <SearchInput
-                  aria-label="Search instance types"
-                  placeholder="Search by name or description"
+                  aria-label={t('Search instance types')}
+                  placeholder={t('Search by name or description')}
                   value={search}
                   onChange={(_e, v) => setSearch(v)}
                   onClear={() => setSearch('')}
@@ -107,16 +112,18 @@ export const ProviderInstanceTypesPage = () => {
               </ToolbarItem>
               <ToolbarGroup variant="filter-group">
                 <ToolbarFilter
-                  labels={stateFilters.map((s) => STATE_LABELS[s]?.label ?? String(s))}
+                  labels={stateFilters.map((s) => t(STATE_LABELS[s]?.label ?? String(s)))}
                   deleteLabel={(_g, chip) => {
                     const label = typeof chip === 'string' ? chip : (chip as { key: string }).key;
-                    const found = Object.entries(STATE_LABELS).find(([, v]) => v.label === label);
+                    const found = Object.entries(STATE_LABELS).find(
+                      ([, v]) => t(v.label) === label,
+                    );
                     if (found) {
                       toggleState(Number(found[0]));
                     }
                   }}
                   deleteLabelGroup={() => setStateFilters([])}
-                  categoryName="State"
+                  categoryName={t('State')}
                 >
                   <Select
                     isOpen={stateOpen}
@@ -129,7 +136,7 @@ export const ProviderInstanceTypesPage = () => {
                         isExpanded={stateOpen}
                         badge={stateFilters.length || undefined}
                       >
-                        State
+                        {t('State')}
                       </MenuToggle>
                     )}
                   >
@@ -141,7 +148,7 @@ export const ProviderInstanceTypesPage = () => {
                           hasCheckbox
                           isSelected={stateFilters.includes(Number(k))}
                         >
-                          {v.label}
+                          {t(v.label)}
                         </SelectOption>
                       ))}
                     </SelectList>
@@ -150,7 +157,7 @@ export const ProviderInstanceTypesPage = () => {
               </ToolbarGroup>
               <ToolbarItem align={{ default: 'alignEnd' }}>
                 <Button variant="primary" onClick={() => navigate('/provider/instance-types/new')}>
-                  Create instance type
+                  {t('Create instance type')}
                 </Button>
               </ToolbarItem>
             </ToolbarContent>
@@ -161,24 +168,25 @@ export const ProviderInstanceTypesPage = () => {
               alignItems={{ default: 'alignItemsCenter' }}
               style={{ gap: '0.5rem', padding: '1rem 0' }}
             >
-              <FlexItem>No instance types match the current filters.</FlexItem>
+              <FlexItem>{t('No instance types match the current filters.')}</FlexItem>
               <FlexItem>
                 <Button variant="link" isInline onClick={clearAll}>
-                  Clear filters
+                  {t('Clear filters')}
                 </Button>
               </FlexItem>
             </Flex>
           ) : instanceTypes.length === 0 ? (
-            <Alert variant="info" isInline title="No instance types defined" />
+            <Alert variant="info" isInline title={t('No instance types defined')} />
           ) : (
-            <Table aria-label="Instance types" variant="compact">
+            <Table aria-label={t('Instance types')} variant="compact">
               <Thead>
                 <Tr>
-                  <Th>Name</Th>
-                  <Th>Sizing</Th>
-                  <Th>Price / hr</Th>
-                  <Th>State</Th>
-                  <Th aria-label="Actions" />
+                  <Th>{t('Name')}</Th>
+                  <Th>{t('Sizing')}</Th>
+                  <Th>{t('Residency')}</Th>
+                  <Th>{t('Price / hr')}</Th>
+                  <Th>{t('State')}</Th>
+                  <Th aria-label={t('Actions')} />
                 </Tr>
               </Thead>
               <Tbody>
@@ -187,30 +195,35 @@ export const ProviderInstanceTypesPage = () => {
                     it.spec?.state !== undefined ? STATE_LABELS[it.spec.state] : undefined;
                   return (
                     <Tr key={it.id}>
-                      <Td dataLabel="Name">
+                      <Td dataLabel={t('Name')}>
                         <strong>{instanceTypeName(it)}</strong>
                       </Td>
-                      <Td dataLabel="Sizing">{formatInstanceTypeSizing(it)}</Td>
-                      <Td dataLabel="Price / hr">
+                      <Td dataLabel={t('Sizing')}>{formatInstanceTypeSizing(it)}</Td>
+                      <Td dataLabel={t('Residency')}>
+                        <Label isCompact color={RESIDENCY_COLOR[resourceResidency(it)]}>
+                          {resourceResidency(it)}
+                        </Label>
+                      </Td>
+                      <Td dataLabel={t('Price / hr')}>
                         {instanceTypePricePerHour(it) !== null
                           ? `$${instanceTypePricePerHour(it)?.toFixed(2)}/hr`
                           : '—'}
                       </Td>
-                      <Td dataLabel="State">
+                      <Td dataLabel={t('State')}>
                         {stateInfo ? (
                           <Label isCompact color={stateInfo.color}>
-                            {stateInfo.label}
+                            {t(stateInfo.label)}
                           </Label>
                         ) : (
                           '—'
                         )}
                       </Td>
-                      <Td dataLabel="Actions" isActionCell>
+                      <Td dataLabel={t('Actions')} isActionCell>
                         <ActionsColumn
                           items={[
-                            { title: 'Edit price', onClick: () => setEditPriceTarget(it) },
+                            { title: t('Edit price'), onClick: () => setEditPriceTarget(it) },
                             {
-                              title: 'Delete',
+                              title: t('Delete'),
                               onClick: () => setPendingDelete(it),
                               isDanger: true,
                             },
@@ -247,7 +260,7 @@ export const ProviderInstanceTypesPage = () => {
       {pendingDelete && (
         <DeleteConfirmModal
           resourceName={instanceTypeName(pendingDelete)}
-          resourceKind="instance type"
+          resourceKind={t('instance type')}
           onClose={() => setPendingDelete(null)}
           onConfirm={async () => {
             await deleteIT.mutateAsync(pendingDelete.id);

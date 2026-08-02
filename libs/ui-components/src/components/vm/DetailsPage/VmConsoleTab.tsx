@@ -11,8 +11,10 @@ import { Alert, Button, Flex, FlexItem, Label, Spinner } from '@patternfly/react
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 
-import '@xterm/xterm/css/xterm.css';
 import { ConsoleResourceType, ConsoleType, useCreateConsoleSession } from '../../../api/v1/console';
+import { useTranslation } from '../../../hooks/useTranslation';
+
+import '@xterm/xterm/css/xterm.css';
 
 interface Props {
   vmId: string;
@@ -62,6 +64,7 @@ export const VmConsoleTab = ({
   vmName = 'vm',
   resourceType = ConsoleResourceType.COMPUTE_INSTANCE,
 }: Props) => {
+  const { t } = useTranslation();
   const termRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
@@ -115,7 +118,7 @@ export const VmConsoleTab = ({
     wsRef.current?.close();
     wsRef.current = null;
     setConsoleState('idle');
-    xtermRef.current?.writeln('\r\n\x1b[33m[Console disconnected]\x1b[0m');
+    xtermRef.current?.writeln(`\r\n\x1b[33m[${t('Console disconnected')}]\x1b[0m`);
   };
 
   const connect = async () => {
@@ -127,13 +130,13 @@ export const VmConsoleTab = ({
 
     const term = xtermRef.current;
     term.clear();
-    term.writeln('\x1b[90m[Requesting console session...]\x1b[0m');
+    term.writeln(`\x1b[90m[${t('Requesting console session...')}]\x1b[0m`);
 
     try {
       const session = await createSession({ resourceId: vmId, type: consoleType, resourceType });
 
       if (DEMO_MODE) {
-        term.writeln('\x1b[90m[Connected — demo serial console]\x1b[0m\r\n');
+        term.writeln(`\x1b[90m[${t('Connected — demo serial console')}]\x1b[0m\r\n`);
         setConsoleState('connected');
         // Simulate boot and handle input
         const stopSim = runDemoSimulation(term, vmName);
@@ -177,7 +180,7 @@ export const VmConsoleTab = ({
         // Send ticket as first frame (auth handshake)
         ws.send(JSON.stringify({ ticket: session.ticket }));
         setConsoleState('connected');
-        term.writeln('\x1b[32m[Connected]\x1b[0m');
+        term.writeln(`\x1b[32m[${t('Connected')}]\x1b[0m`);
       };
 
       ws.onmessage = (evt) => {
@@ -190,7 +193,9 @@ export const VmConsoleTab = ({
 
       ws.onerror = () => {
         setConsoleState('error');
-        setErrorMsg('WebSocket connection failed. Ensure the console-proxy service is reachable.');
+        setErrorMsg(
+          t('WebSocket connection failed. Ensure the console-proxy service is reachable.'),
+        );
       };
 
       ws.onclose = () => setConsoleState('idle');
@@ -204,7 +209,7 @@ export const VmConsoleTab = ({
       cleanupRef.current = () => keyDisposable.dispose();
     } catch (err) {
       setConsoleState('error');
-      setErrorMsg(err instanceof Error ? err.message : 'Failed to create console session');
+      setErrorMsg(err instanceof Error ? err.message : t('Failed to create console session'));
     }
   };
 
@@ -217,7 +222,7 @@ export const VmConsoleTab = ({
         <FlexItem>
           {isConnected ? (
             <Button variant="secondary" size="sm" onClick={disconnect}>
-              Disconnect
+              {t('Disconnect')}
             </Button>
           ) : (
             <Button
@@ -227,44 +232,44 @@ export const VmConsoleTab = ({
               isLoading={isPending || consoleState === 'connecting'}
               isDisabled={isPending || consoleState === 'connecting'}
             >
-              {consoleState === 'connecting' ? 'Connecting…' : 'Connect'}
+              {consoleState === 'connecting' ? t('Connecting…') : t('Connect')}
             </Button>
           )}
         </FlexItem>
         <FlexItem>
           <Label color="grey" isCompact>
-            Serial console
+            {t('Serial console')}
           </Label>
         </FlexItem>
         {isConnected && (
           <FlexItem>
             <Label color="green" isCompact>
-              Connected
+              {t('Connected')}
             </Label>
           </FlexItem>
         )}
         {consoleState === 'connecting' && (
           <FlexItem>
-            <Spinner size="sm" aria-label="Connecting" />
+            <Spinner size="sm" aria-label={t('Connecting')} />
           </FlexItem>
         )}
         {DEMO_MODE && (
           <FlexItem>
             <Label color="gold" isCompact variant="outline">
-              demo
+              {t('demo')}
             </Label>
           </FlexItem>
         )}
       </Flex>
 
       {consoleState === 'error' && (
-        <Alert variant="danger" isInline title="Console error">
+        <Alert variant="danger" isInline title={t('Console error')}>
           {errorMsg}
         </Alert>
       )}
 
       {!DEMO_MODE && consoleState === 'idle' && (
-        <Alert variant="info" isInline title="WebSocket proxy required">
+        <Alert variant="info" isInline title={t('WebSocket proxy required')}>
           The serial console requires a running <code>console-proxy</code> sidecar reachable at{' '}
           <code>{import.meta.env.VITE_CONSOLE_WS_URL ?? window.location.origin}</code>. Click{' '}
           <strong>Connect</strong> to attempt connection.

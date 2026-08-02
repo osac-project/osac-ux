@@ -13,6 +13,7 @@ import { UsageSummaryCard } from '@osac/ui-components/components/metering/UsageS
 import ListPage from '@osac/ui-components/components/Page/ListPage';
 import ListPageBody from '@osac/ui-components/components/Page/ListPageBody';
 import { useSession } from '@osac/ui-components/hooks/use-session';
+import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 import {
   COMPUTE_INSTANCE_STATE,
   readComputeInstanceState,
@@ -43,39 +44,43 @@ const TILES = [
 ];
 
 export const AdminDashboardPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { username } = useSession();
   const { data: vms = [], isLoading: vmsLoading, error: vmsError } = useComputeInstances();
   const { data: users = [], isLoading: usersLoading, error: usersError } = useUsers();
-  const tenantLabel = username ?? 'your organization';
+  const tenantLabel = username ?? t('your organization');
 
   return (
-    <ListPage title="Dashboard" description={`Tenant administration for ${tenantLabel}`}>
+    <ListPage
+      title={t('Dashboard')}
+      description={t('Tenant administration for {{tenantLabel}}', { tenantLabel })}
+    >
       <ListPageBody isLoading={vmsLoading || usersLoading} error={vmsError || usersError}>
         <Flex spaceItems={{ default: 'spaceItemsMd' }} flexWrap={{ default: 'wrap' }}>
-          <DashboardMetricCard label="Total VMs" value={vms.length} />
+          <DashboardMetricCard label={t('Total VMs')} value={vms.length} />
           <DashboardMetricCard
-            label="Running"
+            label={t('Running')}
             value={
               vms.filter((v) => readComputeInstanceState(v) === COMPUTE_INSTANCE_STATE.RUNNING)
                 .length
             }
           />
-          <DashboardMetricCard label="Users" value={users.length} />
+          <DashboardMetricCard label={t('Users')} value={users.length} />
         </Flex>
         <UsageSummaryCard />
 
         <Title headingLevel="h2" size="xl">
-          Administration areas
+          {t('Administration areas')}
         </Title>
         <Gallery hasGutter minWidths={{ default: '220px' }}>
           {TILES.map((tile) => (
             <GalleryItem key={tile.id}>
               <DashboardActionTile
                 icon={tile.icon}
-                title={tile.label}
-                description={tile.desc}
-                actionLabel={`Go to ${tile.label.toLowerCase()} →`}
+                title={t(tile.label)}
+                description={t(tile.desc)}
+                actionLabel={t('Go to {{label}} →', { label: tile.label.toLowerCase() })}
                 onAction={() => navigate(tile.path)}
               />
             </GalleryItem>

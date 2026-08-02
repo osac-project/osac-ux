@@ -26,39 +26,42 @@ import ListPage from '@osac/ui-components/components/Page/ListPage';
 import ListPageBody from '@osac/ui-components/components/Page/ListPageBody';
 import { Timestamp } from '@osac/ui-components/components/Primitives/Timestamp';
 import { useSession } from '@osac/ui-components/hooks/use-session';
+import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 type StateFilter = 'all' | 'active' | 'revoked';
 
 const ModelAccessStateLabel = ({ state }: { state: ModelAccessState | undefined }) => {
+  const { t } = useTranslation();
   switch (state) {
     case 'ACTIVE':
       return (
         <Label isCompact color="green">
-          Active
+          {t('Active')}
         </Label>
       );
     case 'PROVISIONING':
       return (
         <Label isCompact color="blue">
-          Provisioning
+          {t('Provisioning')}
         </Label>
       );
     case 'REVOKED':
       return (
         <Label isCompact color="grey">
-          Revoked
+          {t('Revoked')}
         </Label>
       );
     default:
       return (
         <Label isCompact color="grey">
-          Unknown
+          {t('Unknown')}
         </Label>
       );
   }
 };
 
 export const MaaSListPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { tenantId } = useSession();
   const [stateFilter, setStateFilter] = useState<StateFilter>('all');
@@ -90,11 +93,13 @@ export const MaaSListPage = () => {
 
   return (
     <ListPage
-      title="AI Models"
-      description="Model access credentials provisioned for your applications. Each access provides an OpenAI-compatible endpoint secured by an API key."
+      title={t('AI Models')}
+      description={t(
+        'Model access credentials provisioned for your applications. Each access provides an OpenAI-compatible endpoint secured by an API key.',
+      )}
       actions={
         <Button variant="primary" onClick={() => navigate('/catalog')}>
-          Browse catalog
+          {t('Browse catalog')}
         </Button>
       }
     >
@@ -107,28 +112,28 @@ export const MaaSListPage = () => {
         >
           <FlexItem>
             <SearchInput
-              placeholder="Search by name…"
+              placeholder={t('Search by name…')}
               value={search}
               onChange={(_e, v) => setSearch(v)}
               onClear={() => setSearch('')}
             />
           </FlexItem>
           <FlexItem>
-            <ToggleGroup aria-label="Filter by state">
+            <ToggleGroup aria-label={t('Filter by state')}>
               <ToggleGroupItem
-                text="All"
+                text={t('All')}
                 buttonId="maas-filter-all"
                 isSelected={stateFilter === 'all'}
                 onChange={() => setStateFilter('all')}
               />
               <ToggleGroupItem
-                text="Active"
+                text={t('Active')}
                 buttonId="maas-filter-active"
                 isSelected={stateFilter === 'active'}
                 onChange={() => setStateFilter('active')}
               />
               <ToggleGroupItem
-                text="Revoked"
+                text={t('Revoked')}
                 buttonId="maas-filter-revoked"
                 isSelected={stateFilter === 'revoked'}
                 onChange={() => setStateFilter('revoked')}
@@ -139,26 +144,28 @@ export const MaaSListPage = () => {
 
         {filtered.length === 0 ? (
           search || stateFilter !== 'all' ? (
-            <Alert variant="info" isInline title="No model accesses match your filters." />
+            <Alert variant="info" isInline title={t('No model accesses match your filters.')} />
           ) : (
-            <EmptyState titleText="No model accesses yet" headingLevel="h2">
-              <EmptyStateBody>Browse the catalog to request access to an AI model.</EmptyStateBody>
+            <EmptyState titleText={t('No model accesses yet')} headingLevel="h2">
+              <EmptyStateBody>
+                {t('Browse the catalog to request access to an AI model.')}
+              </EmptyStateBody>
               <Button variant="primary" onClick={() => navigate('/catalog')}>
-                Browse catalog
+                {t('Browse catalog')}
               </Button>
             </EmptyState>
           )
         ) : (
-          <Table aria-label="Model accesses" variant="compact">
+          <Table aria-label={t('Model accesses')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Status</Th>
-                <Th>Model</Th>
-                <Th>Endpoint</Th>
-                <Th>Monthly quota</Th>
-                <Th>Created</Th>
-                <Th aria-label="Actions" />
+                <Th>{t('Name')}</Th>
+                <Th>{t('Status')}</Th>
+                <Th>{t('Model')}</Th>
+                <Th>{t('Endpoint')}</Th>
+                <Th>{t('Monthly quota')}</Th>
+                <Th>{t('Created')}</Th>
+                <Th aria-label={t('Actions')} />
               </Tr>
             </Thead>
             <Tbody>
@@ -167,7 +174,7 @@ export const MaaSListPage = () => {
                 const isRevoked = access.status?.state === 'REVOKED';
                 return (
                   <Tr key={access.id}>
-                    <Td dataLabel="Name">
+                    <Td dataLabel={t('Name')}>
                       <Button
                         variant="link"
                         isInline
@@ -176,11 +183,11 @@ export const MaaSListPage = () => {
                         {name}
                       </Button>
                     </Td>
-                    <Td dataLabel="Status">
+                    <Td dataLabel={t('Status')}>
                       <ModelAccessStateLabel state={access.status?.state} />
                     </Td>
-                    <Td dataLabel="Model">{catalogItemTitle(access.spec?.catalogItem)}</Td>
-                    <Td dataLabel="Endpoint">
+                    <Td dataLabel={t('Model')}>{catalogItemTitle(access.spec?.catalogItem)}</Td>
+                    <Td dataLabel={t('Endpoint')}>
                       {access.status?.endpoint ? (
                         <code style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
                           {access.status.endpoint}
@@ -189,26 +196,26 @@ export const MaaSListPage = () => {
                         '—'
                       )}
                     </Td>
-                    <Td dataLabel="Monthly quota">
+                    <Td dataLabel={t('Monthly quota')}>
                       {access.spec?.tokenQuotaMonthly
                         ? access.spec.tokenQuotaMonthly.toLocaleString()
                         : '—'}
                     </Td>
-                    <Td dataLabel="Created">
+                    <Td dataLabel={t('Created')}>
                       <Timestamp value={access.metadata?.creationTimestamp} />
                     </Td>
                     <Td isActionCell>
                       <ActionsColumn
                         items={[
                           {
-                            title: 'View details',
+                            title: t('View details'),
                             onClick: () => navigate(`/models/${access.id}`),
                           },
                           { isSeparator: true },
                           {
                             title: (
                               <>
-                                <BanIcon /> Revoke
+                                <BanIcon /> {t('Revoke')}
                               </>
                             ),
                             isDisabled: isRevoked || revoking,

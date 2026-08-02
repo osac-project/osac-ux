@@ -21,8 +21,10 @@ import {
 } from '@patternfly/react-core';
 
 import { useCreateObjectStorageBucket } from '../../api/v1/object-storage';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export const ObjectStorageNewPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [quotaGib, setQuotaGib] = useState<number | undefined>(undefined);
@@ -44,7 +46,7 @@ export const ObjectStorageNewPage = () => {
       });
       navigate('/bucket-storage');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create bucket');
+      setError(err instanceof Error ? err.message : t('Failed to create bucket'));
     }
   };
 
@@ -55,13 +57,13 @@ export const ObjectStorageNewPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/bucket-storage')}>
-                Storage Buckets
+                {t('Storage Buckets')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Create bucket</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Create bucket')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Create object storage bucket
+            {t('Create object storage bucket')}
           </Title>
         </Stack>
       </PageSection>
@@ -69,12 +71,12 @@ export const ObjectStorageNewPage = () => {
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '480px' }} id="create-bucket-form">
           {error && (
-            <Alert variant="danger" isInline title="Error">
+            <Alert variant="danger" isInline title={t('Error')}>
               {error}
             </Alert>
           )}
 
-          <FormGroup label="Bucket name" isRequired fieldId="bucket-name">
+          <FormGroup label={t('Bucket name')} isRequired fieldId="bucket-name">
             <TextInput
               id="bucket-name"
               value={name}
@@ -85,7 +87,7 @@ export const ObjectStorageNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Quota (GiB)" fieldId="bucket-quota">
+          <FormGroup label={t('Quota (GiB)')} fieldId="bucket-quota">
             <NumberInput
               id="bucket-quota"
               value={quotaGib ?? ''}
@@ -96,25 +98,25 @@ export const ObjectStorageNewPage = () => {
                 setQuotaGib(isNaN(v) ? undefined : v);
               }}
               min={1}
-              placeholder="No limit"
+              placeholder={t('No limit')}
             />
           </FormGroup>
 
           <FormGroup fieldId="bucket-versioning">
             <Checkbox
               id="bucket-versioning"
-              label="Enable versioning"
+              label={t('Enable versioning')}
               isChecked={versioning}
               onChange={(_e, checked) => setVersioning(checked)}
             />
           </FormGroup>
 
-          <FormGroup label="Description" fieldId="bucket-desc">
+          <FormGroup label={t('Description')} fieldId="bucket-desc">
             <TextInput
               id="bucket-desc"
               value={description}
               onChange={(_e, v) => setDescription(v)}
-              placeholder="Optional description"
+              placeholder={t('Optional description')}
             />
           </FormGroup>
 
@@ -126,14 +128,14 @@ export const ObjectStorageNewPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !name.trim()}
             >
-              Create bucket
+              {t('Create bucket')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate('/bucket-storage')}
               isDisabled={isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

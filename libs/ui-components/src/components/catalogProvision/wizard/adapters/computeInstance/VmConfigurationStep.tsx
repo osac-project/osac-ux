@@ -44,6 +44,7 @@ import {
   readCatalogFieldDefinitions,
 } from '../../catalogOverlay';
 import { CATALOG_PROVISION_MULTILINE_TEXTAREA } from '../../constants';
+import { DynamicFieldsFormSection } from '../../DynamicFieldsFormSection';
 
 interface Props {
   catalogItem: ComputeInstanceCatalogItem | null;
@@ -379,6 +380,16 @@ export const VmConfigurationStep = ({ catalogItem }: Props) => {
             />
           </FormGroup>
         </OsacForm>
+      </StackItem>
+
+      <StackItem>
+        <DynamicFieldsFormSection
+          definitions={definitions}
+          values={values.spec.dynamicParameters}
+          onChange={(path, v) =>
+            void setFieldValue('spec.dynamicParameters', { ...values.spec.dynamicParameters, [path]: v })
+          }
+        />
       </StackItem>
     </Stack>
   );

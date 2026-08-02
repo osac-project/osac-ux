@@ -12,6 +12,8 @@ import {
   CardTitle,
   ClipboardCopy,
   ClipboardCopyVariant,
+  CodeBlock,
+  CodeBlockCode,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
@@ -35,8 +37,10 @@ import {
 import { useMaaSCatalogItem } from '@osac/ui-components/api/v1/maas-catalog-item';
 import { useModelAccess, useRevokeModelAccess } from '@osac/ui-components/api/v1/maas-instance';
 import type { ModelAccessState } from '@osac/ui-components/api/v1/maas-types';
+import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 import { MaaSDetailsSummary } from './MaaSDetailsSummary';
+import { ResourceUsageCard } from '../metering/ResourceUsageCard';
 import { Timestamp } from '../Primitives/Timestamp';
 import { ResourceDetailHeader } from '../Resource/ResourceDetailHeader';
 import { ResourceDetailsPageError } from '../Resource/ResourceDetailsPageError';
@@ -46,35 +50,37 @@ const MAAS_OVERVIEW_TAB_ID = 'maas-detail-overview';
 const MAAS_USAGE_TAB_ID = 'maas-detail-usage';
 
 const ModelAccessStateLabel = ({ state }: { state: ModelAccessState | undefined }) => {
+  const { t } = useTranslation();
   switch (state) {
     case 'ACTIVE':
       return (
         <Label isCompact color="green">
-          Active
+          {t('Active')}
         </Label>
       );
     case 'PROVISIONING':
       return (
         <Label isCompact color="blue">
-          Provisioning
+          {t('Provisioning')}
         </Label>
       );
     case 'REVOKED':
       return (
         <Label isCompact color="grey">
-          Revoked
+          {t('Revoked')}
         </Label>
       );
     default:
       return (
         <Label isCompact color="grey">
-          Unknown
+          {t('Unknown')}
         </Label>
       );
   }
 };
 
 const MaskedApiKey = ({ apiKey }: { apiKey: string | undefined }) => {
+  const { t } = useTranslation();
   if (!apiKey) {
     return <span>—</span>;
   }
@@ -82,8 +88,8 @@ const MaskedApiKey = ({ apiKey }: { apiKey: string | undefined }) => {
     <ClipboardCopy
       variant={ClipboardCopyVariant.inline}
       isCode
-      hoverTip="Copy API key"
-      clickTip="Copied!"
+      hoverTip={t('Copy API key')}
+      clickTip={t('Copied!')}
     >
       {apiKey}
     </ClipboardCopy>
@@ -91,6 +97,7 @@ const MaskedApiKey = ({ apiKey }: { apiKey: string | undefined }) => {
 };
 
 export const MaaSDetailsPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams() as { id: string };
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
@@ -105,8 +112,8 @@ export const MaaSDetailsPage = () => {
     return (
       <ResourceDetailsPageLoading
         parentTo="/models"
-        parentLabel="AI Models"
-        tabLabels={['Overview', 'Usage']}
+        parentLabel={t('AI Models')}
+        tabLabels={[t('Overview'), t('Usage')]}
         tabsId="maas-detail-tabs"
       />
     );
@@ -116,8 +123,8 @@ export const MaaSDetailsPage = () => {
     return (
       <ResourceDetailsPageError
         parentTo="/models"
-        parentLabel="AI Models"
-        resourceLabel="model access"
+        parentLabel={t('AI Models')}
+        resourceLabel={t('model access')}
         variant={isError ? 'load-error' : 'not-found'}
       />
     );
@@ -141,7 +148,7 @@ export const MaaSDetailsPage = () => {
               <FlexItem>
                 <ResourceDetailHeader
                   parentTo="/models"
-                  parentLabel="AI Models"
+                  parentLabel={t('AI Models')}
                   resourceName={resourceName}
                   titleAddon={<ModelAccessStateLabel state={state} />}
                 />
@@ -153,7 +160,7 @@ export const MaaSDetailsPage = () => {
                   isLoading={revoking}
                   onClick={() => revoke(access.id)}
                 >
-                  Revoke access
+                  {t('Revoke access')}
                 </Button>
               </FlexItem>
             </Flex>
@@ -161,9 +168,30 @@ export const MaaSDetailsPage = () => {
 
           {revokeError && (
             <StackItem>
-              <Alert variant="danger" isInline title="Failed to revoke access">
+              <Alert variant="danger" isInline title={t('Failed to revoke access')}>
                 {revokeError instanceof Error ? revokeError.message : String(revokeError)}
               </Alert>
+            </StackItem>
+          )}
+
+          {access.status?.endpoint && (
+            <StackItem>
+              <Card isCompact isPlain>
+                <CardBody>
+                  <p style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>
+                    {t('Inference endpoint')}
+                  </p>
+                  <ClipboardCopy
+                    isReadOnly
+                    isCode
+                    hoverTip={t('Copy endpoint')}
+                    clickTip={t('Copied!')}
+                    variant={ClipboardCopyVariant.expansion}
+                  >
+                    {access.status.endpoint}
+                  </ClipboardCopy>
+                </CardBody>
+              </Card>
             </StackItem>
           )}
 
@@ -181,12 +209,12 @@ export const MaaSDetailsPage = () => {
             >
               <Tab
                 eventKey={0}
-                title={<TabTitleText>Overview</TabTitleText>}
+                title={<TabTitleText>{t('Overview')}</TabTitleText>}
                 tabContentId={MAAS_OVERVIEW_TAB_ID}
               />
               <Tab
                 eventKey={1}
-                title={<TabTitleText>Usage</TabTitleText>}
+                title={<TabTitleText>{t('Usage')}</TabTitleText>}
                 tabContentId={MAAS_USAGE_TAB_ID}
               />
             </Tabs>
@@ -205,21 +233,21 @@ export const MaaSDetailsPage = () => {
             >
               <TabContentBody>
                 <Card isFullHeight>
-                  <CardTitle>Access details</CardTitle>
+                  <CardTitle>{t('Access details')}</CardTitle>
                   <CardBody>
                     <DescriptionList isCompact>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>Application name</DescriptionListTerm>
+                        <DescriptionListTerm>{t('Application name')}</DescriptionListTerm>
                         <DescriptionListDescription>{resourceName}</DescriptionListDescription>
                       </DescriptionListGroup>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>Status</DescriptionListTerm>
+                        <DescriptionListTerm>{t('Status')}</DescriptionListTerm>
                         <DescriptionListDescription>
                           <ModelAccessStateLabel state={state} />
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>Model</DescriptionListTerm>
+                        <DescriptionListTerm>{t('Model')}</DescriptionListTerm>
                         <DescriptionListDescription>
                           {isCatalogLoading
                             ? '…'
@@ -227,13 +255,13 @@ export const MaaSDetailsPage = () => {
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>Created</DescriptionListTerm>
+                        <DescriptionListTerm>{t('Created')}</DescriptionListTerm>
                         <DescriptionListDescription>
                           <Timestamp value={access.metadata?.creationTimestamp} />
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>Creator</DescriptionListTerm>
+                        <DescriptionListTerm>{t('Creator')}</DescriptionListTerm>
                         <DescriptionListDescription>
                           {access.metadata?.creator ?? '—'}
                         </DescriptionListDescription>
@@ -251,20 +279,11 @@ export const MaaSDetailsPage = () => {
               hidden={activeTab !== 1}
             >
               <TabContentBody>
-                <Card isFullHeight>
-                  <CardTitle>Token Usage</CardTitle>
-                  <CardBody>
-                    <Alert
-                      variant="info"
-                      isInline
-                      isPlain
-                      title="Estimated — metrics not yet active (Milestone 0.4)"
-                    >
-                      Usage data (input tokens, output tokens, cached tokens) will appear here once
-                      the metering service is available.
-                    </Alert>
-                  </CardBody>
-                </Card>
+                <ResourceUsageCard
+                  resourceId={access.id}
+                  tenantId={access.metadata?.tenant}
+                  title={t('Token usage')}
+                />
               </TabContentBody>
             </TabContent>
           </GridItem>
@@ -278,18 +297,18 @@ export const MaaSDetailsPage = () => {
             >
               <TabContentBody>
                 <Card isFullHeight>
-                  <CardTitle>Credentials</CardTitle>
+                  <CardTitle>{t('Credentials')}</CardTitle>
                   <CardBody>
                     <DescriptionList isCompact>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>Endpoint URL</DescriptionListTerm>
+                        <DescriptionListTerm>{t('Endpoint URL')}</DescriptionListTerm>
                         <DescriptionListDescription>
                           {access.status?.endpoint ? (
                             <ClipboardCopy
                               variant={ClipboardCopyVariant.inline}
                               isCode
-                              hoverTip="Copy endpoint"
-                              clickTip="Copied!"
+                              hoverTip={t('Copy endpoint')}
+                              clickTip={t('Copied!')}
                             >
                               {access.status.endpoint}
                             </ClipboardCopy>
@@ -299,22 +318,48 @@ export const MaaSDetailsPage = () => {
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>API key</DescriptionListTerm>
+                        <DescriptionListTerm>{t('API key')}</DescriptionListTerm>
                         <DescriptionListDescription>
                           <MaskedApiKey apiKey={access.status?.apiKey} />
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>Monthly token quota</DescriptionListTerm>
+                        <DescriptionListTerm>{t('Monthly token quota')}</DescriptionListTerm>
                         <DescriptionListDescription>
                           {access.spec?.tokenQuotaMonthly
-                            ? `${access.spec.tokenQuotaMonthly.toLocaleString()} tokens`
+                            ? t('{{quota}} tokens', {
+                                quota: access.spec.tokenQuotaMonthly.toLocaleString(),
+                              })
                             : '—'}
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                     </DescriptionList>
                   </CardBody>
                 </Card>
+
+                {access.status?.endpoint && (
+                  <Card isFullHeight style={{ marginTop: '1rem' }}>
+                    <CardTitle>{t('How to call this model')}</CardTitle>
+                    <CardBody>
+                      <p style={{ marginBottom: '0.5rem' }}>
+                        {t(
+                          'Send OpenAI-compatible requests to the gateway endpoint using your API key as a bearer token:',
+                        )}
+                      </p>
+                      <CodeBlock>
+                        <CodeBlockCode id="maas-curl-snippet">
+                          {`curl -X POST '${access.status.endpoint}/chat/completions' \\
+  -H "Authorization: Bearer ${access.status?.apiKey ?? '<API_KEY>'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "${catalogItem?.title ?? access.spec?.catalogItem ?? 'model'}",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'`}
+                        </CodeBlockCode>
+                      </CodeBlock>
+                    </CardBody>
+                  </Card>
+                )}
               </TabContentBody>
             </TabContent>
           </GridItem>

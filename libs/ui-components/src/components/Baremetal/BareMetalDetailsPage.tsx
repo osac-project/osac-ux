@@ -51,6 +51,7 @@ import {
   usePatchBareMetalInstance,
 } from '../../api/v1/baremetal-instance';
 import { ConsoleResourceType } from '../../api/v1/console';
+import { useTranslation } from '../../hooks/useTranslation';
 import { Timestamp } from '../Primitives/Timestamp';
 import { ResourceConditionsTable } from '../Resource/ResourceConditionsTable';
 import { ResourceDetailHeader } from '../Resource/ResourceDetailHeader';
@@ -64,23 +65,24 @@ const BM_CONDITIONS_TAB_ID = 'bm-detail-conditions';
 const BM_CONSOLE_TAB_ID = 'bm-detail-console';
 
 const RunStrategyLabel = ({ runStrategy }: { runStrategy?: BareMetalInstanceRunStrategy }) => {
+  const { t } = useTranslation();
   switch (runStrategy) {
     case BareMetalInstanceRunStrategy.ALWAYS:
       return (
         <Label color="green" isCompact>
-          Always on
+          {t('Always on')}
         </Label>
       );
     case BareMetalInstanceRunStrategy.HALTED:
       return (
         <Label color="orange" isCompact>
-          Halted
+          {t('Halted')}
         </Label>
       );
     default:
       return (
         <Label color="grey" isCompact>
-          Unspecified
+          {t('Unspecified')}
         </Label>
       );
   }
@@ -96,6 +98,7 @@ const getRestartConditions = (conditions: { type: number; status: number; messag
   );
 
 export const BareMetalDetailsPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams() as { id: string };
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
@@ -111,8 +114,8 @@ export const BareMetalDetailsPage = () => {
     return (
       <ResourceDetailsPageLoading
         parentTo="/bare-metal"
-        parentLabel="Bare metal"
-        tabLabels={['Overview', 'Power management', 'Conditions', 'Console']}
+        parentLabel={t('Bare metal')}
+        tabLabels={[t('Overview'), t('Power management'), t('Conditions'), t('Console')]}
         tabsId="bm-detail-tabs"
       />
     );
@@ -122,8 +125,8 @@ export const BareMetalDetailsPage = () => {
     return (
       <ResourceDetailsPageError
         parentTo="/bare-metal"
-        parentLabel="Bare metal"
-        resourceLabel="bare metal instance"
+        parentLabel={t('Bare metal')}
+        resourceLabel={t('bare metal instance')}
         variant={isError ? 'load-error' : 'not-found'}
       />
     );
@@ -182,7 +185,7 @@ export const BareMetalDetailsPage = () => {
               <FlexItem>
                 <ResourceDetailHeader
                   parentTo="/bare-metal"
-                  parentLabel="Bare metal"
+                  parentLabel={t('Bare metal')}
                   resourceName={resourceName}
                   titleAddon={<BareMetalStatusLabel state={state} />}
                 />
@@ -198,8 +201,8 @@ export const BareMetalDetailsPage = () => {
                       onClick={togglePower}
                     >
                       {runStrategy === BareMetalInstanceRunStrategy.HALTED
-                        ? 'Power on'
-                        : 'Power off'}
+                        ? t('Power on')
+                        : t('Power off')}
                     </Button>
                   </FlexItem>
                   <FlexItem>
@@ -210,7 +213,7 @@ export const BareMetalDetailsPage = () => {
                       isDisabled={isPatching || isRestartInProgress}
                       onClick={triggerRestart}
                     >
-                      Restart
+                      {t('Restart')}
                     </Button>
                   </FlexItem>
                   <FlexItem>
@@ -219,7 +222,7 @@ export const BareMetalDetailsPage = () => {
                       icon={<DumpsterIcon />}
                       onClick={() => setDeleteOpen(true)}
                     >
-                      Delete
+                      {t('Delete')}
                     </Button>
                   </FlexItem>
                 </Flex>
@@ -240,22 +243,22 @@ export const BareMetalDetailsPage = () => {
             >
               <Tab
                 eventKey={0}
-                title={<TabTitleText>Overview</TabTitleText>}
+                title={<TabTitleText>{t('Overview')}</TabTitleText>}
                 tabContentId={BM_OVERVIEW_TAB_ID}
               />
               <Tab
                 eventKey={1}
-                title={<TabTitleText>Power management</TabTitleText>}
+                title={<TabTitleText>{t('Power management')}</TabTitleText>}
                 tabContentId={BM_POWER_TAB_ID}
               />
               <Tab
                 eventKey={2}
-                title={<TabTitleText>Conditions</TabTitleText>}
+                title={<TabTitleText>{t('Conditions')}</TabTitleText>}
                 tabContentId={BM_CONDITIONS_TAB_ID}
               />
               <Tab
                 eventKey={3}
-                title={<TabTitleText>Console</TabTitleText>}
+                title={<TabTitleText>{t('Console')}</TabTitleText>}
                 tabContentId={BM_CONSOLE_TAB_ID}
               />
             </Tabs>
@@ -275,25 +278,25 @@ export const BareMetalDetailsPage = () => {
             >
               <TabContentBody>
                 <Card isFullHeight>
-                  <CardTitle>Overview</CardTitle>
+                  <CardTitle>{t('Overview')}</CardTitle>
                   <CardBody>
                     <DescriptionList isCompact columnModifier={{ default: '2Col', lg: '3Col' }}>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>ID</DescriptionListTerm>
+                        <DescriptionListTerm>{t('ID')}</DescriptionListTerm>
                         <DescriptionListDescription>{instance.id}</DescriptionListDescription>
                       </DescriptionListGroup>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>Name</DescriptionListTerm>
+                        <DescriptionListTerm>{t('Name')}</DescriptionListTerm>
                         <DescriptionListDescription>{resourceName}</DescriptionListDescription>
                       </DescriptionListGroup>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>State</DescriptionListTerm>
+                        <DescriptionListTerm>{t('State')}</DescriptionListTerm>
                         <DescriptionListDescription>
                           <BareMetalStatusLabel state={state} />
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>Catalog item</DescriptionListTerm>
+                        <DescriptionListTerm>{t('Catalog item')}</DescriptionListTerm>
                         <DescriptionListDescription>
                           {isCatalogLoading ? (
                             <Skeleton width="150px" />
@@ -303,19 +306,19 @@ export const BareMetalDetailsPage = () => {
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>SSH public key</DescriptionListTerm>
+                        <DescriptionListTerm>{t('SSH public key')}</DescriptionListTerm>
                         <DescriptionListDescription>
                           {instance.spec?.sshPublicKey ? '••••••' : '—'}
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>Created</DescriptionListTerm>
+                        <DescriptionListTerm>{t('Created')}</DescriptionListTerm>
                         <DescriptionListDescription>
                           <Timestamp value={instance.metadata?.creationTimestamp} />
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>Creator</DescriptionListTerm>
+                        <DescriptionListTerm>{t('Creator')}</DescriptionListTerm>
                         <DescriptionListDescription>
                           {instance.metadata?.creator ?? '—'}
                         </DescriptionListDescription>
@@ -335,19 +338,19 @@ export const BareMetalDetailsPage = () => {
             >
               <TabContentBody>
                 <Card isFullHeight>
-                  <CardTitle>Power management</CardTitle>
+                  <CardTitle>{t('Power management')}</CardTitle>
                   <CardBody>
                     <Stack hasGutter>
                       <StackItem>
                         <DescriptionList isCompact>
                           <DescriptionListGroup>
-                            <DescriptionListTerm>Run strategy</DescriptionListTerm>
+                            <DescriptionListTerm>{t('Run strategy')}</DescriptionListTerm>
                             <DescriptionListDescription>
                               <RunStrategyLabel runStrategy={runStrategy} />
                             </DescriptionListDescription>
                           </DescriptionListGroup>
                           <DescriptionListGroup>
-                            <DescriptionListTerm>Restart trigger</DescriptionListTerm>
+                            <DescriptionListTerm>{t('Restart trigger')}</DescriptionListTerm>
                             <DescriptionListDescription>
                               {String(instance.spec?.restartTrigger ?? '0')}{' '}
                               <span
@@ -356,7 +359,9 @@ export const BareMetalDetailsPage = () => {
                                   fontSize: 'var(--pf-t--global--font--size--sm)',
                                 }}
                               >
-                                (acknowledged: {String(instance.status?.restartTrigger ?? '0')})
+                                {t('(acknowledged: {{value}})', {
+                                  value: String(instance.status?.restartTrigger ?? '0'),
+                                })}
                               </span>
                             </DescriptionListDescription>
                           </DescriptionListGroup>
@@ -370,10 +375,10 @@ export const BareMetalDetailsPage = () => {
                               const isActive = c.status === ConditionStatus.TRUE;
                               const label =
                                 c.type === BareMetalInstanceConditionType.RESTART_IN_PROGRESS
-                                  ? 'Restart in progress'
+                                  ? t('Restart in progress')
                                   : c.type === BareMetalInstanceConditionType.RESTART_FAILED
-                                    ? 'Restart failed'
-                                    : 'Restart required';
+                                    ? t('Restart failed')
+                                    : t('Restart required');
                               return (
                                 <StackItem key={idx}>
                                   <Alert
@@ -397,7 +402,7 @@ export const BareMetalDetailsPage = () => {
 
                       {patchError && (
                         <StackItem>
-                          <Alert variant="danger" isInline title="Operation failed">
+                          <Alert variant="danger" isInline title={t('Operation failed')}>
                             {patchError instanceof Error ? patchError.message : String(patchError)}
                           </Alert>
                         </StackItem>
@@ -418,8 +423,8 @@ export const BareMetalDetailsPage = () => {
                               onClick={togglePower}
                             >
                               {runStrategy === BareMetalInstanceRunStrategy.HALTED
-                                ? 'Power on'
-                                : 'Power off'}
+                                ? t('Power on')
+                                : t('Power off')}
                             </Button>
                           </FlexItem>
                           <FlexItem>
@@ -430,7 +435,7 @@ export const BareMetalDetailsPage = () => {
                               isDisabled={isPatching || isRestartInProgress}
                               onClick={triggerRestart}
                             >
-                              Restart
+                              {t('Restart')}
                             </Button>
                           </FlexItem>
                         </Flex>
@@ -450,10 +455,10 @@ export const BareMetalDetailsPage = () => {
             >
               <TabContentBody>
                 <Card isFullHeight>
-                  <CardTitle>Conditions</CardTitle>
+                  <CardTitle>{t('Conditions')}</CardTitle>
                   <CardBody>
                     <ResourceConditionsTable
-                      ariaLabel="Bare metal instance conditions"
+                      ariaLabel={t('Bare metal instance conditions')}
                       conditions={conditions}
                       conditionResourceKind="baremetal_instance"
                     />

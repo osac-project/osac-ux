@@ -10,6 +10,7 @@ import {
   StackItem,
 } from '@patternfly/react-core';
 
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 interface DeleteConfirmModalProps {
@@ -27,6 +28,7 @@ export const DeleteConfirmModal = ({
   onClose,
   error,
 }: DeleteConfirmModalProps) => {
+  const { t } = useTranslation();
   const [isPending, setIsPending] = React.useState(false);
 
   const onDelete = async () => {
@@ -46,18 +48,24 @@ export const DeleteConfirmModal = ({
       aria-labelledby="delete-confirm-title"
     >
       <ModalHeader
-        title={`Delete ${resourceName}?`}
+        title={t('Delete {{resourceName}}?', { resourceName })}
         titleIconVariant="warning"
         labelId="delete-confirm-title"
       />
       <ModalBody>
         <Stack hasGutter>
           <StackItem>
-            {`This permanently deletes the ${resourceKind}. This action cannot be undone.`}
+            {t('This permanently deletes the {{resourceKind}}. This action cannot be undone.', {
+              resourceKind,
+            })}
           </StackItem>
           {error != null && (
             <StackItem>
-              <Alert variant="danger" title={`Failed to delete ${resourceKind}`} isInline>
+              <Alert
+                variant="danger"
+                title={t('Failed to delete {{resourceKind}}', { resourceKind })}
+                isInline
+              >
                 {getErrorMessage(error)}
               </Alert>
             </StackItem>
@@ -66,10 +74,10 @@ export const DeleteConfirmModal = ({
       </ModalBody>
       <ModalFooter>
         <Button variant="link" onClick={onClose} isDisabled={isPending}>
-          Cancel
+          {t('Cancel')}
         </Button>
         <Button variant="danger" onClick={onDelete} isDisabled={isPending} isLoading={isPending}>
-          Delete
+          {t('Delete')}
         </Button>
       </ModalFooter>
     </Modal>

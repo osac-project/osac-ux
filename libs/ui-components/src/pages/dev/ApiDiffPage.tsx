@@ -21,6 +21,7 @@ import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { API_DIFF_MANIFEST, type ApiDiffEntry } from './api-diff-manifest.generated';
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
+import { useTranslation } from '../../hooks/useTranslation';
 
 type CategoryFilter = 'all' | ApiDiffEntry['category'];
 
@@ -56,6 +57,7 @@ function CodeCell({ value }: { value: string | null }) {
 }
 
 export function ApiDiffPage() {
+  const { t } = useTranslation();
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [search, setSearch] = useState('');
 
@@ -84,25 +86,29 @@ export function ApiDiffPage() {
 
   return (
     <ListPage
-      title="API Diff"
-      description="Auto-generated comparison of real proto-aligned vs. mock/temp API routes. Run pnpm gen:api-diff to refresh."
+      title={t('API Diff')}
+      description={t(
+        'Auto-generated comparison of real proto-aligned vs. mock/temp API routes. Run pnpm gen:api-diff to refresh.',
+      )}
     >
       <ListPageBody>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-          <Label color="green">{counts.real} real</Label>
-          <Label color="orange">{counts['temp-api']} temp-api</Label>
-          <Label color="grey">{counts['proto-no-hook']} proto-no-hook</Label>
-          <Label color="blue">{API_DIFF_MANIFEST.length} total</Label>
+          <Label color="green">{t('{{count}} real', { count: counts.real })}</Label>
+          <Label color="orange">{t('{{count}} temp-api', { count: counts['temp-api'] })}</Label>
+          <Label color="grey">
+            {t('{{count}} proto-no-hook', { count: counts['proto-no-hook'] })}
+          </Label>
+          <Label color="blue">{t('{{count}} total', { count: API_DIFF_MANIFEST.length })}</Label>
         </div>
 
         <Toolbar>
           <ToolbarContent>
             <ToolbarItem>
-              <ToggleGroup aria-label="Filter by category">
+              <ToggleGroup aria-label={t('Filter by category')}>
                 {(['all', 'real', 'temp-api', 'proto-no-hook'] as CategoryFilter[]).map((cat) => (
                   <ToggleGroupItem
                     key={cat}
-                    text={cat === 'all' ? 'All' : CATEGORY_LABEL[cat].text}
+                    text={cat === 'all' ? t('All') : t(CATEGORY_LABEL[cat].text)}
                     isSelected={categoryFilter === cat}
                     onChange={() => setCategoryFilter(cat)}
                   />
@@ -111,29 +117,29 @@ export function ApiDiffPage() {
             </ToolbarItem>
             <ToolbarItem>
               <TextInput
-                placeholder="Filter by route…"
+                placeholder={t('Filter by route…')}
                 value={search}
                 onChange={(_e, v) => setSearch(v)}
-                aria-label="Filter routes"
+                aria-label={t('Filter routes')}
                 style={{ minWidth: 240 }}
               />
             </ToolbarItem>
             <ToolbarItem variant="separator" />
-            <ToolbarItem>{filtered.length} routes</ToolbarItem>
+            <ToolbarItem>{t('{{count}} routes', { count: filtered.length })}</ToolbarItem>
           </ToolbarContent>
         </Toolbar>
 
-        <Table aria-label="API diff table" variant="compact">
+        <Table aria-label={t('API diff table')} variant="compact">
           <Thead>
             <Tr>
-              <Th>Route</Th>
-              <Th>Category</Th>
-              <Th>Ops implemented</Th>
-              <Th>Missing ops</Th>
-              <Th>Proto file</Th>
-              <Th>Hook file</Th>
-              <Th>Mock data</Th>
-              <Th>Notes</Th>
+              <Th>{t('Route')}</Th>
+              <Th>{t('Category')}</Th>
+              <Th>{t('Ops implemented')}</Th>
+              <Th>{t('Missing ops')}</Th>
+              <Th>{t('Proto file')}</Th>
+              <Th>{t('Hook file')}</Th>
+              <Th>{t('Mock data')}</Th>
+              <Th>{t('Notes')}</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -146,7 +152,7 @@ export function ApiDiffPage() {
                   </Td>
                   <Td>
                     <Label color={cat.color} isCompact>
-                      {cat.text}
+                      {t(cat.text)}
                     </Label>
                   </Td>
                   <Td>
@@ -170,11 +176,11 @@ export function ApiDiffPage() {
                   <Td>
                     {entry.hasMockData ? (
                       <Label color="green" isCompact>
-                        Yes
+                        {t('Yes')}
                       </Label>
                     ) : (
                       <Label color="grey" isCompact>
-                        No
+                        {t('No')}
                       </Label>
                     )}
                   </Td>

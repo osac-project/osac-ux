@@ -7,12 +7,14 @@ import { ComputeInstanceState } from '@osac/types';
 
 import { VmDeleteConfirmModal } from './DetailsPage/VmDeleteConfirmModal';
 import { usePatchComputeInstance } from '../../api/v1/compute-instance';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface VmActionsMenuProps {
   vm: ComputeInstance;
 }
 
 export const VmActionsMenu = ({ vm }: VmActionsMenuProps) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const patchVm = usePatchComputeInstance();
@@ -42,7 +44,7 @@ export const VmActionsMenu = ({ vm }: VmActionsMenuProps) => {
             ref={ref}
             variant="plain"
             onClick={() => setOpen((o) => !o)}
-            aria-label={`Actions for ${vm.metadata?.name ?? vm.id}`}
+            aria-label={t('Actions for {{name}}', { name: vm.metadata?.name ?? vm.id })}
           >
             <EllipsisVIcon />
           </MenuToggle>
@@ -61,7 +63,7 @@ export const VmActionsMenu = ({ vm }: VmActionsMenuProps) => {
               setOpen(false);
             }}
           >
-            Start
+            {t('Start')}
           </DropdownItem>
           <DropdownItem
             value="stop"
@@ -74,7 +76,7 @@ export const VmActionsMenu = ({ vm }: VmActionsMenuProps) => {
               setOpen(false);
             }}
           >
-            Stop
+            {t('Stop')}
           </DropdownItem>
           <DropdownItem
             value="restart"
@@ -87,7 +89,7 @@ export const VmActionsMenu = ({ vm }: VmActionsMenuProps) => {
               setOpen(false);
             }}
           >
-            Restart
+            {t('Restart')}
           </DropdownItem>
           <DropdownItem
             value="delete"
@@ -100,7 +102,7 @@ export const VmActionsMenu = ({ vm }: VmActionsMenuProps) => {
               setOpen(false);
             }}
           >
-            Delete
+            {t('Delete')}
           </DropdownItem>
         </DropdownList>
       </Dropdown>

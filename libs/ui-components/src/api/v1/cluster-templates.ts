@@ -37,21 +37,6 @@ const invalidateClusterTemplatesQueries = async (qc: ReturnType<typeof useApiQue
   await qc.invalidateQueries({ queryKey: apiQueryKey('v1/cluster_templates', null) });
 };
 
-export const useCreateClusterTemplate = () => {
-  const apiFetch = useApiFetch();
-  const qc = useApiQueryClient();
-  return useMutation({
-    mutationFn: (body: Omit<ClusterTemplate, 'id'>) =>
-      apiFetch<ClusterTemplate>('v1/cluster_templates', {
-        method: 'POST',
-        body,
-        decode: ClusterTemplateSchema,
-      }),
-    onSuccess: () => invalidateClusterTemplatesQueries(qc),
-    retry: false,
-  });
-};
-
 export const usePatchClusterTemplate = () => {
   const apiFetch = useApiFetch();
   const qc = useApiQueryClient();
@@ -63,17 +48,6 @@ export const usePatchClusterTemplate = () => {
         body: patch,
         decode: ClusterTemplateSchema,
       }),
-    onSuccess: () => invalidateClusterTemplatesQueries(qc),
-    retry: false,
-  });
-};
-
-export const useDeleteClusterTemplate = () => {
-  const apiFetch = useApiFetch();
-  const qc = useApiQueryClient();
-  return useMutation({
-    mutationFn: (id: string) =>
-      apiFetch<void>('v1/cluster_templates', { pathParams: [id], method: 'DELETE' }),
     onSuccess: () => invalidateClusterTemplatesQueries(qc),
     retry: false,
   });

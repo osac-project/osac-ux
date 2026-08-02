@@ -24,6 +24,13 @@ import {
 
 import type { BareMetalInstanceCatalogItem } from '@osac/types';
 
+import {
+  fieldDefinitionDefaultToInputString,
+  isDynamicFieldPath,
+  resolvedFieldDefault,
+  wireKeyForDynamicFieldPath,
+} from './catalogFieldDefinition';
+import { useTranslation } from '../../hooks/useTranslation';
 import { BareMetalCatalogStep } from './wizard/baremetal/BareMetalCatalogStep';
 import { BareMetalConfigurationStep } from './wizard/baremetal/BareMetalConfigurationStep';
 import { BareMetalGeneralStep } from './wizard/baremetal/BareMetalGeneralStep';
@@ -34,6 +41,7 @@ import {
   createEmptyBareMetalValues,
   isBmStepValid,
 } from './wizard/baremetal/fields';
+import { readCatalogFieldDefinitions } from './wizard/catalogOverlay';
 import {
   useBareMetalInstanceCatalogItems,
   useCreateBareMetalInstance,
@@ -41,10 +49,10 @@ import {
 import { useBareMetalInstanceTemplate } from '../../api/v1/baremetal-instance-templates';
 
 const BM_WIZARD_STEPS = [
-  { id: 'catalog', name: 'Catalog' },
-  { id: 'general', name: 'General' },
-  { id: 'configuration', name: 'Configuration' },
-  { id: 'review', name: 'Review' },
+  { id: 'catalog', name: 'catalogProvision.steps.catalog.title' },
+  { id: 'general', name: 'catalogProvision.steps.general.title' },
+  { id: 'configuration', name: 'catalogProvision.steps.configuration.title' },
+  { id: 'review', name: 'catalogProvision.steps.review.title' },
 ] as const;
 
 type BmWizardStepId = (typeof BM_WIZARD_STEPS)[number]['id'];
@@ -66,6 +74,7 @@ const BareMetalWizardFooter = ({
   onBack,
   onCancel,
 }: FooterProps) => {
+  const { t } = useTranslation();
   const { activeStep, goToStepByIndex } = useWizardContext();
   const stepIndex = (activeStep?.index ?? 1) - 1;
   const isFirst = stepIndex === 0;
@@ -86,7 +95,7 @@ const BareMetalWizardFooter = ({
           }}
           isDisabled={isPending}
         >
-          Back
+          {t('catalogProvision.actions.back')}
         </Button>
       )}
       <Button
@@ -100,10 +109,12 @@ const BareMetalWizardFooter = ({
         isLoading={isLast && isPending}
         isDisabled={(isLast && isPending) || (!isLast && !canAdvance)}
       >
-        {isLast ? 'Create bare metal' : 'Next'}
+        {isLast
+          ? t('catalogProvision.baremetal.actions.create')
+          : t('catalogProvision.actions.next')}
       </Button>
       <Button variant="link" onClick={onCancel} isDisabled={isPending}>
-        Cancel
+        {t('catalogProvision.actions.cancel')}
       </Button>
     </Flex>
   );
@@ -115,6 +126,7 @@ interface Props {
 }
 
 export const BareMetalProvisionWizard = ({ initialCatalogItemId, onClosed }: Props) => {
+  const { t } = useTranslation();
   const [values, setValues] = useState<BareMetalWizardValues>(
     createEmptyBareMetalValues(initialCatalogItemId),
   );
@@ -181,10 +193,20 @@ export const BareMetalProvisionWizard = ({ initialCatalogItemId, onClosed }: Pro
 
   const handleCatalogItemSelected = useCallback((item: BareMetalInstanceCatalogItem) => {
     setSelectedCatalogItem(item);
+    // Seed custom.* and template_parameters.* fields from the catalog item's org
+    // defaults — makes the Tenant Admin's authoring-time defaults reach this wizard.
+    const dynamicParameters: Record<string, string> = {};
+    for (const def of readCatalogFieldDefinitions(item).filter((d) => isDynamicFieldPath(d.path))) {
+      const resolved = resolvedFieldDefault(def);
+      if (resolved !== undefined) {
+        dynamicParameters[def.path] = fieldDefinitionDefaultToInputString(resolved);
+      }
+    }
     setValues((prev) => ({
       ...createEmptyBareMetalValues(item.id),
       // preserve general fields the user may have typed before changing catalog item
       name: prev.name,
+      dynamicParameters,
     }));
   }, []);
 
@@ -205,6 +227,13 @@ export const BareMetalProvisionWizard = ({ initialCatalogItemId, onClosed }: Pro
       return;
     }
 
+    const templateParameters: Record<string, unknown> = {};
+    for (const [path, val] of Object.entries(values.dynamicParameters)) {
+      if (val.trim()) {
+        templateParameters[wireKeyForDynamicFieldPath(path)] = val;
+      }
+    }
+
     createBareMetalInstance
       .mutateAsync({
         metadata: { name: values.name.trim() },
@@ -213,6 +242,7 @@ export const BareMetalProvisionWizard = ({ initialCatalogItemId, onClosed }: Pro
           runStrategy: values.runStrategy,
           ...(values.sshPublicKey.trim() && { sshPublicKey: values.sshPublicKey.trim() }),
           ...(values.userData.trim() && { userData: values.userData.trim() }),
+          ...(Object.keys(templateParameters).length > 0 && { templateParameters }),
         },
       })
       .then(() => {
@@ -220,10 +250,12 @@ export const BareMetalProvisionWizard = ({ initialCatalogItemId, onClosed }: Pro
       })
       .catch((err: unknown) => {
         setProvisionError(
-          err instanceof Error ? err.message : 'Failed to create bare metal instance.',
+          err instanceof Error
+            ? err.message
+            : t('catalogProvision.baremetal.errors.provisionFailed'),
         );
       });
-  }, [canAdvance, createBareMetalInstance, isLastStep, onClosed, values]);
+  }, [canAdvance, createBareMetalInstance, isLastStep, onClosed, t, values]);
 
   const handleBack = useCallback(() => {
     setShowValidationErrors(false);
@@ -271,7 +303,13 @@ export const BareMetalProvisionWizard = ({ initialCatalogItemId, onClosed }: Pro
             />
           );
         case 'configuration':
-          return <BareMetalConfigurationStep values={values} onChange={setValue} />;
+          return (
+            <BareMetalConfigurationStep
+              values={values}
+              onChange={setValue}
+              catalogItem={selectedCatalogItem}
+            />
+          );
         case 'review':
           return (
             <BareMetalReviewStep
@@ -287,11 +325,7 @@ export const BareMetalProvisionWizard = ({ initialCatalogItemId, onClosed }: Pro
       <Stack hasGutter>
         {showValidationErrors && activeStepIndex === index && !canAdvance && (
           <StackItem>
-            <Alert
-              variant="danger"
-              isInline
-              title="Complete all required fields before proceeding."
-            />
+            <Alert variant="danger" isInline title={t('catalogProvision.validation.stepInvalid')} />
           </StackItem>
         )}
         <StackItem>{content}</StackItem>
@@ -309,19 +343,17 @@ export const BareMetalProvisionWizard = ({ initialCatalogItemId, onClosed }: Pro
           aria-labelledby="bm-wizard-cancel-title"
         >
           <ModalHeader
-            title="Discard progress?"
+            title={t('catalogProvision.cancel.title')}
             titleIconVariant="warning"
             labelId="bm-wizard-cancel-title"
           />
-          <ModalBody>
-            You have unsaved changes. Are you sure you want to cancel bare metal instance creation?
-          </ModalBody>
+          <ModalBody>{t('catalogProvision.baremetal.cancel.body')}</ModalBody>
           <ModalFooter>
             <Button variant="link" onClick={() => setShowCancelConfirm(false)}>
-              Keep editing
+              {t('catalogProvision.cancel.keepEditing')}
             </Button>
             <Button variant="primary" onClick={handleConfirmCancel}>
-              Discard
+              {t('catalogProvision.cancel.discard')}
             </Button>
           </ModalFooter>
         </Modal>
@@ -330,11 +362,11 @@ export const BareMetalProvisionWizard = ({ initialCatalogItemId, onClosed }: Pro
       <PageSection
         hasBodyWrapper={false}
         type={PageSectionTypes.wizard}
-        aria-label="Create bare metal instance wizard"
+        aria-label={t('catalogProvision.baremetal.wizard.ariaLabel')}
       >
         <Wizard
           key={wizardResetKey}
-          navAriaLabel="Create bare metal instance wizard navigation"
+          navAriaLabel={t('catalogProvision.baremetal.wizard.navAriaLabel')}
           isVisitRequired
           footer={
             <WizardFooterWrapper>
@@ -350,7 +382,7 @@ export const BareMetalProvisionWizard = ({ initialCatalogItemId, onClosed }: Pro
           }
         >
           {BM_WIZARD_STEPS.map((step, index) => (
-            <WizardStep key={step.id} id={step.id} name={step.name}>
+            <WizardStep key={step.id} id={step.id} name={t(step.name)}>
               {renderStepContent(step.id, index)}
             </WizardStep>
           ))}

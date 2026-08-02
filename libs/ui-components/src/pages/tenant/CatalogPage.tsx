@@ -21,11 +21,6 @@ import {
 } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 
-import type {
-  BareMetalInstanceCatalogItem,
-  ClusterCatalogItem,
-  ComputeInstanceCatalogItem,
-} from '@osac/types';
 import { useBareMetalInstanceCatalogItems } from '@osac/ui-components/api/v1/baremetal-instance';
 import {
   useAllBareMetalInstanceCatalogItems,
@@ -58,7 +53,6 @@ import {
   filterCatalogItemsBySearch,
 } from '@osac/ui-components/components/catalog/catalogItemDisplay';
 import { CatalogItemListSection } from '@osac/ui-components/components/catalog/CatalogItemListSection';
-import { TenantTemplateCustomizeModal } from '@osac/ui-components/components/catalog/TenantTemplateCustomizeModal';
 import ListPage from '@osac/ui-components/components/Page/ListPage';
 import ListPageBody from '@osac/ui-components/components/Page/ListPageBody';
 import { useSession } from '@osac/ui-components/hooks/use-session';
@@ -72,16 +66,10 @@ interface SelectedCatalogItem {
 }
 
 interface Props {
-  isProviderGlobal?: boolean;
   isAdminMode?: boolean;
 }
 
-interface CustomizeTarget {
-  kind: CatalogItemKind;
-  item: ComputeInstanceCatalogItem | ClusterCatalogItem | BareMetalInstanceCatalogItem;
-}
-
-export const CatalogPage = ({ isProviderGlobal = false, isAdminMode = false }: Props) => {
+export const CatalogPage = ({ isAdminMode = false }: Props) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { tenantId } = useSession();
@@ -94,7 +82,6 @@ export const CatalogPage = ({ isProviderGlobal = false, isAdminMode = false }: P
   const [archOpen, setArchOpen] = useState(false);
   const [workloadOpen, setWorkloadOpen] = useState(false);
   const [selectedCatalogItem, setSelectedCatalogItem] = useState<SelectedCatalogItem | null>(null);
-  const [customizeTarget, setCustomizeTarget] = useState<CustomizeTarget | null>(null);
 
   const catalogTypeFilters = useMemo(
     () =>
@@ -123,40 +110,29 @@ export const CatalogPage = ({ isProviderGlobal = false, isAdminMode = false }: P
     [labelCelFilter],
   );
 
-  const vmPublished = useComputeInstanceCatalogItems(isProviderGlobal ? {} : hookParams, tenantId);
-  const vmAll = useAllComputeInstanceCatalogItems(isProviderGlobal ? hookParams : {});
   const {
     data: vmCatalogItemsRaw = [],
     isLoading: vmLoading,
     error: vmError,
-  } = isProviderGlobal ? vmAll : vmPublished;
+  } = useComputeInstanceCatalogItems(hookParams, tenantId);
 
-  const clPublished = useClusterCatalogItems(isProviderGlobal ? {} : hookParams, tenantId);
-  const clAll = useAllClusterCatalogItems(isProviderGlobal ? hookParams : {});
   const {
     data: clusterCatalogItemsRaw = [],
     isLoading: clusterLoading,
     error: clusterError,
-  } = isProviderGlobal ? clAll : clPublished;
+  } = useClusterCatalogItems(hookParams, tenantId);
 
-  const bmPublished = useBareMetalInstanceCatalogItems(
-    isProviderGlobal ? {} : hookParams,
-    tenantId,
-  );
-  const bmAll = useAllBareMetalInstanceCatalogItems(isProviderGlobal ? hookParams : {});
   const {
     data: bmCatalogItemsRaw = [],
     isLoading: bmLoading,
     error: bmError,
-  } = isProviderGlobal ? bmAll : bmPublished;
+  } = useBareMetalInstanceCatalogItems(hookParams, tenantId);
 
-  const maasPublished = useMaaSCatalogItems(isProviderGlobal ? {} : hookParams, tenantId);
-  const maasAll = useAllMaaSCatalogItems(isProviderGlobal ? hookParams : {});
   const {
     data: maasCatalogItemsRaw = [],
     isLoading: maasLoading,
     error: maasError,
-  } = isProviderGlobal ? maasAll : maasPublished;
+  } = useMaaSCatalogItems(hookParams, tenantId);
 
   // In admin mode, fetch all items (to find org-scoped ones) and filter accordingly
   const vmAllForAdmin = useAllComputeInstanceCatalogItems();
@@ -326,15 +302,11 @@ export const CatalogPage = ({ isProviderGlobal = false, isAdminMode = false }: P
     ? !hasCatalogItems
     : !hasVisibleSections && !vmLoading && !clusterLoading && !bmLoading && !maasLoading;
 
-  const pageDescription = isProviderGlobal
-    ? t(
-        'Manage all catalog items and control publishing for virtual machines, clusters, and bare metal.',
-      )
-    : isAdminMode
-      ? t('Browse published offerings and customize defaults for your organization.')
-      : t(
-          'Browse catalog items and launch virtual machines, clusters, or bare metal instances from published offerings.',
-        );
+  const pageDescription = isAdminMode
+    ? t('Browse published templates and combine them into catalog items for your organization.')
+    : t(
+        'Browse catalog items and launch virtual machines, clusters, or bare metal instances from published offerings.',
+      );
 
   const kindLabel = (kind: CatalogItemKind) => {
     if (kind === 'vm') {
@@ -398,52 +370,23 @@ export const CatalogPage = ({ isProviderGlobal = false, isAdminMode = false }: P
 
   return (
     <>
-      {customizeTarget && (
-        <TenantTemplateCustomizeModal
-          sourceItem={customizeTarget.item}
-          kind={customizeTarget.kind}
-          onClose={() => setCustomizeTarget(null)}
-          onSuccess={() => {
-            setCustomizeTarget(null);
-            setSelectedCatalogItem(null);
-          }}
-        />
-      )}
       <ListPage
-        title={
-          isProviderGlobal ? t('Global catalog') : isAdminMode ? t('Catalog — Admin') : t('Catalog')
-        }
+        title={isAdminMode ? t('Catalog — Admin') : t('Catalog')}
         description={pageDescription}
         actions={
-          isProviderGlobal ? (
-            <Button variant="primary" onClick={() => navigate('/provider/catalog/new')}>
-              {t('Create catalog item')}
+          isAdminMode ? (
+            <Button variant="primary" onClick={() => navigate('/admin/catalog/combine')}>
+              {t('Create Catalog')}
             </Button>
           ) : undefined
         }
       >
         <ListPageBody isLoading={isLoading} error={error}>
           <CatalogItemDetailDrawer
-            item={isProviderGlobal ? null : (selectedCatalogItem?.item ?? null)}
+            item={selectedCatalogItem?.item ?? null}
             onClose={() => setSelectedCatalogItem(null)}
             actions={
-              isAdminMode && selectedCatalogItem ? (
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    const si = selectedCatalogItem;
-                    setCustomizeTarget({
-                      kind: si.kind,
-                      item: si.item as
-                        | ComputeInstanceCatalogItem
-                        | ClusterCatalogItem
-                        | BareMetalInstanceCatalogItem,
-                    });
-                  }}
-                >
-                  {t('Customize for my org')}
-                </Button>
-              ) : selectedCatalogItem?.kind === 'vm' ? (
+              selectedCatalogItem?.kind === 'vm' ? (
                 <Button
                   variant="primary"
                   onClick={() => navigate(`/vms/create/${selectedCatalogItem.item.id}`)}
@@ -643,17 +586,9 @@ export const CatalogPage = ({ isProviderGlobal = false, isAdminMode = false }: P
                     isLoading={showVmCatalog && vmLoading}
                     error={showVmCatalog ? vmError : null}
                     selectedItemId={
-                      isProviderGlobal
-                        ? null
-                        : selectedCatalogItem?.kind === 'vm'
-                          ? selectedCatalogItem.item.id
-                          : null
+                      selectedCatalogItem?.kind === 'vm' ? selectedCatalogItem.item.id : null
                     }
-                    onSelectItem={(item) =>
-                      isProviderGlobal
-                        ? navigate(`/provider/catalog/${item.id}/edit?kind=vm`)
-                        : setSelectedCatalogItem({ kind: 'vm', item })
-                    }
+                    onSelectItem={(item) => setSelectedCatalogItem({ kind: 'vm', item })}
                   />
                   <CatalogItemListSection
                     title={t('Clusters')}
@@ -662,17 +597,9 @@ export const CatalogPage = ({ isProviderGlobal = false, isAdminMode = false }: P
                     isLoading={showClusterCatalog && clusterLoading}
                     error={showClusterCatalog ? clusterError : null}
                     selectedItemId={
-                      isProviderGlobal
-                        ? null
-                        : selectedCatalogItem?.kind === 'cluster'
-                          ? selectedCatalogItem.item.id
-                          : null
+                      selectedCatalogItem?.kind === 'cluster' ? selectedCatalogItem.item.id : null
                     }
-                    onSelectItem={(item) =>
-                      isProviderGlobal
-                        ? navigate(`/provider/catalog/${item.id}/edit?kind=cluster`)
-                        : setSelectedCatalogItem({ kind: 'cluster', item })
-                    }
+                    onSelectItem={(item) => setSelectedCatalogItem({ kind: 'cluster', item })}
                   />
                   <CatalogItemListSection
                     title={t('Bare metal')}
@@ -681,17 +608,9 @@ export const CatalogPage = ({ isProviderGlobal = false, isAdminMode = false }: P
                     isLoading={showBmCatalog && bmLoading}
                     error={showBmCatalog ? bmError : null}
                     selectedItemId={
-                      isProviderGlobal
-                        ? null
-                        : selectedCatalogItem?.kind === 'baremetal'
-                          ? selectedCatalogItem.item.id
-                          : null
+                      selectedCatalogItem?.kind === 'baremetal' ? selectedCatalogItem.item.id : null
                     }
-                    onSelectItem={(item) =>
-                      isProviderGlobal
-                        ? navigate(`/provider/catalog/${item.id}/edit?kind=baremetal`)
-                        : setSelectedCatalogItem({ kind: 'baremetal', item })
-                    }
+                    onSelectItem={(item) => setSelectedCatalogItem({ kind: 'baremetal', item })}
                   />
                   <CatalogItemListSection
                     title={t('AI Models')}
@@ -700,17 +619,9 @@ export const CatalogPage = ({ isProviderGlobal = false, isAdminMode = false }: P
                     isLoading={showMaasCatalog && maasLoading}
                     error={showMaasCatalog ? maasError : null}
                     selectedItemId={
-                      isProviderGlobal
-                        ? null
-                        : selectedCatalogItem?.kind === 'maas'
-                          ? selectedCatalogItem.item.id
-                          : null
+                      selectedCatalogItem?.kind === 'maas' ? selectedCatalogItem.item.id : null
                     }
-                    onSelectItem={(item) =>
-                      isProviderGlobal
-                        ? navigate(`/provider/catalog/${item.id}/edit?kind=maas`)
-                        : setSelectedCatalogItem({ kind: 'maas', item })
-                    }
+                    onSelectItem={(item) => setSelectedCatalogItem({ kind: 'maas', item })}
                   />
                 </>
               )}

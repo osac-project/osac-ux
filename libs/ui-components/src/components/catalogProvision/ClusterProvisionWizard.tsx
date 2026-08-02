@@ -24,6 +24,9 @@ import {
 
 import type { ClusterCatalogItem } from '@osac/types';
 
+import { wireKeyForDynamicFieldPath } from './catalogFieldDefinition';
+import { readCatalogFieldDefinitions } from './wizard/catalogOverlay';
+import { useTranslation } from '../../hooks/useTranslation';
 import { ClusterCatalogStep } from './wizard/cluster/ClusterCatalogStep';
 import { ClusterConfigurationStep } from './wizard/cluster/ClusterConfigurationStep';
 import { ClusterGeneralStep } from './wizard/cluster/ClusterGeneralStep';
@@ -33,17 +36,18 @@ import {
   type ClusterWizardValues,
   createEmptyClusterValues,
   isStepValid,
+  seedClusterTemplateParameterDefaults,
 } from './wizard/cluster/fields';
 import { useCreateCluster } from '../../api/v1/cluster';
 import { useClusterCatalogItems } from '../../api/v1/cluster-catalog-item';
 import { useClusterTemplate } from '../../api/v1/cluster-templates';
 
 const CLUSTER_WIZARD_STEPS = [
-  { id: 'catalog', name: 'Catalog' },
-  { id: 'general', name: 'General' },
-  { id: 'configuration', name: 'Configuration' },
-  { id: 'networking', name: 'Networking' },
-  { id: 'review', name: 'Review' },
+  { id: 'catalog', name: 'catalogProvision.steps.catalog.title' },
+  { id: 'general', name: 'catalogProvision.steps.general.title' },
+  { id: 'configuration', name: 'catalogProvision.steps.configuration.title' },
+  { id: 'networking', name: 'catalogProvision.steps.networking.title' },
+  { id: 'review', name: 'catalogProvision.steps.review.title' },
 ] as const;
 
 type ClusterWizardStepId = (typeof CLUSTER_WIZARD_STEPS)[number]['id'];
@@ -66,6 +70,7 @@ const ClusterWizardFooter = ({
   onBack,
   onCancel,
 }: FooterProps) => {
+  const { t } = useTranslation();
   const { activeStep, goToStepByIndex } = useWizardContext();
   const stepIndex = (activeStep?.index ?? 1) - 1;
   const isFirst = stepIndex === 0;
@@ -86,7 +91,7 @@ const ClusterWizardFooter = ({
           }}
           isDisabled={isPending}
         >
-          Back
+          {t('catalogProvision.actions.back')}
         </Button>
       )}
       <Button
@@ -100,10 +105,10 @@ const ClusterWizardFooter = ({
         isLoading={isLast && isPending}
         isDisabled={(isLast && isPending) || (!isLast && !canAdvance)}
       >
-        {isLast ? 'Create cluster' : 'Next'}
+        {isLast ? t('catalogProvision.cluster.actions.create') : t('catalogProvision.actions.next')}
       </Button>
       <Button variant="link" onClick={onCancel} isDisabled={isPending}>
-        Cancel
+        {t('catalogProvision.actions.cancel')}
       </Button>
     </Flex>
   );
@@ -115,6 +120,7 @@ interface Props {
 }
 
 export const ClusterProvisionWizard = ({ initialCatalogItemId, onClosed }: Props) => {
+  const { t } = useTranslation();
   const [values, setValues] = useState<ClusterWizardValues>(
     createEmptyClusterValues(initialCatalogItemId),
   );
@@ -144,16 +150,19 @@ export const ClusterProvisionWizard = ({ initialCatalogItemId, onClosed }: Props
     if (!template) {
       return;
     }
+    const definitions = readCatalogFieldDefinitions(selectedCatalogItem);
     setValues((prev) => ({
       ...prev,
       releaseImage: prev.releaseImage || template.specDefaults?.releaseImage || '',
       podCidr: prev.podCidr || template.specDefaults?.network?.podCidr || '',
       serviceCidr: prev.serviceCidr || template.specDefaults?.network?.serviceCidr || '',
-      // initialize empty parameter slots for all template parameters
-      templateParameters: {
-        ...Object.fromEntries(template.parameters.map((p) => [p.name, ''])),
-        ...prev.templateParameters,
-      },
+      // initialize parameter slots for all template parameters, seeded from the catalog
+      // item's org-default field_definitions when the Tenant Admin set one
+      templateParameters: seedClusterTemplateParameterDefaults(
+        template.parameters.map((p) => p.name),
+        definitions,
+        prev.templateParameters,
+      ),
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [template?.id]);
@@ -216,6 +225,12 @@ export const ClusterProvisionWizard = ({ initialCatalogItemId, onClosed }: Props
         }
       }
     }
+    // Merge in new custom.* fields under a collision-safe wire key
+    for (const [path, val] of Object.entries(values.customParameters)) {
+      if (val.trim()) {
+        templateParameters[wireKeyForDynamicFieldPath(path)] = val;
+      }
+    }
 
     const hasNetworkOverrides = values.podCidr.trim() || values.serviceCidr.trim();
 
@@ -240,9 +255,11 @@ export const ClusterProvisionWizard = ({ initialCatalogItemId, onClosed }: Props
         onClosed?.();
       })
       .catch((err: unknown) => {
-        setProvisionError(err instanceof Error ? err.message : 'Failed to create cluster.');
+        setProvisionError(
+          err instanceof Error ? err.message : t('catalogProvision.cluster.errors.provisionFailed'),
+        );
       });
-  }, [canAdvance, createCluster, isLastStep, onClosed, template?.parameters, values]);
+  }, [canAdvance, createCluster, isLastStep, onClosed, t, template?.parameters, values]);
 
   const handleBack = useCallback(() => {
     setShowValidationErrors(false);
@@ -295,6 +312,7 @@ export const ClusterProvisionWizard = ({ initialCatalogItemId, onClosed }: Props
             onChange={setValue}
             template={template}
             templateLoading={templateLoading && Boolean(templateId)}
+            catalogItem={selectedCatalogItem}
           />
         );
       case 'networking':
@@ -321,19 +339,17 @@ export const ClusterProvisionWizard = ({ initialCatalogItemId, onClosed }: Props
           aria-labelledby="cluster-wizard-cancel-title"
         >
           <ModalHeader
-            title="Discard progress?"
+            title={t('catalogProvision.cancel.title')}
             titleIconVariant="warning"
             labelId="cluster-wizard-cancel-title"
           />
-          <ModalBody>
-            You have unsaved changes. Are you sure you want to cancel cluster creation?
-          </ModalBody>
+          <ModalBody>{t('catalogProvision.cluster.cancel.body')}</ModalBody>
           <ModalFooter>
             <Button variant="link" onClick={() => setShowCancelConfirm(false)}>
-              Keep editing
+              {t('catalogProvision.cancel.keepEditing')}
             </Button>
             <Button variant="primary" onClick={handleConfirmCancel}>
-              Discard
+              {t('catalogProvision.cancel.discard')}
             </Button>
           </ModalFooter>
         </Modal>
@@ -342,11 +358,11 @@ export const ClusterProvisionWizard = ({ initialCatalogItemId, onClosed }: Props
       <PageSection
         hasBodyWrapper={false}
         type={PageSectionTypes.wizard}
-        aria-label="Create cluster wizard"
+        aria-label={t('catalogProvision.cluster.wizard.ariaLabel')}
       >
         <Wizard
           key={wizardResetKey}
-          navAriaLabel="Create cluster wizard navigation"
+          navAriaLabel={t('catalogProvision.cluster.wizard.navAriaLabel')}
           isVisitRequired
           footer={
             <WizardFooterWrapper>
@@ -363,14 +379,14 @@ export const ClusterProvisionWizard = ({ initialCatalogItemId, onClosed }: Props
           }
         >
           {CLUSTER_WIZARD_STEPS.map((step, index) => (
-            <WizardStep key={step.id} id={step.id} name={step.name}>
+            <WizardStep key={step.id} id={step.id} name={t(step.name)}>
               <Stack hasGutter>
                 {showValidationErrors && activeStepIndex === index && !canAdvance && (
                   <StackItem>
                     <Alert
                       variant="danger"
                       isInline
-                      title="Complete all required fields before proceeding."
+                      title={t('catalogProvision.validation.stepInvalid')}
                     />
                   </StackItem>
                 )}

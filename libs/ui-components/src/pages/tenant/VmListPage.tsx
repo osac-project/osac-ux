@@ -16,6 +16,7 @@ import ListPage from '@osac/ui-components/components/Page/ListPage';
 import ListPageBody from '@osac/ui-components/components/Page/ListPageBody';
 import { VmTable } from '@osac/ui-components/components/vm/VmTable';
 import { useSession } from '@osac/ui-components/hooks/use-session';
+import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 import './VmListPage.css';
 
@@ -35,6 +36,7 @@ const normalizePowerFilter = (value: string | null): VmPowerFilter => {
 };
 
 export const VmListPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { role } = useSession();
   const [searchParams] = useSearchParams();
@@ -61,12 +63,12 @@ export const VmListPage = () => {
 
   return (
     <ListPage
-      title="Virtual machines"
-      description="View and filter your virtual machines."
+      title={t('Virtual machines')}
+      description={t('View and filter your virtual machines.')}
       actions={
         role === 'tenantUser' ? (
           <Button variant="primary" onClick={() => navigate('/vms/create')}>
-            Create virtual machine
+            {t('Create virtual machine')}
           </Button>
         ) : undefined
       }
@@ -80,7 +82,7 @@ export const VmListPage = () => {
         >
           <FlexItem>
             <SearchInput
-              placeholder="Search VMs by name…"
+              placeholder={t('Search VMs by name…')}
               value={search}
               onChange={(_e, v) => setSearch(v)}
               onClear={() => setSearch('')}
@@ -89,13 +91,13 @@ export const VmListPage = () => {
           </FlexItem>
           <FlexItem>
             <ToggleGroup
-              aria-label="Filter virtual machines by status"
+              aria-label={t('Filter virtual machines by status')}
               className="osac-vm-list__status-toggle"
             >
               {POWER_FILTERS.map((option) => (
                 <ToggleGroupItem
                   key={option.value}
-                  text={option.label}
+                  text={t(option.label)}
                   buttonId={`vm-filter-status-${option.value}`}
                   isSelected={powerFilter === option.value}
                   onChange={() => setPowerFilter(option.value)}
@@ -105,10 +107,10 @@ export const VmListPage = () => {
           </FlexItem>
         </Flex>
         {filteredVms.length === 0 ? (
-          <Alert variant="info" isInline title="No virtual machines found">
+          <Alert variant="info" isInline title={t('No virtual machines found')}>
             {search || powerFilter !== 'all'
-              ? 'No virtual machines match your filters.'
-              : 'No virtual machines are provisioned for your organization yet.'}
+              ? t('No virtual machines match your filters.')
+              : t('No virtual machines are provisioned for your organization yet.')}
           </Alert>
         ) : (
           <VmTable vms={filteredVms} />

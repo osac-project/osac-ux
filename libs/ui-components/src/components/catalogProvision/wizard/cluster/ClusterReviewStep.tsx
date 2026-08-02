@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   Alert,
   Content,
@@ -15,6 +16,9 @@ import type { ClusterCatalogItem, ClusterTemplate } from '@osac/types';
 
 import { type ClusterWizardValues, DEFAULT_POD_CIDR, DEFAULT_SERVICE_CIDR } from './fields';
 import { clusterTemplateNodeSetsSummary } from '../../../../api/v1/cluster-templates';
+import { readBillableComponents } from '../../../../api/v1/template-billing';
+import { useTranslation } from '../../../../hooks/useTranslation';
+import { PriceBreakdown } from '../../../catalog/PriceBreakdown';
 
 interface Props {
   values: ClusterWizardValues;
@@ -24,6 +28,7 @@ interface Props {
 }
 
 export const ClusterReviewStep = ({ values, catalogItem, template, provisionError }: Props) => {
+  const { t } = useTranslation();
   const podCidr =
     values.podCidr.trim() || template?.specDefaults?.network?.podCidr || DEFAULT_POD_CIDR;
   const serviceCidr =
@@ -36,49 +41,70 @@ export const ClusterReviewStep = ({ values, catalogItem, template, provisionErro
   );
 
   const pricePerHour = catalogItem?.metadata?.labels?.['price_per_hour'];
+  const billableComponents = useMemo(
+    () =>
+      catalogItem
+        ? readBillableComponents(
+            catalogItem as unknown as { metadata?: { annotations?: Record<string, string> } },
+          )
+        : [],
+    [catalogItem],
+  );
 
   return (
     <Stack hasGutter>
       {provisionError && (
         <StackItem>
-          <Alert variant="danger" isInline title="Failed to create cluster">
+          <Alert
+            variant="danger"
+            isInline
+            title={t('catalogProvision.cluster.review.provisionErrorTitle')}
+          >
             {provisionError}
           </Alert>
         </StackItem>
       )}
 
-      {pricePerHour && (
+      {billableComponents.length > 0 ? (
         <StackItem>
-          <Alert variant="info" isInline title="Estimated cost (continuous 24/7 usage)">
-            <Label variant="filled" color="blue" isCompact>
-              ${pricePerHour}/hr
-            </Label>{' '}
-            <Content component="small">Metering estimate</Content>
-          </Alert>
+          <PriceBreakdown components={billableComponents} />
         </StackItem>
+      ) : (
+        pricePerHour && (
+          <StackItem>
+            <Alert variant="info" isInline title={t('Estimated cost (continuous 24/7 usage)')}>
+              <Label variant="filled" color="blue" isCompact>
+                ${pricePerHour}/hr
+              </Label>{' '}
+              <Content component="small">{t('catalogProvision.review.meteringEstimate')}</Content>
+            </Alert>
+          </StackItem>
+        )
       )}
 
       {/* ── Catalog ───────────────────────────────────────────── */}
       <StackItem>
         <Title headingLevel="h3" size="md">
-          Catalog
+          {t('catalogProvision.steps.catalog.title')}
         </Title>
       </StackItem>
       <StackItem>
         <DescriptionList isHorizontal isCompact>
           <DescriptionListGroup>
-            <DescriptionListTerm>Catalog item</DescriptionListTerm>
+            <DescriptionListTerm>{t('catalogProvision.review.catalogItem')}</DescriptionListTerm>
             <DescriptionListDescription>{catalogItem?.title ?? '—'}</DescriptionListDescription>
           </DescriptionListGroup>
           {catalogItem?.description && (
             <DescriptionListGroup>
-              <DescriptionListTerm>Description</DescriptionListTerm>
+              <DescriptionListTerm>{t('catalogProvision.review.description')}</DescriptionListTerm>
               <DescriptionListDescription>{catalogItem.description}</DescriptionListDescription>
             </DescriptionListGroup>
           )}
           {template && (
             <DescriptionListGroup>
-              <DescriptionListTerm>Node sets</DescriptionListTerm>
+              <DescriptionListTerm>
+                {t('catalogProvision.cluster.fields.nodeSets')}
+              </DescriptionListTerm>
               <DescriptionListDescription>
                 {clusterTemplateNodeSetsSummary(template)}
               </DescriptionListDescription>
@@ -90,41 +116,43 @@ export const ClusterReviewStep = ({ values, catalogItem, template, provisionErro
       {/* ── General ───────────────────────────────────────────── */}
       <StackItem>
         <Title headingLevel="h3" size="md">
-          General
+          {t('catalogProvision.steps.general.title')}
         </Title>
       </StackItem>
       <StackItem>
         <DescriptionList isHorizontal isCompact>
           <DescriptionListGroup>
-            <DescriptionListTerm>Cluster name</DescriptionListTerm>
+            <DescriptionListTerm>{t('catalogProvision.cluster.fields.name')}</DescriptionListTerm>
             <DescriptionListDescription>
               <code>{values.name}</code>
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
-            <DescriptionListTerm>Pull secret</DescriptionListTerm>
+            <DescriptionListTerm>
+              {t('catalogProvision.cluster.fields.pullSecret')}
+            </DescriptionListTerm>
             <DescriptionListDescription>
               {values.pullSecret.trim() ? (
                 <Label isCompact color="green">
-                  Provided
+                  {t('catalogProvision.review.provided')}
                 </Label>
               ) : (
                 <Label isCompact color="orange">
-                  Not set
+                  {t('catalogProvision.review.notSet')}
                 </Label>
               )}
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
-            <DescriptionListTerm>SSH public key</DescriptionListTerm>
+            <DescriptionListTerm>{t('catalogProvision.cluster.fields.sshKey')}</DescriptionListTerm>
             <DescriptionListDescription>
               {values.sshPublicKey.trim() ? (
                 <Label isCompact color="green">
-                  Provided
+                  {t('catalogProvision.review.provided')}
                 </Label>
               ) : (
                 <Content component="small" className="pf-v6-u-color-text-subtle">
-                  Not set
+                  {t('catalogProvision.review.notSet')}
                 </Content>
               )}
             </DescriptionListDescription>
@@ -137,14 +165,16 @@ export const ClusterReviewStep = ({ values, catalogItem, template, provisionErro
         <>
           <StackItem>
             <Title headingLevel="h3" size="md">
-              Configuration
+              {t('catalogProvision.steps.configuration.title')}
             </Title>
           </StackItem>
           <StackItem>
             <DescriptionList isHorizontal isCompact>
               {values.releaseImage.trim() && (
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Release image</DescriptionListTerm>
+                  <DescriptionListTerm>
+                    {t('catalogProvision.cluster.fields.releaseImage')}
+                  </DescriptionListTerm>
                   <DescriptionListDescription>
                     <code>{values.releaseImage}</code>
                   </DescriptionListDescription>
@@ -167,31 +197,35 @@ export const ClusterReviewStep = ({ values, catalogItem, template, provisionErro
       {/* ── Networking ────────────────────────────────────────── */}
       <StackItem>
         <Title headingLevel="h3" size="md">
-          Networking
+          {t('catalogProvision.steps.networking.title')}
         </Title>
       </StackItem>
       <StackItem>
         <DescriptionList isHorizontal isCompact>
           <DescriptionListGroup>
-            <DescriptionListTerm>Pod CIDR</DescriptionListTerm>
+            <DescriptionListTerm>
+              {t('catalogProvision.cluster.fields.podCidr')}
+            </DescriptionListTerm>
             <DescriptionListDescription>
               <code>{podCidr}</code>
               {!values.podCidr.trim() && (
                 <Content component="small" className="pf-v6-u-color-text-subtle">
                   {' '}
-                  (default)
+                  {t('catalogProvision.review.defaultSuffix')}
                 </Content>
               )}
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
-            <DescriptionListTerm>Service CIDR</DescriptionListTerm>
+            <DescriptionListTerm>
+              {t('catalogProvision.cluster.fields.serviceCidr')}
+            </DescriptionListTerm>
             <DescriptionListDescription>
               <code>{serviceCidr}</code>
               {!values.serviceCidr.trim() && (
                 <Content component="small" className="pf-v6-u-color-text-subtle">
                   {' '}
-                  (default)
+                  {t('catalogProvision.review.defaultSuffix')}
                 </Content>
               )}
             </DescriptionListDescription>

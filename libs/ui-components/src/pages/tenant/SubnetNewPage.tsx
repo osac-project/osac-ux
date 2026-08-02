@@ -23,9 +23,11 @@ import type { MenuToggleElement } from '@patternfly/react-core';
 
 import { resourceDisplayName, useCreateSubnet, useVirtualNetworks } from '../../api/v1/networking';
 import OsacForm from '../../components/Form/OsacForm';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 export const SubnetNewPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preselectedVNetId = searchParams.get('vnetId') ?? '';
@@ -68,13 +70,13 @@ export const SubnetNewPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/networks?tab=subnets')}>
-                Networks
+                {t('Networks')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Create subnet</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Create subnet')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Create subnet
+            {t('Create subnet')}
           </Title>
         </Stack>
       </PageSection>
@@ -82,7 +84,7 @@ export const SubnetNewPage = () => {
       <PageSection hasBodyWrapper={false}>
         <OsacForm style={{ maxWidth: '480px' }} onSubmit={onSubmit} id="subnet-create-form">
           {!preselectedVNetId && (
-            <FormGroup label="Virtual network" fieldId="subnet-vnet" isRequired>
+            <FormGroup label={t('Virtual network')} fieldId="subnet-vnet" isRequired>
               <Select
                 isOpen={vnetSelectOpen}
                 selected={selectedVNetId}
@@ -100,7 +102,7 @@ export const SubnetNewPage = () => {
                   >
                     {selectedVNet
                       ? resourceDisplayName(selectedVNet.metadata, selectedVNet.id)
-                      : 'Select virtual network'}
+                      : t('Select virtual network')}
                   </MenuToggle>
                 )}
               >
@@ -113,7 +115,7 @@ export const SubnetNewPage = () => {
             </FormGroup>
           )}
 
-          <FormGroup label="Name" fieldId="subnet-name" isRequired>
+          <FormGroup label={t('Name')} fieldId="subnet-name" isRequired>
             <TextInput
               id="subnet-name"
               value={name}
@@ -123,7 +125,7 @@ export const SubnetNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="IPv4 CIDR" fieldId="subnet-cidr" isRequired>
+          <FormGroup label={t('IPv4 CIDR')} fieldId="subnet-cidr" isRequired>
             <TextInput
               id="subnet-cidr"
               value={ipv4Cidr}
@@ -134,7 +136,7 @@ export const SubnetNewPage = () => {
           </FormGroup>
 
           {createSubnet.error && (
-            <Alert variant="danger" title="Failed to create subnet" isInline>
+            <Alert variant="danger" title={t('Failed to create subnet')} isInline>
               {getErrorMessage(createSubnet.error)}
             </Alert>
           )}
@@ -147,14 +149,14 @@ export const SubnetNewPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !name.trim() || !ipv4Cidr.trim() || !effectiveVNetId}
             >
-              Create
+              {t('Create')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate('/networks?tab=subnets')}
               isDisabled={isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </OsacForm>

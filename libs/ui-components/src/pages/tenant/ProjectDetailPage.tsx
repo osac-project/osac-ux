@@ -37,12 +37,14 @@ import {
   TabTitleText,
   Tabs,
   Title,
+  Tooltip,
 } from '@patternfly/react-core';
 import type { MenuToggleElement } from '@patternfly/react-core';
 import { ActionsColumn, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 
 import { ProjectMembershipRole, ProjectMembershipState, ProjectState } from '@osac/types';
 
+import { projectKmsStatus } from '../../api/v1/compliance';
 import { useProject } from '../../api/v1/project';
 import {
   useCreateProjectMembership,
@@ -50,6 +52,7 @@ import {
   useProjectMemberships,
 } from '../../api/v1/project-membership';
 import { useUsers } from '../../api/v1/user';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 // ---------------------------------------------------------------------------
@@ -93,6 +96,15 @@ const ENV_LABELS: Record<string, { label: string; color: 'green' | 'blue' | 'gre
   development: { label: 'Development', color: 'grey' },
 };
 
+const KMS_LABELS: Record<
+  ReturnType<typeof projectKmsStatus>,
+  { label: string; color: 'green' | 'blue' | 'grey' }
+> = {
+  dedicated: { label: 'Dedicated key (per-project KMS)', color: 'green' },
+  shared: { label: 'Shared platform key', color: 'blue' },
+  none: { label: 'Not configured', color: 'grey' },
+};
+
 const ROLE_OPTIONS: { value: ProjectMembershipRole; label: string }[] = [
   { value: ProjectMembershipRole.MANAGER, label: 'Manager' },
   { value: ProjectMembershipRole.VIEWER, label: 'Viewer' },
@@ -109,6 +121,7 @@ interface AddMemberModalProps {
 }
 
 const AddMemberModal = ({ projectId, isOpen, onClose }: AddMemberModalProps) => {
+  const { t } = useTranslation();
   const [userId, setUserId] = useState('');
   const [userSelectOpen, setUserSelectOpen] = useState(false);
   const [role, setRole] = useState<ProjectMembershipRole>(ProjectMembershipRole.VIEWER);
@@ -118,7 +131,7 @@ const AddMemberModal = ({ projectId, isOpen, onClose }: AddMemberModalProps) => 
   const { mutateAsync, isPending, error } = useCreateProjectMembership();
 
   const selectedUser = users.find((u) => u.id === userId);
-  const selectedRoleLabel = ROLE_OPTIONS.find((o) => o.value === role)?.label ?? 'Select role';
+  const selectedRoleLabel = ROLE_OPTIONS.find((o) => o.value === role)?.label ?? t('Select role');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,10 +152,10 @@ const AddMemberModal = ({ projectId, isOpen, onClose }: AddMemberModalProps) => 
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} variant="small">
-      <ModalHeader title="Add member" />
+      <ModalHeader title={t('Add member')} />
       <ModalBody>
         <Form id="add-member-form" onSubmit={handleSubmit}>
-          <FormGroup label="User" fieldId="member-user" isRequired>
+          <FormGroup label={t('User')} fieldId="member-user" isRequired>
             <Select
               isOpen={userSelectOpen}
               selected={userId}
@@ -160,7 +173,7 @@ const AddMemberModal = ({ projectId, isOpen, onClose }: AddMemberModalProps) => 
                 >
                   {selectedUser
                     ? `${selectedUser.spec?.firstName ?? ''} ${selectedUser.spec?.lastName ?? ''} (${selectedUser.spec?.email ?? ''})`
-                    : 'Select user'}
+                    : t('Select user')}
                 </MenuToggle>
               )}
             >
@@ -175,7 +188,7 @@ const AddMemberModal = ({ projectId, isOpen, onClose }: AddMemberModalProps) => 
             </Select>
           </FormGroup>
 
-          <FormGroup label="Role" fieldId="member-role" isRequired>
+          <FormGroup label={t('Role')} fieldId="member-role" isRequired>
             <Select
               isOpen={roleSelectOpen}
               selected={role}
@@ -204,7 +217,7 @@ const AddMemberModal = ({ projectId, isOpen, onClose }: AddMemberModalProps) => 
           </FormGroup>
 
           {error && (
-            <Alert variant="danger" isInline title="Failed to add member">
+            <Alert variant="danger" isInline title={t('Failed to add member')}>
               {getErrorMessage(error)}
             </Alert>
           )}
@@ -219,10 +232,10 @@ const AddMemberModal = ({ projectId, isOpen, onClose }: AddMemberModalProps) => 
             isLoading={isPending}
             isDisabled={isPending || !userId}
           >
-            Add member
+            {t('Add member')}
           </Button>
           <Button variant="link" onClick={onClose} isDisabled={isPending}>
-            Cancel
+            {t('Cancel')}
           </Button>
         </ActionGroup>
       </ModalFooter>
@@ -235,6 +248,7 @@ const AddMemberModal = ({ projectId, isOpen, onClose }: AddMemberModalProps) => 
 // ---------------------------------------------------------------------------
 
 export const ProjectDetailPage = () => {
+  const { t } = useTranslation();
   const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<number>(OVERVIEW_TAB);
@@ -267,8 +281,8 @@ export const ProjectDetailPage = () => {
   if (projectError || !project) {
     return (
       <PageSection>
-        <Alert variant="danger" isInline title="Failed to load project">
-          {projectError ? getErrorMessage(projectError) : 'Project not found.'}
+        <Alert variant="danger" isInline title={t('Failed to load project')}>
+          {projectError ? getErrorMessage(projectError) : t('Project not found.')}
         </Alert>
       </PageSection>
     );
@@ -290,7 +304,7 @@ export const ProjectDetailPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/projects')}>
-                Projects
+                {t('Projects')}
               </Button>
             </BreadcrumbItem>
             <BreadcrumbItem isActive>{title}</BreadcrumbItem>
@@ -328,12 +342,12 @@ export const ProjectDetailPage = () => {
           onSelect={(_, key) => setActiveTab(key as number)}
           isBox={false}
         >
-          <Tab eventKey={OVERVIEW_TAB} title={<TabTitleText>Overview</TabTitleText>} />
+          <Tab eventKey={OVERVIEW_TAB} title={<TabTitleText>{t('Overview')}</TabTitleText>} />
           <Tab
             eventKey={MEMBERS_TAB}
             title={
               <TabTitleText>
-                Members <Badge isRead>{memberships.length}</Badge>
+                {t('Members')} <Badge isRead>{memberships.length}</Badge>
               </TabTitleText>
             }
           />
@@ -347,19 +361,19 @@ export const ProjectDetailPage = () => {
               <CardBody>
                 <DescriptionList isHorizontal columnModifier={{ default: '2Col' }}>
                   <DescriptionListGroup>
-                    <DescriptionListTerm>Name</DescriptionListTerm>
+                    <DescriptionListTerm>{t('Name')}</DescriptionListTerm>
                     <DescriptionListDescription>
                       {project.metadata?.name ?? '—'}
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                   <DescriptionListGroup>
-                    <DescriptionListTerm>ID</DescriptionListTerm>
+                    <DescriptionListTerm>{t('ID')}</DescriptionListTerm>
                     <DescriptionListDescription>
                       <code>{project.id}</code>
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                   <DescriptionListGroup>
-                    <DescriptionListTerm>Environment</DescriptionListTerm>
+                    <DescriptionListTerm>{t('Environment')}</DescriptionListTerm>
                     <DescriptionListDescription>
                       {envCfg ? (
                         <Label color={envCfg.color} isCompact>
@@ -371,7 +385,7 @@ export const ProjectDetailPage = () => {
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                   <DescriptionListGroup>
-                    <DescriptionListTerm>State</DescriptionListTerm>
+                    <DescriptionListTerm>{t('State')}</DescriptionListTerm>
                     <DescriptionListDescription>
                       {stateCfg ? (
                         <Label color={stateCfg.color} isCompact>
@@ -383,12 +397,26 @@ export const ProjectDetailPage = () => {
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                   <DescriptionListGroup>
-                    <DescriptionListTerm>Created</DescriptionListTerm>
+                    <DescriptionListTerm>{t('Created')}</DescriptionListTerm>
                     <DescriptionListDescription>{created}</DescriptionListDescription>
+                  </DescriptionListGroup>
+                  <DescriptionListGroup>
+                    <DescriptionListTerm>{t('Encryption key (KMS)')}</DescriptionListTerm>
+                    <DescriptionListDescription>
+                      <Tooltip
+                        content={t(
+                          "Per-project encryption keys (OSAC-2389). A dedicated key isolates this project's data-at-rest from other projects sharing the same platform KMS.",
+                        )}
+                      >
+                        <Label color={KMS_LABELS[projectKmsStatus(project)].color} isCompact>
+                          {KMS_LABELS[projectKmsStatus(project)].label}
+                        </Label>
+                      </Tooltip>
+                    </DescriptionListDescription>
                   </DescriptionListGroup>
                   {project.spec?.parent && (
                     <DescriptionListGroup>
-                      <DescriptionListTerm>Parent project</DescriptionListTerm>
+                      <DescriptionListTerm>{t('Parent project')}</DescriptionListTerm>
                       <DescriptionListDescription>
                         <Button
                           variant="link"
@@ -402,7 +430,7 @@ export const ProjectDetailPage = () => {
                   )}
                   {project.spec?.description && (
                     <DescriptionListGroup>
-                      <DescriptionListTerm>Description</DescriptionListTerm>
+                      <DescriptionListTerm>{t('Description')}</DescriptionListTerm>
                       <DescriptionListDescription>
                         {project.spec.description}
                       </DescriptionListDescription>
@@ -410,7 +438,7 @@ export const ProjectDetailPage = () => {
                   )}
                   {project.status?.message && (
                     <DescriptionListGroup>
-                      <DescriptionListTerm>Status message</DescriptionListTerm>
+                      <DescriptionListTerm>{t('Status message')}</DescriptionListTerm>
                       <DescriptionListDescription>
                         {project.status.message}
                       </DescriptionListDescription>
@@ -429,7 +457,7 @@ export const ProjectDetailPage = () => {
             <Stack hasGutter>
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Button variant="primary" onClick={() => setAddMemberOpen(true)}>
-                  Add member
+                  {t('Add member')}
                 </Button>
               </div>
               <Card>
@@ -438,16 +466,16 @@ export const ProjectDetailPage = () => {
                     {membershipsLoading ? (
                       <Spinner />
                     ) : memberships.length === 0 ? (
-                      <Alert variant="info" isInline title="No members yet">
-                        Add members to grant them access to this project.
+                      <Alert variant="info" isInline title={t('No members yet')}>
+                        {t('Add members to grant them access to this project.')}
                       </Alert>
                     ) : (
-                      <Table aria-label="Project members" variant="compact">
+                      <Table aria-label={t('Project members')} variant="compact">
                         <Thead>
                           <Tr>
-                            <Th>User</Th>
-                            <Th>Role</Th>
-                            <Th>Status</Th>
+                            <Th>{t('User')}</Th>
+                            <Th>{t('Role')}</Th>
+                            <Th>{t('Status')}</Th>
                             <Td />
                           </Tr>
                         </Thead>
@@ -468,8 +496,8 @@ export const ProjectDetailPage = () => {
 
                             return (
                               <Tr key={membership.id}>
-                                <Td dataLabel="User">{getUserLabel(memberUserId)}</Td>
-                                <Td dataLabel="Role">
+                                <Td dataLabel={t('User')}>{getUserLabel(memberUserId)}</Td>
+                                <Td dataLabel={t('Role')}>
                                   {roleCfg ? (
                                     <Label color={roleCfg.color} isCompact>
                                       {roleCfg.label}
@@ -478,7 +506,7 @@ export const ProjectDetailPage = () => {
                                     '—'
                                   )}
                                 </Td>
-                                <Td dataLabel="Status">
+                                <Td dataLabel={t('Status')}>
                                   {stateMemberCfg ? (
                                     <Label color={stateMemberCfg.color} isCompact>
                                       {stateMemberCfg.label}
@@ -491,7 +519,7 @@ export const ProjectDetailPage = () => {
                                   <ActionsColumn
                                     items={[
                                       {
-                                        title: 'Remove',
+                                        title: t('Remove'),
                                         onClick: () => deleteMembership(membership.id),
                                       },
                                     ]}

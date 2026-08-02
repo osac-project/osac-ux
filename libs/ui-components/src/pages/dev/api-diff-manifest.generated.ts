@@ -1,5 +1,5 @@
 // AUTO-GENERATED — run `pnpm gen:api-diff` to regenerate. Do not edit manually.
-// Generated: 2026-07-07T13:37:19.413Z
+// Generated: 2026-08-02T11:45:21.907Z
 
 export interface ApiDiffEntry {
   route: string;
@@ -23,18 +23,18 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'compute-instance.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/admin/dashboard', '/ips', '/networks', '/provider/dashboard', '/storage/snapshots', '/storage/volumes', '/vms', '/vms/:id', '/vms/create/:catalogItemId?'],
+    pages: ['/admin/dashboard', '/ips', '/networks', '/provider/compliance', '/provider/dashboard', '/provider/infra-topology', '/storage/snapshots', '/storage/volumes', '/vms', '/vms/:id', '/vms/create/:catalogItemId?'],
   },
   {
     route: 'v1/compute_instance_templates',
     category: 'temp-api',
-    ops: ['create', 'delete', 'get', 'list', 'patch'],
+    ops: ['get', 'list', 'patch'],
     missingOps: [],
     protoFile: null,
     hookFile: 'compute-instance-templates.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/provider/catalog-studio', '/provider/catalog-studio/new', '/provider/catalog/:id/edit', '/provider/catalog/new', '/provider/templates', '/provider/templates/vm/:id/edit', '/provider/templates/vm/new'],
+    pages: ['/admin/catalog/combine', '/provider/templates', '/provider/templates/vm/:id/edit'],
   },
   {
     route: 'v1/compute_instance_catalog_items',
@@ -45,7 +45,7 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'compute-instance-catalog-item.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/admin/catalog', '/catalog', '/provider/catalog', '/provider/catalog-studio', '/provider/catalog-studio/new', '/provider/catalog/:id/edit', '/provider/catalog/new'],
+    pages: ['/admin/catalog', '/admin/catalog/combine', '/catalog'],
   },
   {
     route: 'v1/clusters',
@@ -56,18 +56,18 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'cluster.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/clusters', '/clusters/:clusterId', '/provider/ai-setup', '/provider/catalog-studio'],
+    pages: ['/clusters', '/clusters/:clusterId', '/provider/ai-setup', '/provider/compliance'],
   },
   {
     route: 'v1/cluster_templates',
     category: 'temp-api',
-    ops: ['create', 'delete', 'get', 'list', 'patch'],
+    ops: ['get', 'list', 'patch'],
     missingOps: [],
     protoFile: null,
     hookFile: 'cluster-templates.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/provider/catalog-studio', '/provider/catalog-studio/new', '/provider/catalog/:id/edit', '/provider/catalog/new', '/provider/templates'],
+    pages: ['/admin/catalog/combine', '/provider/templates', '/provider/templates/cluster/:id/edit'],
   },
   {
     route: 'v1/cluster_catalog_items',
@@ -78,7 +78,7 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'cluster-catalog-item.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/admin/catalog', '/catalog', '/provider/catalog', '/provider/catalog-studio', '/provider/catalog-studio/new', '/provider/catalog/:id/edit', '/provider/catalog/new'],
+    pages: ['/admin/catalog', '/admin/catalog/combine', '/catalog'],
   },
   {
     route: 'v1/baremetal_instances',
@@ -89,18 +89,18 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'baremetal-instance.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/admin/catalog', '/bare-metal', '/catalog', '/provider/catalog'],
+    pages: ['/admin/catalog', '/bare-metal', '/catalog', '/provider/compliance'],
   },
   {
     route: 'v1/baremetal_instance_templates',
     category: 'temp-api',
-    ops: ['create', 'delete', 'get', 'list'],
+    ops: ['get', 'list', 'patch'],
     missingOps: [],
     protoFile: null,
     hookFile: 'baremetal-instance-templates.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/provider/catalog-studio', '/provider/catalog-studio/new', '/provider/catalog/:id/edit', '/provider/catalog/new', '/provider/templates'],
+    pages: ['/admin/catalog/combine', '/provider/templates', '/provider/templates/bm/:id/edit'],
   },
   {
     route: 'v1/baremetal_instance_catalog_items',
@@ -111,7 +111,7 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'baremetal-instance-catalog-item.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/admin/catalog', '/catalog', '/provider/catalog', '/provider/catalog-studio', '/provider/catalog-studio/new', '/provider/catalog/:id/edit', '/provider/catalog/new'],
+    pages: ['/admin/catalog', '/admin/catalog/combine', '/catalog'],
   },
   {
     route: 'v1/host_types',
@@ -122,7 +122,7 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'host-types.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/provider/catalog-studio', '/provider/host-types', '/provider/host-types/new'],
+    pages: ['/provider/host-types', '/provider/host-types/new', '/provider/templates/bm/:id/edit'],
   },
   {
     route: 'v1/instance_types',
@@ -133,7 +133,7 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'instance-types.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/provider/catalog-studio', '/provider/instance-types', '/provider/instance-types/new', '/provider/templates/vm/:id/edit', '/provider/templates/vm/new'],
+    pages: ['/provider/instance-types', '/provider/instance-types/new'],
   },
   {
     route: 'v1/virtual_networks',
@@ -144,7 +144,7 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'networking.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/networks/:id', '/networks/new', '/networks/security-groups/:id/rules', '/networks/security-groups/new', '/networks/subnets/new', '/provider/network-classes', '/provider/network-classes/new'],
+    pages: ['/networks/:id', '/networks/new', '/networks/security-groups/:id/rules', '/networks/security-groups/new', '/networks/subnets/new', '/provider/compliance', '/provider/network-classes', '/provider/network-classes/new'],
   },
   {
     route: 'v1/subnets',
@@ -155,7 +155,7 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'networking.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/networks/:id', '/networks/new', '/networks/security-groups/:id/rules', '/networks/security-groups/new', '/networks/subnets/new', '/provider/network-classes', '/provider/network-classes/new'],
+    pages: ['/networks/:id', '/networks/new', '/networks/security-groups/:id/rules', '/networks/security-groups/new', '/networks/subnets/new', '/provider/compliance', '/provider/network-classes', '/provider/network-classes/new'],
   },
   {
     route: 'v1/security_groups',
@@ -166,7 +166,7 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'networking.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/networks/:id', '/networks/new', '/networks/security-groups/:id/rules', '/networks/security-groups/new', '/networks/subnets/new', '/provider/network-classes', '/provider/network-classes/new'],
+    pages: ['/networks/:id', '/networks/new', '/networks/security-groups/:id/rules', '/networks/security-groups/new', '/networks/subnets/new', '/provider/compliance', '/provider/network-classes', '/provider/network-classes/new'],
   },
   {
     route: 'v1/network_classes',
@@ -177,7 +177,7 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'networking.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/networks/:id', '/networks/new', '/networks/security-groups/:id/rules', '/networks/security-groups/new', '/networks/subnets/new', '/provider/network-classes', '/provider/network-classes/new'],
+    pages: ['/networks/:id', '/networks/new', '/networks/security-groups/:id/rules', '/networks/security-groups/new', '/networks/subnets/new', '/provider/compliance', '/provider/network-classes', '/provider/network-classes/new'],
   },
   {
     route: 'v1/public_ips',
@@ -254,7 +254,7 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'tenant.ts',
     hasMockData: true,
     notes: null,
-    pages: ['/provider/catalog-studio/new', '/provider/catalog/:id/edit', '/provider/catalog/new', '/provider/ip-pools', '/provider/ip-pools/new', '/provider/organizations', '/provider/organizations/:id/edit', '/provider/organizations/new'],
+    pages: ['/provider/billing', '/provider/billing/tenants', '/provider/billing/usage', '/provider/compliance', '/provider/ip-pools', '/provider/ip-pools/new', '/provider/organizations', '/provider/organizations/:id/edit', '/provider/organizations/new'],
   },
   {
     route: 'v1/organizations',
@@ -441,7 +441,7 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'ai-environment.ts',
     hasMockData: true,
     notes: '@temp-api — not yet in fulfillment-service',
-    pages: ['/provider/ai-setup', '/provider/catalog-studio'],
+    pages: ['/admin/ai-environment', '/provider/ai-setup'],
   },
   {
     route: 'v1/model_catalog_items',
@@ -452,7 +452,7 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'maas-catalog-item.ts',
     hasMockData: true,
     notes: '@temp-api — not yet in fulfillment-service',
-    pages: ['/admin/catalog', '/catalog', '/models', '/models/create/:catalogItemId?', '/provider/catalog', '/provider/catalog-studio', '/provider/catalog-studio/new', '/provider/catalog/:id/edit', '/provider/catalog/new'],
+    pages: ['/admin/ai-subscriptions', '/admin/ai-subscriptions/:id/edit', '/admin/ai-subscriptions/new', '/admin/catalog', '/catalog', '/models'],
   },
   {
     route: 'v1/model_accesses',
@@ -463,7 +463,40 @@ export const API_DIFF_MANIFEST: ApiDiffEntry[] = [
     hookFile: 'maas-instance.ts',
     hasMockData: true,
     notes: '@temp-api — not yet in fulfillment-service',
-    pages: ['/models', '/models/create/:catalogItemId?'],
+    pages: ['/models'],
+  },
+  {
+    route: 'v1/subscriptions',
+    category: 'temp-api',
+    ops: ['create', 'delete', 'get', 'list', 'patch'],
+    missingOps: [],
+    protoFile: null,
+    hookFile: 'maas-subscription.ts',
+    hasMockData: true,
+    notes: '@temp-api — not yet in fulfillment-service',
+    pages: ['/admin/ai-subscriptions', '/admin/ai-subscriptions/:id/edit', '/admin/ai-subscriptions/new'],
+  },
+  {
+    route: 'v1/maas_token_usage',
+    category: 'temp-api',
+    ops: ['list'],
+    missingOps: [],
+    protoFile: null,
+    hookFile: 'maas-metrics.ts',
+    hasMockData: true,
+    notes: '@temp-api — not yet in fulfillment-service',
+    pages: ['/provider/ai-setup'],
+  },
+  {
+    route: 'v1/price_plans',
+    category: 'temp-api',
+    ops: ['create', 'delete', 'get', 'list', 'patch'],
+    missingOps: [],
+    protoFile: null,
+    hookFile: 'price-plan.ts',
+    hasMockData: true,
+    notes: '@temp-api — not yet in fulfillment-service',
+    pages: ['/provider/billing', '/provider/billing/plans', '/provider/billing/plans/:id/edit', '/provider/billing/plans/new', '/provider/billing/tenants'],
   },
   {
     route: 'v1/hubs',

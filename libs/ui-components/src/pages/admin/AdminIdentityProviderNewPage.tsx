@@ -21,9 +21,11 @@ import {
 } from '@patternfly/react-core';
 
 import { useCreateIdentityProvider } from '../../api/v1/identity-provider';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 export const AdminIdentityProviderNewPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [title, setTitle] = useState('');
@@ -77,20 +79,20 @@ export const AdminIdentityProviderNewPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/admin/identity-providers')}>
-                Identity providers
+                {t('Identity providers')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Add provider</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Add provider')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Add identity provider (OIDC)
+            {t('Add identity provider (OIDC)')}
           </Title>
         </Stack>
       </PageSection>
 
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '520px' }} id="idp-create-form">
-          <FormGroup label="Internal name" isRequired fieldId="idp-name">
+          <FormGroup label={t('Internal name')} isRequired fieldId="idp-name">
             <TextInput
               id="idp-name"
               value={name}
@@ -101,7 +103,7 @@ export const AdminIdentityProviderNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Display title" isRequired fieldId="idp-title">
+          <FormGroup label={t('Display title')} isRequired fieldId="idp-title">
             <TextInput
               id="idp-title"
               value={title}
@@ -111,7 +113,7 @@ export const AdminIdentityProviderNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Issuer URL" isRequired fieldId="idp-issuer">
+          <FormGroup label={t('Issuer URL')} isRequired fieldId="idp-issuer">
             <TextInput
               id="idp-issuer"
               value={issuer}
@@ -121,7 +123,7 @@ export const AdminIdentityProviderNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Client ID" isRequired fieldId="idp-client-id">
+          <FormGroup label={t('Client ID')} isRequired fieldId="idp-client-id">
             <TextInput
               id="idp-client-id"
               value={clientId}
@@ -130,7 +132,7 @@ export const AdminIdentityProviderNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Client secret" isRequired fieldId="idp-client-secret">
+          <FormGroup label={t('Client secret')} isRequired fieldId="idp-client-secret">
             <TextInput
               id="idp-client-secret"
               type="password"
@@ -140,35 +142,35 @@ export const AdminIdentityProviderNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Authorization URL (optional override)" fieldId="idp-auth-url">
+          <FormGroup label={t('Authorization URL (optional override)')} fieldId="idp-auth-url">
             <TextInput
               id="idp-auth-url"
               value={authorizationUrl}
               onChange={(_e, v) => setAuthorizationUrl(v)}
-              placeholder="Derived from issuer if blank"
+              placeholder={t('Derived from issuer if blank')}
             />
           </FormGroup>
 
-          <FormGroup label="Token URL (optional override)" fieldId="idp-token-url">
+          <FormGroup label={t('Token URL (optional override)')} fieldId="idp-token-url">
             <TextInput
               id="idp-token-url"
               value={tokenUrl}
               onChange={(_e, v) => setTokenUrl(v)}
-              placeholder="Derived from issuer if blank"
+              placeholder={t('Derived from issuer if blank')}
             />
           </FormGroup>
 
           <FormGroup fieldId="idp-enabled">
             <Checkbox
               id="idp-enabled"
-              label="Enable immediately"
+              label={t('Enable immediately')}
               isChecked={enabled}
               onChange={(_e, v) => setEnabled(v)}
             />
           </FormGroup>
 
           {error && (
-            <Alert variant="danger" isInline title="Failed to add identity provider">
+            <Alert variant="danger" isInline title={t('Failed to add identity provider')}>
               {getErrorMessage(error)}
             </Alert>
           )}
@@ -181,14 +183,14 @@ export const AdminIdentityProviderNewPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !isValid}
             >
-              Add provider
+              {t('Add provider')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate('/admin/identity-providers')}
               isDisabled={isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

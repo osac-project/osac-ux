@@ -2,18 +2,13 @@ import { Flex, FlexItem, Label, Spinner } from '@patternfly/react-core';
 
 import { NetworkClassState } from '@osac/types';
 
+import { useTranslation } from '../../hooks/useTranslation';
+
 type LabelColor = 'green' | 'orange' | 'red' | 'blue' | 'grey';
 
 type LabelStyle = {
   color: LabelColor;
   text: string;
-};
-
-const STATE_MAP: Record<number, LabelStyle> = {
-  [NetworkClassState.UNSPECIFIED]: { color: 'grey', text: 'Unknown' },
-  [NetworkClassState.PENDING]: { color: 'blue', text: 'Pending' },
-  [NetworkClassState.READY]: { color: 'green', text: 'Ready' },
-  [NetworkClassState.FAILED]: { color: 'red', text: 'Failed' },
 };
 
 const PENDING_STATES = new Set<number>([NetworkClassState.PENDING]);
@@ -23,10 +18,19 @@ interface NetworkStatusLabelProps {
 }
 
 export const NetworkStatusLabel = ({ state }: NetworkStatusLabelProps) => {
+  const { t } = useTranslation();
+
+  const stateMap: Record<number, LabelStyle> = {
+    [NetworkClassState.UNSPECIFIED]: { color: 'grey', text: t('Unknown') },
+    [NetworkClassState.PENDING]: { color: 'blue', text: t('Pending') },
+    [NetworkClassState.READY]: { color: 'green', text: t('Ready') },
+    [NetworkClassState.FAILED]: { color: 'red', text: t('Failed') },
+  };
+
   const style =
     state != null
-      ? (STATE_MAP[state] ?? STATE_MAP[NetworkClassState.UNSPECIFIED])
-      : STATE_MAP[NetworkClassState.UNSPECIFIED];
+      ? (stateMap[state] ?? stateMap[NetworkClassState.UNSPECIFIED])
+      : stateMap[NetworkClassState.UNSPECIFIED];
   const { color, text } = style;
   const inTransition = state != null && PENDING_STATES.has(state);
 
@@ -34,7 +38,7 @@ export const NetworkStatusLabel = ({ state }: NetworkStatusLabelProps) => {
     <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
       {inTransition && (
         <FlexItem>
-          <Spinner size="sm" aria-label={`${text} in progress`} />
+          <Spinner size="sm" aria-label={t('{{text}} in progress', { text })} />
         </FlexItem>
       )}
       <FlexItem>

@@ -10,19 +10,28 @@ import { AdminDashboardPage } from '@osac/ui-components/pages/admin/AdminDashboa
 import { AdminIdentityProviderEditPage } from '@osac/ui-components/pages/admin/AdminIdentityProviderEditPage';
 import { AdminIdentityProviderNewPage } from '@osac/ui-components/pages/admin/AdminIdentityProviderNewPage';
 import { AdminIdentityProvidersPage } from '@osac/ui-components/pages/admin/AdminIdentityProvidersPage';
+import { AdminMaaSEnvironmentPage } from '@osac/ui-components/pages/admin/AdminMaaSEnvironmentPage';
+import { AdminMaaSSubscriptionFormPage } from '@osac/ui-components/pages/admin/AdminMaaSSubscriptionFormPage';
+import { AdminMaaSSubscriptionsPage } from '@osac/ui-components/pages/admin/AdminMaaSSubscriptionsPage';
 import { AdminRoleBindingAssignPage } from '@osac/ui-components/pages/admin/AdminRoleBindingAssignPage';
 import { AdminRoleBindingEditPage } from '@osac/ui-components/pages/admin/AdminRoleBindingEditPage';
 import { AdminRoleBindingsPage } from '@osac/ui-components/pages/admin/AdminRoleBindingsPage';
+import { AdminUsagePage } from '@osac/ui-components/pages/admin/AdminUsagePage';
 import { AdminUserNewPage } from '@osac/ui-components/pages/admin/AdminUserNewPage';
 import { AdminUsersPage } from '@osac/ui-components/pages/admin/AdminUsersPage';
 import { ApiDiffPage } from '@osac/ui-components/pages/dev/ApiDiffPage';
 import { ProviderAdminDashboardPage } from '@osac/ui-components/pages/provider/ProviderAdminDashboardPage';
 import { ProviderAiSetupPage } from '@osac/ui-components/pages/provider/ProviderAiSetupPage';
-import { ProviderCatalogItemEditPage } from '@osac/ui-components/pages/provider/ProviderCatalogItemEditPage';
-import { ProviderCatalogItemNewPage } from '@osac/ui-components/pages/provider/ProviderCatalogItemNewPage';
-import { ProviderCatalogStudioPage } from '@osac/ui-components/pages/provider/ProviderCatalogStudioPage';
+import { ProviderAuditLogPage } from '@osac/ui-components/pages/provider/ProviderAuditLogPage';
+import { ProviderBillingDashboardPage } from '@osac/ui-components/pages/provider/ProviderBillingDashboardPage';
+import { ProviderBillingPlanFormPage } from '@osac/ui-components/pages/provider/ProviderBillingPlanFormPage';
+import { ProviderBillingPlansPage } from '@osac/ui-components/pages/provider/ProviderBillingPlansPage';
+import { ProviderBmTemplateFormPage } from '@osac/ui-components/pages/provider/ProviderBmTemplateFormPage';
+import { ProviderClusterTemplateFormPage } from '@osac/ui-components/pages/provider/ProviderClusterTemplateFormPage';
+import { ProviderCompliancePostureDashboardPage } from '@osac/ui-components/pages/provider/ProviderCompliancePostureDashboardPage';
 import { ProviderHostTypeNewPage } from '@osac/ui-components/pages/provider/ProviderHostTypeNewPage';
 import { ProviderHostTypesPage } from '@osac/ui-components/pages/provider/ProviderHostTypesPage';
+import { ProviderInfraTopologyPage } from '@osac/ui-components/pages/provider/ProviderInfraTopologyPage';
 import { ProviderInstanceTypeNewPage } from '@osac/ui-components/pages/provider/ProviderInstanceTypeNewPage';
 import { ProviderInstanceTypesPage } from '@osac/ui-components/pages/provider/ProviderInstanceTypesPage';
 import { ProviderIPPoolDetailPage } from '@osac/ui-components/pages/provider/ProviderIPPoolDetailPage';
@@ -35,9 +44,11 @@ import { ProviderStorageBackendsPage } from '@osac/ui-components/pages/provider/
 import { ProviderStorageTierFormPage } from '@osac/ui-components/pages/provider/ProviderStorageTierFormPage';
 import { ProviderStorageTiersPage } from '@osac/ui-components/pages/provider/ProviderStorageTiersPage';
 import { ProviderTemplatesPage } from '@osac/ui-components/pages/provider/ProviderTemplatesPage';
+import { ProviderTenantBillingPage } from '@osac/ui-components/pages/provider/ProviderTenantBillingPage';
 import { ProviderTenantEditPage } from '@osac/ui-components/pages/provider/ProviderTenantEditPage';
 import { ProviderTenantNewPage } from '@osac/ui-components/pages/provider/ProviderTenantNewPage';
 import { ProviderTenantOrgsPage } from '@osac/ui-components/pages/provider/ProviderTenantOrgsPage';
+import { ProviderUsageReportsPage } from '@osac/ui-components/pages/provider/ProviderUsageReportsPage';
 import { ProviderVmTemplateFormPage } from '@osac/ui-components/pages/provider/ProviderVmTemplateFormPage';
 import { BareMetalCreatePage } from '@osac/ui-components/pages/tenant/BareMetalCreatePage';
 import { BareMetalListPage } from '@osac/ui-components/pages/tenant/BareMetalListPage';
@@ -60,7 +71,9 @@ import { ProjectDetailPage } from '@osac/ui-components/pages/tenant/ProjectDetai
 import { ProjectsListPage } from '@osac/ui-components/pages/tenant/ProjectsListPage';
 import { SnapshotsPage } from '@osac/ui-components/pages/tenant/SnapshotsPage';
 import { StorageTiersPage } from '@osac/ui-components/pages/tenant/StorageTiersPage';
+import { TenantCombineTemplatePage } from '@osac/ui-components/pages/tenant/TenantCombineTemplatePage';
 import { TenantPublicIPsPage } from '@osac/ui-components/pages/tenant/TenantPublicIPsPage';
+import { UsagePage } from '@osac/ui-components/pages/tenant/UsagePage';
 import { VmCreatePage } from '@osac/ui-components/pages/tenant/VmCreatePage';
 import { VmDetailsPage } from '@osac/ui-components/pages/tenant/VmDetailsPage';
 import { VmListPage } from '@osac/ui-components/pages/tenant/VmListPage';
@@ -132,10 +145,26 @@ export const AppShell = ({ logout }: { logout: () => Promise<void> }) => {
           }
         />
         <Route
+          path="/usage"
+          element={
+            <RoleRoute allow={['tenantUser', 'tenantAdmin']} fallback={defaultRoute}>
+              <UsagePage />
+            </RoleRoute>
+          }
+        />
+        <Route
           path="/admin/catalog"
           element={
             <RoleRoute allow={['tenantAdmin']} fallback={defaultRoute}>
               <CatalogPage isAdminMode />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/admin/catalog/combine"
+          element={
+            <RoleRoute allow={['tenantAdmin']} fallback={defaultRoute}>
+              <TenantCombineTemplatePage />
             </RoleRoute>
           }
         />
@@ -277,6 +306,14 @@ export const AppShell = ({ logout }: { logout: () => Promise<void> }) => {
           }
         />
         <Route
+          path="/admin/usage"
+          element={
+            <RoleRoute allow={['tenantAdmin']} fallback={defaultRoute}>
+              <AdminUsagePage />
+            </RoleRoute>
+          }
+        />
+        <Route
           path="/admin/users"
           element={
             <RoleRoute allow={['tenantAdmin']} fallback={defaultRoute}>
@@ -313,6 +350,38 @@ export const AppShell = ({ logout }: { logout: () => Promise<void> }) => {
           element={
             <RoleRoute allow={['tenantAdmin']} fallback={defaultRoute}>
               <AdminIdentityProviderEditPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/admin/ai-environment"
+          element={
+            <RoleRoute allow={['tenantAdmin']} fallback={defaultRoute}>
+              <AdminMaaSEnvironmentPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/admin/ai-subscriptions"
+          element={
+            <RoleRoute allow={['tenantAdmin']} fallback={defaultRoute}>
+              <AdminMaaSSubscriptionsPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/admin/ai-subscriptions/new"
+          element={
+            <RoleRoute allow={['tenantAdmin']} fallback={defaultRoute}>
+              <AdminMaaSSubscriptionFormPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/admin/ai-subscriptions/:id/edit"
+          element={
+            <RoleRoute allow={['tenantAdmin']} fallback={defaultRoute}>
+              <AdminMaaSSubscriptionFormPage />
             </RoleRoute>
           }
         />
@@ -374,42 +443,66 @@ export const AppShell = ({ logout }: { logout: () => Promise<void> }) => {
           }
         />
         <Route
-          path="/provider/catalog"
+          path="/provider/compliance"
           element={
             <RoleRoute allow={['providerAdmin']} fallback={defaultRoute}>
-              <CatalogPage isProviderGlobal />
+              <ProviderCompliancePostureDashboardPage />
             </RoleRoute>
           }
         />
         <Route
-          path="/provider/catalog/new"
+          path="/provider/audit-log"
           element={
             <RoleRoute allow={['providerAdmin']} fallback={defaultRoute}>
-              <ProviderCatalogItemNewPage />
+              <ProviderAuditLogPage />
             </RoleRoute>
           }
         />
         <Route
-          path="/provider/catalog/:id/edit"
+          path="/provider/billing"
           element={
             <RoleRoute allow={['providerAdmin']} fallback={defaultRoute}>
-              <ProviderCatalogItemEditPage />
+              <ProviderBillingDashboardPage />
             </RoleRoute>
           }
         />
         <Route
-          path="/provider/catalog-studio"
+          path="/provider/billing/plans"
           element={
             <RoleRoute allow={['providerAdmin']} fallback={defaultRoute}>
-              <ProviderCatalogStudioPage />
+              <ProviderBillingPlansPage />
             </RoleRoute>
           }
         />
         <Route
-          path="/provider/catalog-studio/new"
+          path="/provider/billing/plans/new"
           element={
             <RoleRoute allow={['providerAdmin']} fallback={defaultRoute}>
-              <ProviderCatalogItemNewPage />
+              <ProviderBillingPlanFormPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/provider/billing/plans/:id/edit"
+          element={
+            <RoleRoute allow={['providerAdmin']} fallback={defaultRoute}>
+              <ProviderBillingPlanFormPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/provider/billing/tenants"
+          element={
+            <RoleRoute allow={['providerAdmin']} fallback={defaultRoute}>
+              <ProviderTenantBillingPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/provider/billing/usage"
+          element={
+            <RoleRoute allow={['providerAdmin']} fallback={defaultRoute}>
+              <ProviderUsageReportsPage />
             </RoleRoute>
           }
         />
@@ -422,7 +515,7 @@ export const AppShell = ({ logout }: { logout: () => Promise<void> }) => {
           }
         />
         <Route
-          path="/provider/templates/vm/new"
+          path="/provider/templates/vm/:id/edit"
           element={
             <RoleRoute allow={['providerAdmin']} fallback={defaultRoute}>
               <ProviderVmTemplateFormPage />
@@ -430,10 +523,18 @@ export const AppShell = ({ logout }: { logout: () => Promise<void> }) => {
           }
         />
         <Route
-          path="/provider/templates/vm/:id/edit"
+          path="/provider/templates/cluster/:id/edit"
           element={
             <RoleRoute allow={['providerAdmin']} fallback={defaultRoute}>
-              <ProviderVmTemplateFormPage />
+              <ProviderClusterTemplateFormPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/provider/templates/bm/:id/edit"
+          element={
+            <RoleRoute allow={['providerAdmin']} fallback={defaultRoute}>
+              <ProviderBmTemplateFormPage />
             </RoleRoute>
           }
         />
@@ -482,6 +583,14 @@ export const AppShell = ({ logout }: { logout: () => Promise<void> }) => {
           element={
             <RoleRoute allow={['providerAdmin']} fallback={defaultRoute}>
               <ProviderIPPoolDetailPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/provider/infra-topology"
+          element={
+            <RoleRoute allow={['providerAdmin']} fallback={defaultRoute}>
+              <ProviderInfraTopologyPage />
             </RoleRoute>
           }
         />

@@ -29,6 +29,7 @@ import { ProjectState } from '@osac/types';
 import { type Project, useDeleteProject, useProjects } from '../../api/v1/project';
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const ENV_OPTIONS = ['production', 'staging', 'development'] as const;
 type EnvOption = (typeof ENV_OPTIONS)[number];
@@ -91,6 +92,7 @@ const ProjectStateBadge = ({ state }: { state?: ProjectState }) => {
 };
 
 export const ProjectsListPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: projects = [], isLoading, error } = useProjects();
   const { mutate: deleteProject } = useDeleteProject();
@@ -147,20 +149,25 @@ export const ProjectsListPage = () => {
   };
 
   return (
-    <ListPage title="Projects" description="Organize and isolate your resources using projects.">
+    <ListPage
+      title={t('Projects')}
+      description={t('Organize and isolate your resources using projects.')}
+    >
       {projectToDelete && (
         <Alert
           variant="warning"
           isInline
-          title={`Delete project "${projectToDelete.spec?.title ?? projectToDelete.id}"?`}
+          title={t('Delete project "{{title}}"?', {
+            title: projectToDelete.spec?.title ?? projectToDelete.id,
+          })}
           style={{ marginBottom: '1rem' }}
           actionLinks={
             <>
               <Button variant="danger" onClick={() => handleDelete(projectToDelete)}>
-                Delete
+                {t('Delete')}
               </Button>
               <Button variant="link" onClick={() => setProjectToDelete(null)}>
-                Cancel
+                {t('Cancel')}
               </Button>
             </>
           }
@@ -171,8 +178,8 @@ export const ProjectsListPage = () => {
           <ToolbarContent>
             <ToolbarItem variant="search-filter">
               <SearchInput
-                aria-label="Search projects"
-                placeholder="Search by name, title, or description"
+                aria-label={t('Search projects')}
+                placeholder={t('Search by name, title, or description')}
                 value={search}
                 onChange={(_e, v) => setSearch(v)}
                 onClear={() => setSearch('')}
@@ -189,7 +196,7 @@ export const ProjectsListPage = () => {
                   }
                 }}
                 deleteChipGroup={() => setEnvFilters([])}
-                categoryName="Environment"
+                categoryName={t('Environment')}
               >
                 <Select
                   isOpen={envOpen}
@@ -202,7 +209,7 @@ export const ProjectsListPage = () => {
                       isExpanded={envOpen}
                       badge={envFilters.length || undefined}
                     >
-                      Environment
+                      {t('Environment')}
                     </MenuToggle>
                   )}
                 >
@@ -230,7 +237,7 @@ export const ProjectsListPage = () => {
                   }
                 }}
                 deleteChipGroup={() => setStateFilters([])}
-                categoryName="State"
+                categoryName={t('State')}
               >
                 <Select
                   isOpen={stateOpen}
@@ -243,7 +250,7 @@ export const ProjectsListPage = () => {
                       isExpanded={stateOpen}
                       badge={stateFilters.length || undefined}
                     >
-                      State
+                      {t('State')}
                     </MenuToggle>
                   )}
                 >
@@ -265,7 +272,7 @@ export const ProjectsListPage = () => {
 
             <ToolbarItem align={{ default: 'alignEnd' }}>
               <Button variant="primary" onClick={() => navigate('/projects/new')}>
-                New project
+                {t('New project')}
               </Button>
             </ToolbarItem>
           </ToolbarContent>
@@ -276,26 +283,26 @@ export const ProjectsListPage = () => {
             alignItems={{ default: 'alignItemsCenter' }}
             style={{ gap: '0.5rem', padding: '1rem 0' }}
           >
-            <FlexItem>No projects match the current filters.</FlexItem>
+            <FlexItem>{t('No projects match the current filters.')}</FlexItem>
             <FlexItem>
               <Button variant="link" isInline onClick={clearAll}>
-                Clear filters
+                {t('Clear filters')}
               </Button>
             </FlexItem>
           </Flex>
         ) : projects.length === 0 ? (
-          <Alert variant="info" isInline title="No projects yet">
-            Create your first project to start organizing resources.
+          <Alert variant="info" isInline title={t('No projects yet')}>
+            {t('Create your first project to start organizing resources.')}
           </Alert>
         ) : (
-          <Table aria-label="Projects" variant="compact">
+          <Table aria-label={t('Projects')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Environment</Th>
-                <Th>State</Th>
-                <Th>Description</Th>
-                <Th>Created</Th>
+                <Th>{t('Name')}</Th>
+                <Th>{t('Environment')}</Th>
+                <Th>{t('State')}</Th>
+                <Th>{t('Description')}</Th>
+                <Th>{t('Created')}</Th>
                 <Td />
               </Tr>
             </Thead>
@@ -311,7 +318,7 @@ export const ProjectsListPage = () => {
 
                 return (
                   <Tr key={project.id}>
-                    <Td dataLabel="Name">
+                    <Td dataLabel={t('Name')}>
                       <Button
                         variant="link"
                         isInline
@@ -320,19 +327,19 @@ export const ProjectsListPage = () => {
                         {title}
                       </Button>
                     </Td>
-                    <Td dataLabel="Environment">
+                    <Td dataLabel={t('Environment')}>
                       <ProjectEnvBadge env={env} />
                     </Td>
-                    <Td dataLabel="State">
+                    <Td dataLabel={t('State')}>
                       <ProjectStateBadge state={project.status?.state} />
                     </Td>
-                    <Td dataLabel="Description">{project.spec?.description || '—'}</Td>
-                    <Td dataLabel="Created">{created}</Td>
+                    <Td dataLabel={t('Description')}>{project.spec?.description || '—'}</Td>
+                    <Td dataLabel={t('Created')}>{created}</Td>
                     <Td isActionCell>
                       <ActionsColumn
                         items={[
                           {
-                            title: 'Delete',
+                            title: t('Delete'),
                             onClick: () => setProjectToDelete(project),
                             isDanger: true,
                           },

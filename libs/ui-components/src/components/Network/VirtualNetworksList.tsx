@@ -8,11 +8,13 @@ import type { VirtualNetwork } from '@osac/types';
 import { NetworkStatusLabel } from './NetworkStatusLabel';
 import { useDeleteVirtualNetwork, useVirtualNetworks } from '../../api/v1/networking';
 import { resourceDisplayName } from '../../api/v1/networking';
+import { useTranslation } from '../../hooks/useTranslation';
 import ListPageBody from '../Page/ListPageBody';
 import { DeleteConfirmModal } from '../shared/DeleteConfirmModal';
 import { SubtleContent } from '../SubtleContent/SubtleContent';
 
 export const VirtualNetworksList = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: vnets = [], isLoading, error } = useVirtualNetworks();
   const deleteVNet = useDeleteVirtualNetwork();
@@ -23,23 +25,23 @@ export const VirtualNetworksList = () => {
       <ListPageBody isLoading={isLoading} error={error}>
         {vnets.length === 0 ? (
           <SubtleContent component="p">
-            No virtual networks yet. Create one to get started.
+            {t('No virtual networks yet. Create one to get started.')}
           </SubtleContent>
         ) : (
-          <Table aria-label="Virtual networks" variant="compact" borders>
+          <Table aria-label={t('Virtual networks')} variant="compact" borders>
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Network class</Th>
-                <Th>IPv4 CIDR</Th>
-                <Th>State</Th>
-                <Th aria-label="Actions" />
+                <Th>{t('Name')}</Th>
+                <Th>{t('Network class')}</Th>
+                <Th>{t('IPv4 CIDR')}</Th>
+                <Th>{t('State')}</Th>
+                <Th aria-label={t('Actions')} />
               </Tr>
             </Thead>
             <Tbody>
               {vnets.map((vnet) => (
                 <Tr key={vnet.id}>
-                  <Td dataLabel="Name">
+                  <Td dataLabel={t('Name')}>
                     <Button
                       variant="link"
                       isInline
@@ -48,16 +50,16 @@ export const VirtualNetworksList = () => {
                       {resourceDisplayName(vnet.metadata, vnet.id)}
                     </Button>
                   </Td>
-                  <Td dataLabel="Network class">{vnet.spec?.networkClass || '—'}</Td>
-                  <Td dataLabel="IPv4 CIDR">{vnet.spec?.ipv4Cidr || '—'}</Td>
-                  <Td dataLabel="State">
+                  <Td dataLabel={t('Network class')}>{vnet.spec?.networkClass || '—'}</Td>
+                  <Td dataLabel={t('IPv4 CIDR')}>{vnet.spec?.ipv4Cidr || '—'}</Td>
+                  <Td dataLabel={t('State')}>
                     <NetworkStatusLabel state={vnet.status?.state} />
                   </Td>
-                  <Td dataLabel="Actions" isActionCell>
+                  <Td dataLabel={t('Actions')} isActionCell>
                     <ActionsColumn
                       items={[
                         {
-                          title: 'Delete',
+                          title: t('Delete'),
                           onClick: () => setDeleteTarget(vnet),
                         },
                       ]}
@@ -73,7 +75,7 @@ export const VirtualNetworksList = () => {
       {deleteTarget && (
         <DeleteConfirmModal
           resourceName={resourceDisplayName(deleteTarget.metadata, deleteTarget.id)}
-          resourceKind="virtual network"
+          resourceKind={t('virtual network')}
           error={deleteVNet.error}
           onConfirm={async () => {
             await deleteVNet.mutateAsync(deleteTarget.id);

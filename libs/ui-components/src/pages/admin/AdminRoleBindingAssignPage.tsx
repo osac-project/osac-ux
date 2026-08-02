@@ -25,9 +25,11 @@ import {
 } from '@patternfly/react-core';
 
 import { useCreateRoleBinding, useRoles } from '../../api/v1/role-binding';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 export const AdminRoleBindingAssignPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: roles = [] } = useRoles();
 
@@ -66,20 +68,20 @@ export const AdminRoleBindingAssignPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/admin/role-bindings')}>
-                Role management
+                {t('Role management')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Assign role</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Assign role')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Assign role to users
+            {t('Assign role to users')}
           </Title>
         </Stack>
       </PageSection>
 
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '480px' }} id="assign-role-form">
-          <FormGroup label="Role" isRequired fieldId="role-select">
+          <FormGroup label={t('Role')} isRequired fieldId="role-select">
             <Select
               isOpen={roleOpen}
               onSelect={(_e, val) => {
@@ -95,7 +97,7 @@ export const AdminRoleBindingAssignPage = () => {
                   isExpanded={roleOpen}
                   style={{ width: '100%' }}
                 >
-                  {selectedRole?.spec?.title ?? 'Select role'}
+                  {selectedRole?.spec?.title ?? t('Select role')}
                 </MenuToggle>
               )}
             >
@@ -116,10 +118,12 @@ export const AdminRoleBindingAssignPage = () => {
           </FormGroup>
 
           <FormGroup
-            label="Users"
+            label={t('Users')}
             isRequired
             fieldId="role-users"
-            helperText="Enter a user ID or email and press Enter to add. Multiple users can be added."
+            helperText={t(
+              'Enter a user ID or email and press Enter to add. Multiple users can be added.',
+            )}
           >
             {users.length > 0 && (
               <LabelGroup style={{ marginBottom: '0.5rem' }}>
@@ -145,12 +149,12 @@ export const AdminRoleBindingAssignPage = () => {
                 }
               }}
               onBlur={addUser}
-              placeholder="user ID or email (press Enter to add)"
+              placeholder={t('user ID or email (press Enter to add)')}
             />
           </FormGroup>
 
           {error && (
-            <Alert variant="danger" isInline title="Failed to assign role">
+            <Alert variant="danger" isInline title={t('Failed to assign role')}>
               {getErrorMessage(error)}
             </Alert>
           )}
@@ -163,14 +167,14 @@ export const AdminRoleBindingAssignPage = () => {
               isLoading={isPending}
               isDisabled={isPending || !isValid}
             >
-              Assign
+              {t('Assign')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate('/admin/role-bindings')}
               isDisabled={isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

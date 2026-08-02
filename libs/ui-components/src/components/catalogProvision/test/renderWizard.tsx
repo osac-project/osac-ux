@@ -60,7 +60,11 @@ export const renderWizardElement = async (
 
   const view = render(ui, {
     wrapper: ({ children }) => (
-      <WizardTestProvidersWithI18n i18n={i18n} apiFixtures={options.apiFixtures}>
+      <WizardTestProvidersWithI18n
+        i18n={i18n}
+        apiFixtures={options.apiFixtures}
+        fetch={options.fetch}
+      >
         {children}
       </WizardTestProvidersWithI18n>
     ),

@@ -22,25 +22,36 @@ import {
   ToolbarFilter,
   ToolbarGroup,
   ToolbarItem,
+  Tooltip,
 } from '@patternfly/react-core';
 import { ActionsColumn, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 
 import type { NetworkClass } from '@osac/types';
-import { useDeleteNetworkClass, useNetworkClasses } from '@osac/ui-components/api/v1/networking';
+import { networkIsolationEnforced } from '@osac/ui-components/api/v1/compliance';
+import {
+  useDeleteNetworkClass,
+  useNetworkClasses,
+  usePatchNetworkClass,
+} from '@osac/ui-components/api/v1/networking';
+import { EditPriceModal } from '@osac/ui-components/components/catalog/EditPriceModal';
 import { NetworkStatusLabel } from '@osac/ui-components/components/Network/NetworkStatusLabel';
 import ListPage from '@osac/ui-components/components/Page/ListPage';
 import ListPageBody from '@osac/ui-components/components/Page/ListPageBody';
 import { DeleteConfirmModal } from '@osac/ui-components/components/shared/DeleteConfirmModal';
+import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 type CapabilityFilter = 'IPv4' | 'IPv6' | 'Dual-stack';
 type StatusFilter = string;
 
 export const ProviderNetworkClassesPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: classes = [], isLoading, error } = useNetworkClasses();
   const deleteNC = useDeleteNetworkClass();
+  const patchNC = usePatchNetworkClass();
 
   const [pendingDelete, setPendingDelete] = useState<NetworkClass | null>(null);
+  const [priceTarget, setPriceTarget] = useState<NetworkClass | null>(null);
 
   // Search & filter state
   const [search, setSearch] = useState('');
@@ -107,16 +118,18 @@ export const ProviderNetworkClassesPage = () => {
   return (
     <>
       <ListPage
-        title="Network classes"
-        description="Network classes define the underlying network implementation strategies available to tenants. Each class determines available capabilities such as IPv4, IPv6, or dual-stack addressing."
+        title={t('Network classes')}
+        description={t(
+          'Network classes define the underlying network implementation strategies available to tenants. Each class determines available capabilities such as IPv4, IPv6, or dual-stack addressing.',
+        )}
       >
         <ListPageBody isLoading={isLoading} error={error}>
           <Toolbar clearAllFilters={clearAll} collapseListedFiltersBreakpoint="xl">
             <ToolbarContent>
               <ToolbarItem variant="search-filter">
                 <SearchInput
-                  aria-label="Search network classes"
-                  placeholder="Search by name or title"
+                  aria-label={t('Search network classes')}
+                  placeholder={t('Search by name or title')}
                   value={search}
                   onChange={(_e, v) => setSearch(v)}
                   onClear={() => setSearch('')}
@@ -128,7 +141,7 @@ export const ProviderNetworkClassesPage = () => {
                   labels={capFilters}
                   deleteLabel={(_g, v) => toggleCap(v as CapabilityFilter)}
                   deleteLabelGroup={() => setCapFilters([])}
-                  categoryName="Capability"
+                  categoryName={t('Capability')}
                 >
                   <Select
                     isOpen={capOpen}
@@ -144,7 +157,7 @@ export const ProviderNetworkClassesPage = () => {
                         isExpanded={capOpen}
                         badge={capFilters.length || undefined}
                       >
-                        Capability
+                        {t('Capability')}
                       </MenuToggle>
                     )}
                   >
@@ -167,7 +180,7 @@ export const ProviderNetworkClassesPage = () => {
                   labels={statusFilters}
                   deleteLabel={(_g, v) => toggleStatus(v as string)}
                   deleteLabelGroup={() => setStatusFilters([])}
-                  categoryName="Status"
+                  categoryName={t('Status')}
                 >
                   <Select
                     isOpen={statusOpen}
@@ -183,7 +196,7 @@ export const ProviderNetworkClassesPage = () => {
                         isExpanded={statusOpen}
                         badge={statusFilters.length || undefined}
                       >
-                        Status
+                        {t('Status')}
                       </MenuToggle>
                     )}
                   >
@@ -208,14 +221,14 @@ export const ProviderNetworkClassesPage = () => {
                     size="sm"
                     onClick={() => setDefaultOnly((v) => !v)}
                   >
-                    Default only
+                    {t('Default only')}
                   </Button>
                 </ToolbarItem>
               </ToolbarGroup>
 
               <ToolbarItem align={{ default: 'alignEnd' }}>
                 <Button variant="primary" onClick={() => navigate('/provider/network-classes/new')}>
-                  Create network class
+                  {t('Create network class')}
                 </Button>
               </ToolbarItem>
             </ToolbarContent>
@@ -226,38 +239,41 @@ export const ProviderNetworkClassesPage = () => {
               alignItems={{ default: 'alignItemsCenter' }}
               style={{ gap: '0.5rem', padding: '1rem 0' }}
             >
-              <FlexItem>No network classes match the current filters.</FlexItem>
+              <FlexItem>{t('No network classes match the current filters.')}</FlexItem>
               <FlexItem>
                 <Button variant="link" isInline onClick={clearAll}>
-                  Clear filters
+                  {t('Clear filters')}
                 </Button>
               </FlexItem>
             </Flex>
           ) : classes.length === 0 ? (
-            <Alert variant="info" isInline title="No network classes">
-              No network classes have been defined yet. Create one to allow tenants to provision
-              virtual networks.
+            <Alert variant="info" isInline title={t('No network classes')}>
+              {t(
+                'No network classes have been defined yet. Create one to allow tenants to provision virtual networks.',
+              )}
             </Alert>
           ) : (
-            <Table aria-label="Network classes" variant="compact">
+            <Table aria-label={t('Network classes')} variant="compact">
               <Thead>
                 <Tr>
-                  <Th>Identifier</Th>
-                  <Th>Title</Th>
-                  <Th>Capabilities</Th>
-                  <Th>Status</Th>
-                  <Th>Default</Th>
-                  <Th aria-label="Actions" />
+                  <Th>{t('Identifier')}</Th>
+                  <Th>{t('Title')}</Th>
+                  <Th>{t('Capabilities')}</Th>
+                  <Th>{t('Status')}</Th>
+                  <Th>{t('Default')}</Th>
+                  <Th>{t('Isolation')}</Th>
+                  <Th>{t('Price / attached-hour')}</Th>
+                  <Th aria-label={t('Actions')} />
                 </Tr>
               </Thead>
               <Tbody>
                 {filtered.map((nc: NetworkClass) => (
                   <Tr key={nc.id}>
-                    <Td dataLabel="Identifier">
+                    <Td dataLabel={t('Identifier')}>
                       <strong>{nc.metadata?.name ?? nc.id}</strong>
                     </Td>
-                    <Td dataLabel="Title">{nc.title || '—'}</Td>
-                    <Td dataLabel="Capabilities">
+                    <Td dataLabel={t('Title')}>{nc.title || '—'}</Td>
+                    <Td dataLabel={t('Capabilities')}>
                       {nc.capabilities ? (
                         <LabelGroup>
                           {nc.capabilities.supportsIpv4 && (
@@ -272,7 +288,7 @@ export const ProviderNetworkClassesPage = () => {
                           )}
                           {nc.capabilities.supportsDualStack && (
                             <Label isCompact color="teal">
-                              Dual-stack
+                              {t('Dual-stack')}
                             </Label>
                           )}
                         </LabelGroup>
@@ -280,22 +296,47 @@ export const ProviderNetworkClassesPage = () => {
                         '—'
                       )}
                     </Td>
-                    <Td dataLabel="Status">
+                    <Td dataLabel={t('Status')}>
                       <NetworkStatusLabel state={nc.status?.state} />
                     </Td>
-                    <Td dataLabel="Default">
+                    <Td dataLabel={t('Default')}>
                       {nc.isDefault ? (
                         <Label isCompact color="yellow">
-                          Default
+                          {t('Default')}
                         </Label>
                       ) : (
                         '—'
                       )}
                     </Td>
-                    <Td dataLabel="Actions" isActionCell>
+                    <Td dataLabel={t('Isolation')}>
+                      <Tooltip
+                        content={t(
+                          'Network isolation enforcement via per-tenant VRFs (Netris, OSAC-3028). Isolated classes prevent cross-tenant L2/L3 reachability.',
+                        )}
+                      >
+                        <Label
+                          isCompact
+                          color={networkIsolationEnforced(nc) ? 'green' : 'grey'}
+                          variant={networkIsolationEnforced(nc) ? 'filled' : 'outline'}
+                        >
+                          {networkIsolationEnforced(nc) ? t('Isolated (VRF)') : t('Shared')}
+                        </Label>
+                      </Tooltip>
+                    </Td>
+                    <Td dataLabel={t('Price / attached-hour')}>
+                      {nc.metadata?.labels?.['price_per_hour']
+                        ? `$${nc.metadata.labels['price_per_hour']}`
+                        : '—'}
+                    </Td>
+                    <Td dataLabel={t('Actions')} isActionCell>
                       <ActionsColumn
                         items={[
-                          { title: 'Delete', onClick: () => setPendingDelete(nc), isDanger: true },
+                          { title: t('Set price'), onClick: () => setPriceTarget(nc) },
+                          {
+                            title: t('Delete'),
+                            onClick: () => setPendingDelete(nc),
+                            isDanger: true,
+                          },
                         ]}
                       />
                     </Td>
@@ -307,10 +348,32 @@ export const ProviderNetworkClassesPage = () => {
         </ListPageBody>
       </ListPage>
 
+      {priceTarget && (
+        <EditPriceModal
+          resourceName={priceTarget.title || priceTarget.metadata?.name || priceTarget.id}
+          currentPrice={priceTarget.metadata?.labels?.['price_per_hour'] ?? ''}
+          label={t('Price per attached-hour (USD)')}
+          onClose={() => setPriceTarget(null)}
+          error={patchNC.error}
+          onSave={async (price) => {
+            await patchNC.mutateAsync({
+              id: priceTarget.id,
+              patch: {
+                metadata: {
+                  ...priceTarget.metadata,
+                  labels: { ...(priceTarget.metadata?.labels ?? {}), price_per_hour: price },
+                },
+              },
+            });
+            setPriceTarget(null);
+          }}
+        />
+      )}
+
       {pendingDelete && (
         <DeleteConfirmModal
           resourceName={pendingDelete.title || pendingDelete.metadata?.name || pendingDelete.id}
-          resourceKind="network class"
+          resourceKind={t('network class')}
           onClose={() => setPendingDelete(null)}
           onConfirm={async () => {
             await deleteNC.mutateAsync(pendingDelete.id);

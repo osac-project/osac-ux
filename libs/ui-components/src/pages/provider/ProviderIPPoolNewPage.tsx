@@ -28,6 +28,7 @@ import {
 
 import { useCreateExternalIPPool } from '../../api/v1/ip-management';
 import { useTenants } from '../../api/v1/tenant';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 const IP_FAMILIES = [
@@ -40,6 +41,7 @@ const CIDR_RE = /^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$|^[0-9a-fA-F:]+\/\d{1,3}$/;
 const BACK = '/provider/ip-pools';
 
 export const ProviderIPPoolNewPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: tenants = [] } = useTenants();
   const createExternal = useCreateExternalIPPool();
@@ -55,7 +57,8 @@ export const ProviderIPPoolNewPage = () => {
   const cidrInvalid = cidr.trim().length > 0 && !CIDR_RE.test(cidr.trim());
   const isValid = name.trim().length > 0 && !cidrInvalid;
 
-  const selectedTenantName = tenants.find((t) => t.id === tenantId)?.metadata?.name ?? tenantId;
+  const selectedTenantName =
+    tenants.find((tenant) => tenant.id === tenantId)?.metadata?.name ?? tenantId;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,13 +87,13 @@ export const ProviderIPPoolNewPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate(BACK)}>
-                IP Pools
+                {t('IP Pools')}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Create external IP pool</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Create external IP pool')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Create external IP pool
+            {t('Create external IP pool')}
           </Title>
         </Stack>
       </PageSection>
@@ -98,12 +101,12 @@ export const ProviderIPPoolNewPage = () => {
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '560px' }} id="ip-pool-form">
           {createExternal.error && (
-            <Alert variant="danger" isInline title="Failed to create IP pool">
+            <Alert variant="danger" isInline title={t('Failed to create IP pool')}>
               {getErrorMessage(createExternal.error)}
             </Alert>
           )}
 
-          <FormGroup label="Pool name" isRequired fieldId="pool-name">
+          <FormGroup label={t('Pool name')} isRequired fieldId="pool-name">
             <TextInput
               id="pool-name"
               value={name}
@@ -113,7 +116,7 @@ export const ProviderIPPoolNewPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="IP family" isRequired fieldId="pool-ip-family">
+          <FormGroup label={t('IP family')} isRequired fieldId="pool-ip-family">
             <Select
               isOpen={familyOpen}
               onSelect={(_e, val) => {
@@ -128,7 +131,7 @@ export const ProviderIPPoolNewPage = () => {
                   onClick={() => setFamilyOpen(!familyOpen)}
                   isExpanded={familyOpen}
                 >
-                  {IP_FAMILIES.find((f) => f.value === ipFamily)?.label ?? 'Select'}
+                  {IP_FAMILIES.find((f) => f.value === ipFamily)?.label ?? t('Select')}
                 </MenuToggle>
               )}
             >
@@ -145,9 +148,9 @@ export const ProviderIPPoolNewPage = () => {
           <FormGroup
             label={
               <>
-                CIDR block{' '}
+                {t('CIDR block')}{' '}
                 <Label isCompact color="gold" variant="outline">
-                  predicted
+                  {t('predicted')}
                 </Label>
               </>
             }
@@ -164,8 +167,8 @@ export const ProviderIPPoolNewPage = () => {
               <HelperText>
                 <HelperTextItem variant={cidrInvalid ? 'error' : 'default'}>
                   {cidrInvalid
-                    ? 'Must be valid CIDR notation (e.g. 203.0.113.0/24)'
-                    : 'Address range for this pool. Leave blank if managed by the backend.'}
+                    ? t('Must be valid CIDR notation (e.g. 203.0.113.0/24)')
+                    : t('Address range for this pool. Leave blank if managed by the backend.')}
                 </HelperTextItem>
               </HelperText>
             </FormHelperText>
@@ -174,9 +177,9 @@ export const ProviderIPPoolNewPage = () => {
           <FormGroup
             label={
               <>
-                Zone{' '}
+                {t('Zone')}{' '}
                 <Label isCompact color="gold" variant="outline">
-                  predicted
+                  {t('predicted')}
                 </Label>
               </>
             }
@@ -190,12 +193,12 @@ export const ProviderIPPoolNewPage = () => {
             />
             <FormHelperText>
               <HelperText>
-                <HelperTextItem>Datacenter or availability zone. Optional.</HelperTextItem>
+                <HelperTextItem>{t('Datacenter or availability zone. Optional.')}</HelperTextItem>
               </HelperText>
             </FormHelperText>
           </FormGroup>
 
-          <FormGroup label="Assign to tenant" fieldId="pool-tenant">
+          <FormGroup label={t('Assign to tenant')} fieldId="pool-tenant">
             <Select
               isOpen={tenantOpen}
               onSelect={(_e, val) => {
@@ -210,16 +213,16 @@ export const ProviderIPPoolNewPage = () => {
                   onClick={() => setTenantOpen(!tenantOpen)}
                   isExpanded={tenantOpen}
                 >
-                  {tenantId ? selectedTenantName : 'No tenant (shared)'}
+                  {tenantId ? selectedTenantName : t('No tenant (shared)')}
                 </MenuToggle>
               )}
             >
               <SelectList>
-                <SelectOption value="">No tenant (shared)</SelectOption>
-                {tenants.map((t) => (
-                  <SelectOption key={t.id} value={t.id}>
-                    {t.metadata?.name ?? t.id}
-                    {t.spec?.domains?.length ? ` (${t.spec.domains.join(', ')})` : ''}
+                <SelectOption value="">{t('No tenant (shared)')}</SelectOption>
+                {tenants.map((tenant) => (
+                  <SelectOption key={tenant.id} value={tenant.id}>
+                    {tenant.metadata?.name ?? tenant.id}
+                    {tenant.spec?.domains?.length ? ` (${tenant.spec.domains.join(', ')})` : ''}
                   </SelectOption>
                 ))}
               </SelectList>
@@ -234,14 +237,14 @@ export const ProviderIPPoolNewPage = () => {
               isLoading={createExternal.isPending}
               isDisabled={createExternal.isPending || !isValid}
             >
-              Create
+              {t('Create')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate(BACK)}
               isDisabled={createExternal.isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

@@ -23,9 +23,11 @@ import {
 
 import { useObjectStorageBucket, useUpdateObjectStorageBucket } from '../../api/v1/object-storage';
 import { ResourceDetailsPageError } from '../../components/Resource/ResourceDetailsPageError';
+import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 
 export const ObjectStorageEditPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id = '' } = useParams<{ id: string }>();
 
@@ -49,7 +51,7 @@ export const ObjectStorageEditPage = () => {
   if (isLoading) {
     return (
       <PageSection hasBodyWrapper={false}>
-        <Spinner aria-label="Loading bucket" />
+        <Spinner aria-label={t('Loading bucket')} />
       </PageSection>
     );
   }
@@ -80,7 +82,7 @@ export const ObjectStorageEditPage = () => {
           <Breadcrumb>
             <BreadcrumbItem>
               <Button variant="link" isInline onClick={() => navigate('/bucket-storage')}>
-                Storage Buckets
+                {t('Storage Buckets')}
               </Button>
             </BreadcrumbItem>
             <BreadcrumbItem>
@@ -88,10 +90,10 @@ export const ObjectStorageEditPage = () => {
                 {name}
               </Button>
             </BreadcrumbItem>
-            <BreadcrumbItem isActive>Edit</BreadcrumbItem>
+            <BreadcrumbItem isActive>{t('Edit')}</BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            Edit — {name}
+            {t('Edit — {{name}}', { name })}
           </Title>
         </Stack>
       </PageSection>
@@ -99,15 +101,15 @@ export const ObjectStorageEditPage = () => {
       <PageSection hasBodyWrapper={false}>
         <Form onSubmit={handleSubmit} style={{ maxWidth: '480px' }} id="edit-bucket-form">
           {saveError && (
-            <Alert variant="danger" isInline title="Failed to update bucket">
+            <Alert variant="danger" isInline title={t('Failed to update bucket')}>
               {getErrorMessage(saveError)}
             </Alert>
           )}
 
           <FormGroup
-            label="Quota (GiB)"
+            label={t('Quota (GiB)')}
             fieldId="edit-quota"
-            helperText="Set to 0 or leave empty for no limit."
+            helperText={t('Set to 0 or leave empty for no limit.')}
           >
             <NumberInput
               id="edit-quota"
@@ -122,24 +124,24 @@ export const ObjectStorageEditPage = () => {
             />
           </FormGroup>
 
-          <FormGroup label="Versioning" fieldId="edit-versioning">
+          <FormGroup label={t('Versioning')} fieldId="edit-versioning">
             <Switch
               id="edit-versioning"
-              label="Enabled"
-              labelOff="Disabled"
+              label={t('Enabled')}
+              labelOff={t('Disabled')}
               isChecked={versioning}
               onChange={(_e, checked) => setVersioning(checked)}
             />
           </FormGroup>
 
-          <FormGroup label="Description" fieldId="edit-description">
+          <FormGroup label={t('Description')} fieldId="edit-description">
             <TextArea
               id="edit-description"
               value={description}
               onChange={(_e, v) => setDescription(v)}
               rows={3}
               resizeOrientation="vertical"
-              placeholder="Optional description"
+              placeholder={t('Optional description')}
             />
           </FormGroup>
 
@@ -151,14 +153,14 @@ export const ObjectStorageEditPage = () => {
               isLoading={isPending}
               isDisabled={isPending}
             >
-              Save changes
+              {t('Save changes')}
             </Button>
             <Button
               variant="link"
               onClick={() => navigate(`/bucket-storage/${id}`)}
               isDisabled={isPending}
             >
-              Cancel
+              {t('Cancel')}
             </Button>
           </ActionGroup>
         </Form>

@@ -6,8 +6,10 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Breadcrumb, BreadcrumbItem, PageBreadcrumb } from '@patternfly/react-core';
 
 import { ClusterProvisionWizard } from '../../components/catalogProvision/ClusterProvisionWizard';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export const ClusterCreatePage = () => {
+  const { t } = useTranslation();
   const { catalogItemId } = useParams<{ catalogItemId?: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -19,7 +21,7 @@ export const ClusterCreatePage = () => {
     (location.state as { from?: string } | null)?.from === '/catalog' || Boolean(catalogItemId);
 
   const parentPath = fromCatalog ? '/catalog' : '/clusters';
-  const parentLabel = fromCatalog ? 'Catalog' : 'Clusters';
+  const parentLabel = fromCatalog ? t('Catalog') : t('Clusters');
 
   return (
     <>
@@ -28,7 +30,7 @@ export const ClusterCreatePage = () => {
           <BreadcrumbItem onClick={() => navigate(parentPath)} style={{ cursor: 'pointer' }}>
             {parentLabel}
           </BreadcrumbItem>
-          <BreadcrumbItem isActive>Create cluster</BreadcrumbItem>
+          <BreadcrumbItem isActive>{t('Create cluster')}</BreadcrumbItem>
         </Breadcrumb>
       </PageBreadcrumb>
 

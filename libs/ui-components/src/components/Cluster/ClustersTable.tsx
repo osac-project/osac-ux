@@ -9,7 +9,9 @@ import type { Cluster } from '@osac/types';
 
 import ClusterActionsMenu from './ClusterActionsMenu';
 import { ClusterStatusLabel } from './ClusterStatusLabel';
+import { resourceComplianceResult } from '../../api/v1/compliance';
 import { useTranslation } from '../../hooks/useTranslation';
+import { ComplianceStateLabel } from '../compliance/ComplianceStateLabel';
 import ExternalLink from '../Primitives/ExternalLink';
 import { Timestamp } from '../Primitives/Timestamp';
 
@@ -26,6 +28,7 @@ export const ClustersTable = ({ clusters }: ClustersTableProps) => {
         <Tr>
           <Th>{t('Name')}</Th>
           <Th>{t('Status')}</Th>
+          <Th>{t('Compliance')}</Th>
           <Th>{t('API URL')}</Th>
           <Th>{t('Created')}</Th>
           <Th aria-label={t('Actions')} />
@@ -44,6 +47,11 @@ export const ClustersTable = ({ clusters }: ClustersTableProps) => {
               </Td>
               <Td dataLabel={t('Status')}>
                 <ClusterStatusLabel state={cluster.status?.state} />
+              </Td>
+              <Td dataLabel={t('Compliance')}>
+                <ComplianceStateLabel
+                  result={resourceComplianceResult(cluster, 'ACM (NIST 800-53)')}
+                />
               </Td>
               <Td dataLabel={t('API URL')}>
                 <ExternalLink href={apiUrl} showUnsafeAsText />

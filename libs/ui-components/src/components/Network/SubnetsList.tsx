@@ -12,6 +12,7 @@ import {
   useVirtualNetworks,
   virtualNetworkFilterForSubnetList,
 } from '../../api/v1/networking';
+import { useTranslation } from '../../hooks/useTranslation';
 import ListPageBody from '../Page/ListPageBody';
 import { DeleteConfirmModal } from '../shared/DeleteConfirmModal';
 import { SubtleContent } from '../SubtleContent/SubtleContent';
@@ -21,6 +22,7 @@ interface SubnetsListProps {
 }
 
 export const SubnetsList = ({ virtualNetworkId }: SubnetsListProps) => {
+  const { t } = useTranslation();
   const params = virtualNetworkId
     ? { filter: virtualNetworkFilterForSubnetList(virtualNetworkId) }
     : {};
@@ -39,17 +41,19 @@ export const SubnetsList = ({ virtualNetworkId }: SubnetsListProps) => {
     <>
       <ListPageBody isLoading={isLoading} error={error}>
         {subnets.length === 0 ? (
-          <SubtleContent component="p">No subnets yet. Create one to get started.</SubtleContent>
+          <SubtleContent component="p">
+            {t('No subnets yet. Create one to get started.')}
+          </SubtleContent>
         ) : (
-          <Table aria-label="Subnets" variant="compact">
+          <Table aria-label={t('Subnets')} variant="compact">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                {!virtualNetworkId && <Th>Virtual network</Th>}
-                <Th>IPv4 CIDR</Th>
-                <Th>IPv6 CIDR</Th>
-                <Th>State</Th>
-                <Th aria-label="Actions" />
+                <Th>{t('Name')}</Th>
+                {!virtualNetworkId && <Th>{t('Virtual network')}</Th>}
+                <Th>{t('IPv4 CIDR')}</Th>
+                <Th>{t('IPv6 CIDR')}</Th>
+                <Th>{t('State')}</Th>
+                <Th aria-label={t('Actions')} />
               </Tr>
             </Thead>
             <Tbody>
@@ -57,25 +61,25 @@ export const SubnetsList = ({ virtualNetworkId }: SubnetsListProps) => {
                 const vnetId = subnet.spec?.virtualNetwork;
                 return (
                   <Tr key={subnet.id}>
-                    <Td dataLabel="Name">{resourceDisplayName(subnet.metadata, subnet.id)}</Td>
+                    <Td dataLabel={t('Name')}>{resourceDisplayName(subnet.metadata, subnet.id)}</Td>
                     {!virtualNetworkId && (
-                      <Td dataLabel="Virtual network">
+                      <Td dataLabel={t('Virtual network')}>
                         {vnetId ? <Link to={`/networks/${vnetId}`}>{vnetName(vnetId)}</Link> : '—'}
                       </Td>
                     )}
-                    <Td dataLabel="IPv4 CIDR">{subnet.spec?.ipv4Cidr || '—'}</Td>
-                    <Td dataLabel="IPv6 CIDR">{subnet.spec?.ipv6Cidr || '—'}</Td>
-                    <Td dataLabel="State">
+                    <Td dataLabel={t('IPv4 CIDR')}>{subnet.spec?.ipv4Cidr || '—'}</Td>
+                    <Td dataLabel={t('IPv6 CIDR')}>{subnet.spec?.ipv6Cidr || '—'}</Td>
+                    <Td dataLabel={t('State')}>
                       <NetworkStatusLabel state={subnet.status?.state} />
                     </Td>
-                    <Td dataLabel="Actions" isActionCell>
+                    <Td dataLabel={t('Actions')} isActionCell>
                       <ActionsColumn
                         items={[
                           ...(vnetId && !virtualNetworkId
-                            ? [{ title: 'Manage in network', onClick: () => void 0 }]
+                            ? [{ title: t('Manage in network'), onClick: () => void 0 }]
                             : []),
                           {
-                            title: 'Delete',
+                            title: t('Delete'),
                             onClick: (e: React.MouseEvent) => {
                               e.stopPropagation();
                               setDeleteTarget(subnet);
@@ -95,7 +99,7 @@ export const SubnetsList = ({ virtualNetworkId }: SubnetsListProps) => {
       {deleteTarget && (
         <DeleteConfirmModal
           resourceName={resourceDisplayName(deleteTarget.metadata, deleteTarget.id)}
-          resourceKind="subnet"
+          resourceKind={t('subnet')}
           error={deleteSubnet.error}
           onConfirm={async () => {
             await deleteSubnet.mutateAsync(deleteTarget.id);

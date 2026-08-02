@@ -4,6 +4,7 @@ import { useField } from 'formik';
 import { getVisibleFieldError } from './fieldError';
 import { useShowFieldValidationErrors } from './FieldValidationContext';
 import { FormFieldHelper } from './FormFieldHelper';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export interface SelectFieldOption {
   value: string;
@@ -32,13 +33,14 @@ export const SelectField = ({
   isDisabled = false,
   isLoading = false,
   placeholder,
-  loadingPlaceholder = 'Loading...',
+  loadingPlaceholder,
 }: SelectFieldProps) => {
+  const { t } = useTranslation();
   const [field, meta] = useField<string>(name);
   const showValidationErrors = useShowFieldValidationErrors();
   const error = getVisibleFieldError(meta, showValidationErrors);
   const validated = error ? 'error' : 'default';
-  const effectivePlaceholder = isLoading ? loadingPlaceholder : placeholder;
+  const effectivePlaceholder = isLoading ? (loadingPlaceholder ?? t('Loading...')) : placeholder;
   const controlDisabled = isDisabled || isLoading;
 
   return (

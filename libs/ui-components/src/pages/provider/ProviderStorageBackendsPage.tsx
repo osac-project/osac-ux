@@ -28,6 +28,7 @@ import { useDeleteStorageBackend, useStorageBackends } from '../../api/v1/storag
 import ListPage from '../../components/Page/ListPage';
 import ListPageBody from '../../components/Page/ListPageBody';
 import { DeleteConfirmModal } from '../../components/shared/DeleteConfirmModal';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const PROVIDERS = ['ceph', 'nfs', 's3'] as const;
 type Provider = (typeof PROVIDERS)[number];
@@ -54,6 +55,7 @@ type ProviderFilter = Provider;
 type StateFilter = BackendState;
 
 export const ProviderStorageBackendsPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: backends = [], isLoading, error } = useStorageBackends();
   const deleteBackend = useDeleteStorageBackend();
@@ -103,16 +105,18 @@ export const ProviderStorageBackendsPage = () => {
   return (
     <>
       <ListPage
-        title="Storage Backends"
-        description="Physical storage systems connected to this provider. Storage tiers are backed by these systems."
+        title={t('Storage Backends')}
+        description={t(
+          'Physical storage systems connected to this provider. Storage tiers are backed by these systems.',
+        )}
       >
         <ListPageBody isLoading={isLoading} error={error}>
           <Toolbar clearAllFilters={clearAll} collapseListedFiltersBreakpoint="xl">
             <ToolbarContent>
               <ToolbarItem variant="search-filter">
                 <SearchInput
-                  aria-label="Search storage backends"
-                  placeholder="Search by name, description, or endpoint"
+                  aria-label={t('Search storage backends')}
+                  placeholder={t('Search by name, description, or endpoint')}
                   value={search}
                   onChange={(_e, v) => setSearch(v)}
                   onClear={() => setSearch('')}
@@ -124,7 +128,7 @@ export const ProviderStorageBackendsPage = () => {
                   labels={providerFilters}
                   deleteLabel={(_g, v) => toggleProvider(v as ProviderFilter)}
                   deleteLabelGroup={() => setProviderFilters([])}
-                  categoryName="Provider"
+                  categoryName={t('Provider')}
                 >
                   <Select
                     isOpen={providerOpen}
@@ -137,7 +141,7 @@ export const ProviderStorageBackendsPage = () => {
                         isExpanded={providerOpen}
                         badge={providerFilters.length || undefined}
                       >
-                        Provider
+                        {t('Provider')}
                       </MenuToggle>
                     )}
                   >
@@ -160,7 +164,7 @@ export const ProviderStorageBackendsPage = () => {
                   labels={stateFilters}
                   deleteLabel={(_g, v) => toggleState(v as StateFilter)}
                   deleteLabelGroup={() => setStateFilters([])}
-                  categoryName="State"
+                  categoryName={t('State')}
                 >
                   <Select
                     isOpen={stateOpen}
@@ -173,7 +177,7 @@ export const ProviderStorageBackendsPage = () => {
                         isExpanded={stateOpen}
                         badge={stateFilters.length || undefined}
                       >
-                        State
+                        {t('State')}
                       </MenuToggle>
                     )}
                   >
@@ -198,7 +202,7 @@ export const ProviderStorageBackendsPage = () => {
                   variant="primary"
                   onClick={() => navigate('/provider/storage-backends/new')}
                 >
-                  Register backend
+                  {t('Register backend')}
                 </Button>
               </ToolbarItem>
             </ToolbarContent>
@@ -209,45 +213,45 @@ export const ProviderStorageBackendsPage = () => {
               alignItems={{ default: 'alignItemsCenter' }}
               style={{ gap: '0.5rem', padding: '1rem 0' }}
             >
-              <FlexItem>No backends match the current filters.</FlexItem>
+              <FlexItem>{t('No backends match the current filters.')}</FlexItem>
               <FlexItem>
                 <Button variant="link" isInline onClick={clearAll}>
-                  Clear filters
+                  {t('Clear filters')}
                 </Button>
               </FlexItem>
             </Flex>
           ) : backends.length === 0 ? (
-            <Alert variant="info" isInline title="No storage backends configured" />
+            <Alert variant="info" isInline title={t('No storage backends configured')} />
           ) : (
-            <Table aria-label="Storage backends" variant="compact">
+            <Table aria-label={t('Storage backends')} variant="compact">
               <Thead>
                 <Tr>
-                  <Th>Name</Th>
-                  <Th>Provider</Th>
-                  <Th>Endpoint</Th>
-                  <Th>Description</Th>
-                  <Th>State</Th>
-                  <Th aria-label="Actions" />
+                  <Th>{t('Name')}</Th>
+                  <Th>{t('Provider')}</Th>
+                  <Th>{t('Endpoint')}</Th>
+                  <Th>{t('Description')}</Th>
+                  <Th>{t('State')}</Th>
+                  <Th aria-label={t('Actions')} />
                 </Tr>
               </Thead>
               <Tbody>
                 {filtered.map((b) => (
                   <Tr key={b.id}>
-                    <Td dataLabel="Name">
+                    <Td dataLabel={t('Name')}>
                       <strong>{b.metadata?.name ?? b.id}</strong>
                     </Td>
-                    <Td dataLabel="Provider">
+                    <Td dataLabel={t('Provider')}>
                       <Label color={PROVIDER_COLORS[b.spec.provider] ?? 'grey'} isCompact>
                         {b.spec.provider.toUpperCase()}
                       </Label>
                     </Td>
-                    <Td dataLabel="Endpoint">
+                    <Td dataLabel={t('Endpoint')}>
                       <code style={{ fontSize: '0.8em' }}>{b.spec.endpoint}</code>
                     </Td>
-                    <Td dataLabel="Description">
+                    <Td dataLabel={t('Description')}>
                       {b.spec.description || b.metadata?.description || '—'}
                     </Td>
-                    <Td dataLabel="State">
+                    <Td dataLabel={t('State')}>
                       <Label color={STATE_COLORS[b.status.state] ?? 'grey'} isCompact>
                         {b.status.state}
                       </Label>
@@ -256,10 +260,14 @@ export const ProviderStorageBackendsPage = () => {
                       <ActionsColumn
                         items={[
                           {
-                            title: 'Edit',
+                            title: t('Edit'),
                             onClick: () => navigate(`/provider/storage-backends/${b.id}/edit`),
                           },
-                          { title: 'Delete', onClick: () => setPendingDelete(b), isDanger: true },
+                          {
+                            title: t('Delete'),
+                            onClick: () => setPendingDelete(b),
+                            isDanger: true,
+                          },
                         ]}
                       />
                     </Td>
@@ -274,7 +282,7 @@ export const ProviderStorageBackendsPage = () => {
       {pendingDelete && (
         <DeleteConfirmModal
           resourceName={pendingDelete.metadata?.name ?? pendingDelete.id}
-          resourceKind="storage backend"
+          resourceKind={t('storage backend')}
           onClose={() => setPendingDelete(null)}
           onConfirm={async () => {
             await deleteBackend.mutateAsync(pendingDelete.id);
