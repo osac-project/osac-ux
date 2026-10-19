@@ -8,6 +8,7 @@
     "i18n": "pnpm --filter @osac/i18n run i18n",
     "dev": "concurrently \"pnpm dev:proxy\" \"pnpm dev:frontend\"",
     "mock": "pnpm --filter @osac/app-frontend run mock",
+    "build:demo": "VITE_MOCK_MODE=true vite build",
     "dev:proxy": "cd proxy && BASE_UI_URL=http://localhost:5173 nodemon --watch 'proxy/**/*' --exec 'go run' main.go --signal SIGTERM",
     "dev:frontend": "pnpm --filter @osac/app-frontend run dev",
     "build": "pnpm --filter @osac/app-frontend run build && cd proxy && go build -o osac-proxy .",
