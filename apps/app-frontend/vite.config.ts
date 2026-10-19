@@ -6,6 +6,9 @@ import { viteStaticCopy } from 'vite-plugin-static-copy'
 const uiComponentsSrc = resolve(__dirname, '../../libs/ui-components/src')
 
 export default defineConfig({
+  // GitHub Pages publishes this repository below /osac-ux/. Keep local
+  // development at the origin root unless the deploy workflow overrides it.
+  base: process.env.VITE_BASE_PATH || '/',
   plugins: [
     react(),
     viteStaticCopy({

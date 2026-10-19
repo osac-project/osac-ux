@@ -9,6 +9,9 @@ i18n
   .use(initReactI18next)
   .init({
     fallbackLng: 'en',
+    backend: {
+      loadPath: `${import.meta.env.BASE_URL}locales/{{lng}}/{{ns}}.json`,
+    },
     interpolation: {
       escapeValue: false,
     },

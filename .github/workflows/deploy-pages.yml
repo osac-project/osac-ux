@@ -25,7 +25,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Build mock website
-        run: VITE_MOCK_MODE=true pnpm --filter @osac/app-frontend exec vite build
+        run: VITE_BASE_PATH=/osac-ux/ VITE_MOCK_MODE=true pnpm --filter @osac/app-frontend exec vite build
 
       - name: Verify website output
         run: test -f apps/app-frontend/dist/index.html

@@ -61,7 +61,9 @@ const queryClient = new QueryClient({
   },
 });
 
-const router = createBrowserRouter([{ path: '*', element: <App /> }]);
+const router = createBrowserRouter([{ path: '*', element: <App /> }], {
+  basename: import.meta.env.BASE_URL,
+});
 
 const rootElement = document.getElementById('root');
 
