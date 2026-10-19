@@ -25,7 +25,11 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Build demo
-        run: pnpm --filter @osac/app-frontend run build:demo
+        working-directory: apps/app-frontend
+        run: pnpm run build:demo
+
+      - name: Verify website output
+        run: test -f apps/app-frontend/dist/index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
