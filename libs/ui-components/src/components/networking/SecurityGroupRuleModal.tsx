@@ -23,6 +23,8 @@ import { useTranslation } from '../../hooks/useTranslation';
 import { getErrorMessage } from '../../utils/error';
 import { buildCidrSchema } from '../../validation/cidr-validation';
 
+import './SecurityGroupRuleModal.css';
+
 const createRuleValidationSchema = (t: TFunction) =>
   Yup.object({
     protocol: Yup.number().required(t('Protocol is required')),
@@ -161,7 +163,7 @@ export const SecurityGroupRuleModal = ({
                   variant="danger"
                   title={t('Error')}
                   isInline
-                  style={{ marginBottom: '1rem' }}
+                  className="security-group-rule-modal__error"
                 >
                   {getErrorMessage(updateSecurityGroup.error)}
                 </Alert>

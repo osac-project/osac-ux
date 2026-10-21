@@ -10,12 +10,21 @@ import ComputeCatalogItemResources from './ComputeCatalogItemResources';
 interface CatalogItemResourcesProps {
   catalogItem: CatalogItem;
   resourceLookups: CatalogItemResourceLookups;
+  hideLockedBadges?: boolean;
 }
 
-const CatalogItemResources: FC<CatalogItemResourcesProps> = ({ catalogItem, resourceLookups }) => {
+const CatalogItemResources: FC<CatalogItemResourcesProps> = ({
+  catalogItem,
+  resourceLookups,
+  hideLockedBadges = false,
+}) => {
   if (catalogItem.$typeName === 'osac.public.v1.ComputeInstanceCatalogItem') {
     return (
-      <ComputeCatalogItemResources catalogItem={catalogItem} resourceLookups={resourceLookups} />
+      <ComputeCatalogItemResources
+        catalogItem={catalogItem}
+        resourceLookups={resourceLookups}
+        hideLockedBadges={hideLockedBadges}
+      />
     );
   }
 

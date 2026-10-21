@@ -60,9 +60,22 @@ const BareMetalCatalogItemResources = ({
   const gpuLabel = formatBareMetalCatalogGpu(fields, instanceType, t);
   const diskImageLabel = formatBareMetalCatalogDiskImage(fields, diskImage, diskImageReference);
   const diskImageOsIcon = diskImageGuestOsIconType(diskImage);
+  const instanceTypeLabel = instanceType?.metadata?.name || instanceTypeReference?.name;
+  const instanceTypePolicyBehavior = catalogFieldPolicyBehavior(fields?.instanceType);
 
   return (
-    <DescriptionList isHorizontal isCompact>
+    <DescriptionList isHorizontal isCompact className="catalog-item-card__baremetal-resources">
+      <DescriptionListGroup>
+        <DescriptionListTerm>{t('Instance type')}</DescriptionListTerm>
+        <DescriptionListDescription>
+          <Flex flexWrap={{ default: 'nowrap' }} gap={{ default: 'gapXs' }}>
+            <FlexItem>{instanceTypeLabel || '-'}</FlexItem>
+            <FlexItem>
+              <CatalogFieldEditabilityLabel behavior={instanceTypePolicyBehavior} />
+            </FlexItem>
+          </Flex>
+        </DescriptionListDescription>
+      </DescriptionListGroup>
       <DescriptionListGroup>
         <DescriptionListTerm>{t('CPU')}</DescriptionListTerm>
         <DescriptionListDescription>{cpuLabel || '-'}</DescriptionListDescription>
@@ -76,7 +89,7 @@ const BareMetalCatalogItemResources = ({
         <DescriptionListDescription>{gpuLabel || '-'}</DescriptionListDescription>
       </DescriptionListGroup>
       <DescriptionListGroup>
-        <DescriptionListTerm>{t('Disk image')}</DescriptionListTerm>
+        <DescriptionListTerm>{t('OS image')}</DescriptionListTerm>
         <DescriptionListDescription>
           <Flex
             flexWrap={{ default: 'nowrap' }}

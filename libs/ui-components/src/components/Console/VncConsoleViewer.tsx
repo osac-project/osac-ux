@@ -128,7 +128,9 @@ const VncConsoleViewer = forwardRef<VncConsoleViewerHandle, Props>(
           window.clearTimeout(initTimeoutId);
           const rfb = new RFB(container, webSocket);
           rfb.scaleViewport = true;
-          rfb.background = 'rgb(40, 40, 40)';
+          rfb.background = getComputedStyle(document.documentElement)
+            .getPropertyValue('--pf-t--global--background--color--inverse--default')
+            .trim();
           rfb.addEventListener('connect', onConnect);
           rfb.addEventListener('disconnect', onDisconnect);
           rfbRef.current = rfb;

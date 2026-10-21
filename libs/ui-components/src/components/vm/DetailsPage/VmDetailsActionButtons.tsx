@@ -6,6 +6,7 @@ import {
   Dropdown,
   DropdownItem,
   DropdownList,
+  Divider,
   Flex,
   FlexItem,
   MenuToggle,
@@ -13,6 +14,7 @@ import {
   StackItem,
 } from '@patternfly/react-core';
 import GlobeIcon from '@patternfly/react-icons/dist/esm/icons/globe-icon';
+import ExternalLinkAltIcon from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
 import PlayIcon from '@patternfly/react-icons/dist/esm/icons/play-icon';
 import StopIcon from '@patternfly/react-icons/dist/esm/icons/stop-icon';
 import SyncAltIcon from '@patternfly/react-icons/dist/esm/icons/sync-alt-icon';
@@ -87,6 +89,9 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
     !externalIpAttachment;
 
   const vmName = vm.metadata?.name ?? vm.id;
+  const openConsole = () => {
+    window.open(`/vms/${encodeURIComponent(vm.id)}#console`, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <>
@@ -138,6 +143,18 @@ const VmDetailsActionButtons = ({ vm }: VmDetailsActionButtonsProps) => {
         {/* Buttons */}
         <StackItem>
           <Flex spaceItems={{ default: 'spaceItemsSm' }} flexWrap={{ default: 'wrap' }}>
+            <FlexItem>
+              <Button
+                variant="primary"
+                icon={<ExternalLinkAltIcon />}
+                onClick={openConsole}
+              >
+                {t('Open console')}
+              </Button>
+            </FlexItem>
+            <FlexItem>
+              <Divider orientation={{ default: 'vertical' }} />
+            </FlexItem>
             {/* Power actions — always visible */}
             <FlexItem>
               <Button

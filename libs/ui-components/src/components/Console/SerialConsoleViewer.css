@@ -3,7 +3,7 @@
    terminal a dark background matching the graphical console. */
 .vm-console-viewport .xterm {
   height: 100%;
-  padding: 4px;
+  padding: var(--pf-t--global--spacer--xs);
   box-sizing: border-box;
-  background-color: rgb(40, 40, 40);
+  background-color: var(--pf-t--global--background--color--inverse--default);
 }

@@ -1,0 +1,4 @@
+.catalog-provision__wizard-step-body {
+  width: 100%;
+  max-inline-size: var(--pf-v6-c-form--m-limit-width--MaxWidth, 55rem);
+}

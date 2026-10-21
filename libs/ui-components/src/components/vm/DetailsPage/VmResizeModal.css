@@ -1,0 +1,40 @@
+.vm-resize-modal__instance-type-toggle {
+  min-block-size: calc(var(--pf-t--global--spacer--xl) * 2);
+  padding-block: var(--pf-t--global--spacer--sm);
+  border-radius: var(--pf-t--global--border--radius--small);
+  text-align: start;
+}
+
+.vm-resize-modal__instance-type-toggle-content {
+  min-inline-size: 0;
+  text-align: start;
+}
+
+.vm-resize-modal__instance-type-name {
+  color: var(--pf-t--global--text--color--regular);
+  font-size: var(--pf-t--global--font--size--body--md);
+  font-weight: var(--pf-t--global--font--weight--body--bold);
+}
+
+.vm-resize-modal__instance-type-sizing {
+  color: var(--pf-t--global--text--color--subtle);
+  font-size: var(--pf-t--global--font--size--body--sm);
+}
+
+.vm-resize-modal__instance-type-menu {
+  min-inline-size: 100%;
+  padding-block-start: var(--pf-t--global--spacer--sm);
+}
+
+.vm-resize-modal__instance-type-menu > .pf-v6-c-search-input {
+  margin-inline: var(--pf-t--global--spacer--sm);
+}
+
+.vm-resize-modal__instance-type-menu > .pf-v6-c-divider {
+  margin-block-start: var(--pf-t--global--spacer--sm);
+}
+
+.vm-resize-modal__instance-type-menu .pf-v6-c-select__menu-list {
+  max-block-size: calc(var(--pf-t--global--spacer--2xl) * 8);
+  overflow-y: auto;
+}

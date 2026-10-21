@@ -198,14 +198,14 @@ export const ClusterAiGridTab = ({ cluster }: ClusterAiGridTabProps) => {
                           <div>
                             <strong>{model.displayName ?? model.name}</strong>
                             {model.description && (
-                              <div style={{ fontSize: '0.875rem', color: 'var(--pf-v6-global--Color--200)' }}>
+                              <div className="cluster-ai-grid__model-description">
                                 {model.description}
                               </div>
                             )}
                           </div>
                         </Td>
                         <Td dataLabel={t('Type')}>
-                          <code style={{ fontSize: '0.875rem' }}>{model.modelRef.kind}</code>
+                          <code className="cluster-ai-grid__model-kind">{model.modelRef.kind}</code>
                         </Td>
                         <Td dataLabel={t('Locations')}>
                           {model.locations.length > 0
@@ -265,7 +265,7 @@ export const ClusterAiGridTab = ({ cluster }: ClusterAiGridTabProps) => {
                           <div>
                             <strong>{sub.displayName ?? sub.name}</strong>
                             {sub.description && (
-                              <div style={{ fontSize: '0.875rem', color: 'var(--pf-v6-global--Color--200)' }}>
+                              <div className="cluster-ai-grid__model-description">
                                 {sub.description}
                               </div>
                             )}

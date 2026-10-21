@@ -1,6 +1,3 @@
-import { Label } from '@patternfly/react-core';
-import LockIcon from '@patternfly/react-icons/dist/esm/icons/lock-icon';
-
 import { StorageProtocol, type StorageTier, StorageTierState, StorageTiers } from '@osac/types';
 
 import { ResourceSelectField } from './ResourceSelectField';
@@ -20,8 +17,9 @@ interface StorageTierSelectFieldProps {
   label: string;
   fieldId: string;
   isRequired?: boolean;
+  helperText?: string;
   protocol?: StorageProtocol;
-  /** Renders the picker read-only with a lock badge — the catalog item does not allow editing this field. */
+  /** Renders the picker read-only when the catalog item does not allow editing this field. */
   isLocked?: boolean;
 }
 
@@ -30,6 +28,7 @@ export const StorageTierSelectField = ({
   label,
   fieldId,
   isRequired = false,
+  helperText,
   protocol,
   isLocked = false,
 }: StorageTierSelectFieldProps) => {
@@ -49,13 +48,9 @@ export const StorageTierSelectField = ({
       }}
       isRequired={isRequired}
       isDisabled={isLocked}
-      labelInfo={
-        isLocked ? (
-          <Label color="grey" icon={<LockIcon aria-hidden />}>
-            {t('Locked by catalog')}
-          </Label>
-        ) : undefined
-      }
+      helperText={helperText}
+      isSearchable
+      searchPlaceholder={t('Search storage tiers')}
       placeholder={t('Select a storage tier')}
       loadingPlaceholder={t('Loading...')}
       loadErrorTitle={t('Failed to load storage tiers')}

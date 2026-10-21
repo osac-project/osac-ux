@@ -10,12 +10,17 @@ import { renderWithProviders } from '../../test-utils/TestProviders';
 
 vi.mock('../../api/v1/project', () => ({
   useAllProjects: () => ({ data: [], isLoading: false, error: null }),
+  useProjects: () => ({ data: [], isLoading: false, error: null }),
 }));
 
 const virtualNetworks = [
   {
     id: 'vn-1',
-    metadata: { name: 'vn-prod' },
+    metadata: {
+      name: 'vn-prod',
+      project: 'project-a',
+      creationTimestamp: { seconds: BigInt(1717000000), nanos: 0 },
+    },
     spec: { ipv4Cidr: '10.0.0.0/16' },
     status: { state: VirtualNetworkState.READY },
   },
@@ -60,6 +65,7 @@ const renderPage = (overrides?: {
   virtualNetworks?: VirtualNetwork[];
   natGateways?: NATGateway[];
   onNatGatewayList?: (req: unknown) => void;
+  routerEntries?: string[];
 }) =>
   renderWithProviders(
     <SessionProvider role="tenant-user" username="test-user" tenantId="test-tenant">
@@ -75,6 +81,7 @@ const renderPage = (overrides?: {
       transportOverrides: {
         onNatGatewayList: overrides?.onNatGatewayList,
       },
+      routerEntries: overrides?.routerEntries,
     },
   );
 
@@ -86,9 +93,17 @@ describe('VirtualNetworksListPage', () => {
   it('renders the section label, title, and create button', async () => {
     renderPage();
 
-    expect(screen.getByRole('heading', { name: 'Virtual networks' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Virtual networks' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create virtual network' })).toBeInTheDocument();
     await screen.findByRole('link', { name: 'vn-prod' });
+  });
+
+  it('opens the create modal when requested by the route', async () => {
+    renderPage({ routerEntries: ['/networking/virtual-networks?create=virtual-network'] });
+
+    expect(
+      await screen.findByRole('dialog', { name: 'Create virtual network' }),
+    ).toBeInTheDocument();
   });
 
   it('renders virtual network names as details links', async () => {
@@ -148,6 +163,20 @@ describe('VirtualNetworksListPage', () => {
     expect(screen.getByRole('link', { name: 'vn-prod' })).toBeInTheDocument();
     expect(screen.getAllByText('Security groups')).toHaveLength(2);
     expect(screen.queryByRole('grid')).not.toBeInTheDocument();
+  });
+
+  it('shows project and created fields in card footers', async () => {
+    const { user } = renderPage();
+
+    await screen.findByRole('link', { name: 'vn-prod' });
+    await user.click(screen.getByRole('button', { name: 'Card view' }));
+
+    expect(screen.getByRole('link', { name: 'project-a' })).toHaveAttribute(
+      'href',
+      '/projects/project-a',
+    );
+    expect(screen.getAllByText('Created')).toHaveLength(2);
+    expect(screen.getByRole('time')).toHaveAttribute('datetime', '2024-05-29T16:26:40.000Z');
   });
 
   it('filters virtual networks by status', async () => {

@@ -1,47 +1,32 @@
-import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Flex, FlexItem } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
-import { Link } from 'react-router-dom';
 
-import type { ComputeInstance, InstanceType } from '@osac/types';
+import type { ComputeInstance } from '@osac/types';
 import { ComputeInstanceState } from '@osac/types';
 
 import { VmActionsMenu } from './VmActionsMenu';
-import { VmInstanceTypeLabel } from './VmInstanceTypeLabel';
 import { useTranslation } from '../../hooks/useTranslation';
 import { VmStatusLabel } from '../../VmStatusLabel';
-import { Timestamp } from '../Primitives/Timestamp';
 
 import './VmTable.css';
 
 interface VmTableProps {
   vms: ComputeInstance[];
-  instanceTypes?: InstanceType[];
-  isInstanceTypesLoading?: boolean;
 }
 
-export const VmTable = ({
-  vms,
-  instanceTypes = [],
-  isInstanceTypesLoading = false,
-}: VmTableProps) => {
+export const VmTable = ({ vms }: VmTableProps) => {
   const { t } = useTranslation();
-
-  const instanceTypeById = useMemo(
-    () => new Map(instanceTypes.map((item) => [item.id, item])),
-    [instanceTypes],
-  );
 
   return (
     <Table aria-label={t('Virtual machines')} variant="compact">
       <Thead>
         <Tr>
           <Th>{t('Name')}</Th>
+          <Th>{t('Project')}</Th>
           <Th>{t('Status')}</Th>
-          <Th>{t('Instance type')}</Th>
           <Th>{t('Internal IP')}</Th>
           <Th>{t('External IP')}</Th>
-          <Th>{t('Created')}</Th>
           <Th aria-label={t('Actions')} />
         </Tr>
       </Thead>
@@ -50,8 +35,7 @@ export const VmTable = ({
           const state = vm.status?.state;
           const locked = state === ComputeInstanceState.DELETING;
           const name = vm.metadata?.name || vm.id;
-          const instanceTypeId = vm.spec?.instanceType?.id;
-          const instanceType = instanceTypeId ? instanceTypeById.get(instanceTypeId) : undefined;
+          const project = vm.metadata?.project;
           const internalIp = vm.status?.internalIpAddress;
           const externalIp = vm.status?.externalIpAddress;
 
@@ -76,18 +60,15 @@ export const VmTable = ({
               <Td dataLabel={t('Status')}>
                 <VmStatusLabel state={state} />
               </Td>
-              <Td dataLabel={t('Instance type')}>
-                <VmInstanceTypeLabel
-                  instanceTypeId={instanceTypeId}
-                  instanceType={instanceType}
-                  isLoading={isInstanceTypesLoading}
-                />
+              <Td dataLabel={t('Project')}>
+                {project ? (
+                  <Link to={`/projects/${encodeURIComponent(project)}`}>{project}</Link>
+                ) : (
+                  '—'
+                )}
               </Td>
               <Td dataLabel={t('Internal IP')}>{locked ? '—' : internalIp || '—'}</Td>
               <Td dataLabel={t('External IP')}>{locked ? '—' : externalIp || '—'}</Td>
-              <Td dataLabel={t('Created')}>
-                <Timestamp value={vm.metadata?.creationTimestamp} />
-              </Td>
               <Td dataLabel={t('Actions')} isActionCell>
                 {locked ? null : <VmActionsMenu vm={vm} />}
               </Td>

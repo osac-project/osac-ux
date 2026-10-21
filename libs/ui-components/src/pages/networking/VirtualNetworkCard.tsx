@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import {
   Card,
   CardBody,
@@ -18,6 +19,7 @@ import ResourceNameField from '@osac/ui-components/components/Resource/ResourceN
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 import { VirtualNetworkStatusLabel } from '../../components/networking/VirtualNetworkStatusLabel';
+import { Timestamp } from '../../components/Primitives/Timestamp';
 
 import './VirtualNetworkCard.css';
 
@@ -53,10 +55,11 @@ const VirtualNetworkCard = ({
       <CardBody>
         <div className="virtual-network-card__main">
           <Stack hasGutter>
-            <StackItem className="virtual-network-card__name">
+            <StackItem>
               <ResourceNameField
                 resource={virtualNetwork}
                 detailsUrl={`/networking/virtual-networks/${virtualNetwork.id}`}
+                nameLinkClassName="virtual-network-card__title-link"
               />
             </StackItem>
             <Divider />
@@ -87,19 +90,37 @@ const VirtualNetworkCard = ({
           </Stack>
         </div>
         <div className="virtual-network-card__footer">
-          <Content component="small" className="virtual-network-card__footer-label">
-            {t('NAT gateway')}
-          </Content>
-          {natGateway ? (
-            <Stack hasGutter={false}>
-              <StackItem>{natGateway.metadata?.name ?? natGateway.id}</StackItem>
-              <StackItem>
+          <div className="virtual-network-card__footer-row">
+            <Content component="small" className="virtual-network-card__footer-label">
+              {t('Project')}
+            </Content>
+            {virtualNetwork.metadata?.project ? (
+              <Link to={`/projects/${encodeURIComponent(virtualNetwork.metadata.project)}`}>
+                {virtualNetwork.metadata.project}
+              </Link>
+            ) : (
+              <span>{t('Default')}</span>
+            )}
+          </div>
+          <div className="virtual-network-card__footer-row">
+            <Content component="small" className="virtual-network-card__footer-label">
+              {t('Created')}
+            </Content>
+            <Timestamp value={virtualNetwork.metadata?.creationTimestamp} />
+          </div>
+          <div className="virtual-network-card__footer-row">
+            <Content component="small" className="virtual-network-card__footer-label">
+              {t('NAT')}
+            </Content>
+            {natGateway ? (
+              <span>
+                {natGateway.metadata?.name ?? natGateway.id} ·{' '}
                 <code>{natGatewayAddress ?? '—'}</code>
-              </StackItem>
-            </Stack>
-          ) : (
-            <span>—</span>
-          )}
+              </span>
+            ) : (
+              <span>—</span>
+            )}
+          </div>
         </div>
       </CardBody>
     </Card>

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button, Flex, FlexItem, Stack, StackItem, Title } from '@patternfly/react-core';
 import PlusCircleIcon from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
@@ -15,6 +15,7 @@ interface VmNetworkingTabProps {
 
 const VmNetworkingTab = ({ vm }: VmNetworkingTabProps) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const rows = useVmNetworkAttachmentRows(vm);
 
   return (
@@ -36,6 +37,7 @@ const VmNetworkingTab = ({ vm }: VmNetworkingTabProps) => {
               size="sm"
               icon={<PlusCircleIcon />}
               aria-label={t('Add network')}
+              onClick={() => navigate('/networking/virtual-networks?create=virtual-network')}
             >
               {t('Add network')}
             </Button>
@@ -50,6 +52,7 @@ const VmNetworkingTab = ({ vm }: VmNetworkingTabProps) => {
                 <Th>{t('Virtual network')}</Th>
                 <Th>{t('Subnet')}</Th>
                 <Th>{t('Security groups')}</Th>
+                <Th>{t('Internal IP')}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -94,6 +97,7 @@ const VmNetworkingTab = ({ vm }: VmNetworkingTabProps) => {
                         ))
                       : '—'}
                   </Td>
+                  <Td dataLabel={t('Internal IP')}>{vm.status?.internalIpAddress || '—'}</Td>
                 </Tr>
               ))}
             </Tbody>

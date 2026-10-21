@@ -6,9 +6,15 @@ import { type CatalogFieldPolicyBehavior } from './catalogFieldPolicyDisplay';
 
 interface CatalogFieldEditabilityLabelProps {
   behavior: CatalogFieldPolicyBehavior | undefined;
+  showLocked?: boolean;
+  showEditable?: boolean;
 }
 
-const CatalogFieldEditabilityLabel = ({ behavior }: CatalogFieldEditabilityLabelProps) => {
+const CatalogFieldEditabilityLabel = ({
+  behavior,
+  showLocked = true,
+  showEditable = true,
+}: CatalogFieldEditabilityLabelProps) => {
   const { t } = useTranslation();
 
   if (!behavior) {
@@ -16,6 +22,9 @@ const CatalogFieldEditabilityLabel = ({ behavior }: CatalogFieldEditabilityLabel
   }
 
   if (behavior === 'editable') {
+    if (!showEditable) {
+      return null;
+    }
     return (
       <Label color="purple" isCompact>
         {t('Editable')}
@@ -23,7 +32,7 @@ const CatalogFieldEditabilityLabel = ({ behavior }: CatalogFieldEditabilityLabel
     );
   }
 
-  return <Label isCompact>{t('Locked')}</Label>;
+  return showLocked ? <Label isCompact>{t('Locked')}</Label> : null;
 };
 
 export default CatalogFieldEditabilityLabel;

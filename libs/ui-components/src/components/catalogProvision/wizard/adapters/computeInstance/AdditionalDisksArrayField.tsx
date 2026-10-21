@@ -4,6 +4,7 @@ import {
   FormFieldGroupHeader,
   Stack,
   StackItem,
+  Title,
 } from '@patternfly/react-core';
 import MinusCircleIcon from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import PlusCircleIcon from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
@@ -37,7 +38,11 @@ export const AdditionalDisksArrayField = () => {
 
   return (
     <Stack hasGutter>
-      {disks.length === 0 ? <StackItem>{t('No additional disks added.')}</StackItem> : null}
+      <StackItem>
+        <Title headingLevel="h3" size="lg">
+          {t('Additional disks')}
+        </Title>
+      </StackItem>
       {disks.map((_, index) => (
         <StackItem key={index}>
           <FormFieldGroup
@@ -60,9 +65,10 @@ export const AdditionalDisksArrayField = () => {
           >
             <InputField
               name={`spec.additionalDisks.${index}.sizeGib`}
-              label={t('Size (GiB)')}
+              label={t('Boot disk size (GiB)')}
               fieldId={`vm-additional-disk-${index}-size`}
               type="number"
+              useNumberInputControls={false}
               isRequired
               min={1}
               max={16384}

@@ -148,9 +148,9 @@ describe('buildComputeInstanceStepSchema', () => {
     });
   });
 
-  it('does not validate boot disk on configuration step', async () => {
+  it('does not validate boot disk on the access step', async () => {
     const errors = await validateStep(
-      'configuration',
+      'access-and-initial-run',
       {
         ...emptyValues,
         catalogItemId: vmCatalogItem.id,
@@ -199,9 +199,9 @@ describe('buildComputeInstanceStepSchema', () => {
     expect(errors).toEqual({});
   });
 
-  it('requires instance type on configuration step', async () => {
+  it('requires instance type on the instance type step', async () => {
     const errors = await validateStep(
-      'configuration',
+      'instance-type',
       {
         ...emptyValues,
         catalogItemId: vmCatalogItem.id,
@@ -221,7 +221,7 @@ describe('buildComputeInstanceStepSchema', () => {
 
   it('validates inline user data with the shared 64 KB limit', async () => {
     const errors = await validateStep(
-      'configuration',
+      'access-and-initial-run',
       {
         ...emptyValues,
         catalogItemId: vmCatalogItem.id,
@@ -240,7 +240,7 @@ describe('buildComputeInstanceStepSchema', () => {
 
     await expect(
       validateStep(
-        'configuration',
+        'access-and-initial-run',
         {
           ...emptyValues,
           catalogItemId: vmCatalogItem.id,
@@ -257,7 +257,7 @@ describe('buildComputeInstanceStepSchema', () => {
 
     await expect(
       validateStep(
-        'configuration',
+        'access-and-initial-run',
         {
           ...emptyValues,
           catalogItemId: vmCatalogItem.id,

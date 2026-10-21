@@ -40,17 +40,33 @@ const CatalogItemCard = ({ item, selection, resourceLookups }: CatalogItemCardPr
   const { t } = useTranslation();
   const { role } = useSession();
   const isWizardMode = Boolean(selection);
+  const isSizeLocked =
+    isWizardMode &&
+    item.$typeName === 'osac.public.v1.ComputeInstanceCatalogItem' &&
+    item.fields?.bootDisk?.sizeGib?.behavior.case === 'locked';
   const cardId = `catalog-item-card-${item.id}`;
   const titleId = `${cardId}-title`;
+  const handleSelectionKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!isWizardMode || (event.key !== 'Enter' && event.key !== ' ')) {
+      return;
+    }
+    event.preventDefault();
+    selection?.onSelect();
+  };
 
   return (
     <Card
       id={cardId}
       ouiaId={`catalog-item-option-${item.id}`}
-      className="catalog-item-card"
-      isSelectable={isWizardMode}
+      className={`catalog-item-card${isWizardMode ? ' catalog-item-card--wizard' : ''}`}
+      isSelectable={false}
       isSelected={selection?.selected}
       isDisabled={!item.published}
+      onClick={isWizardMode ? selection?.onSelect : undefined}
+      onKeyDown={handleSelectionKeyDown}
+      role={isWizardMode ? 'radio' : undefined}
+      aria-checked={isWizardMode ? selection?.selected : undefined}
+      tabIndex={isWizardMode ? 0 : undefined}
     >
       <CardHeader
         className="catalog-item-card__header"
@@ -79,20 +95,6 @@ const CatalogItemCard = ({ item, selection, resourceLookups }: CatalogItemCardPr
             </Flex>
           ) : null,
         }}
-        selectableActions={
-          isWizardMode && selection
-            ? {
-                variant: 'single',
-                name: 'selectedCatalogItem',
-                selectableActionId: `selectedCatalogItem-${item.id}`,
-                selectableActionAriaLabel: item.metadata?.name,
-                hasNoOffset: true,
-                onChange: () => {
-                  selection.onSelect();
-                },
-              }
-            : undefined
-        }
       >
         <span className="catalog-item-card__icon" aria-hidden>
           <CatalogItemIcon kind={item.$typeName} />
@@ -101,14 +103,26 @@ const CatalogItemCard = ({ item, selection, resourceLookups }: CatalogItemCardPr
       <CardTitle id={titleId} className="catalog-item-card__title">
         <ResourceNameField
           resource={item}
+          subTitle={isWizardMode ? item.description || item.id : undefined}
+          titleAdornment={
+            isSizeLocked ? (
+              <Label color="grey" isCompact>
+                {t('Size locked')}
+              </Label>
+            ) : undefined
+          }
           detailsUrl={isWizardMode ? undefined : catalogItemDetailsPath(item)}
+          nameLinkClassName="catalog-item-card__title-link"
         />
       </CardTitle>
-      <Divider />
       <CardBody>
         <Stack hasGutter>
           <StackItem className="catalog-item-card__resources">
-            <CatalogItemResources catalogItem={item} resourceLookups={resourceLookups} />
+            <CatalogItemResources
+              catalogItem={item}
+              resourceLookups={resourceLookups}
+              hideLockedBadges={isWizardMode}
+            />
           </StackItem>
         </Stack>
       </CardBody>

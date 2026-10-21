@@ -72,6 +72,20 @@ describe('StorageTierSelectField', () => {
     expect(toggle).toHaveTextContent('bulk');
   });
 
+  it('shows each tier description as an option subtitle', async () => {
+    const { user } = renderField({
+      apiFixtures: {
+        publicStorageTiers: [
+          makeTier('fast', 'Fast SSD', 'General-purpose SSD for most virtual machines'),
+        ],
+      },
+    });
+
+    await user.click(await screen.findByLabelText(/^Storage tier/));
+
+    expect(screen.getByText('General-purpose SSD for most virtual machines')).toBeInTheDocument();
+  });
+
   it('lists only active tiers', async () => {
     const { user } = renderField({
       apiFixtures: {
@@ -204,7 +218,7 @@ describe('StorageTierSelectField', () => {
     expect(screen.queryByText('Locked by catalog')).not.toBeInTheDocument();
   });
 
-  it('shows the catalog value read-only with a lock badge when isLocked', async () => {
+  it('shows the catalog value read-only without a lock badge when isLocked', async () => {
     renderField(
       { apiFixtures: { publicStorageTiers: [makeTier('fast', 'Fast SSD', 'low latency')] } },
       { id: 'id-fast', name: 'fast' },
@@ -214,7 +228,7 @@ describe('StorageTierSelectField', () => {
     await waitFor(() => {
       expect(screen.getByLabelText(/^Storage tier/)).toHaveTextContent('fast');
     });
-    expect(screen.getByText('Locked by catalog')).toBeInTheDocument();
+    expect(screen.queryByText('Locked by catalog')).not.toBeInTheDocument();
     expect(screen.getByLabelText(/^Storage tier/)).toBeDisabled();
   });
 });

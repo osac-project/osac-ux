@@ -94,7 +94,24 @@ describe('VmStorageStep', () => {
     expect(screen.queryByText('Locked by catalog')).not.toBeInTheDocument();
   });
 
-  it('renders the tier read-only with a lock badge when the catalog locks it', async () => {
+  it('renders the storage introduction and guidance', () => {
+    renderStep(makeCatalogItem());
+
+    expect(screen.getByRole('heading', { name: 'Storage' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Boot disk size (GiB)')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Set the boot disk size and storage tier. Add additional disks if you need more storage.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Starting default from the template.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Storage tiers are defined by your cloud provider administrator.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Additional disks' })).toBeInTheDocument();
+  });
+
+  it('renders the tier read-only without a lock badge when the catalog locks it', async () => {
     renderStep(
       makeCatalogItem({
         $typeName: 'osac.public.v1.FieldDefinition',
@@ -107,7 +124,7 @@ describe('VmStorageStep', () => {
     );
 
     await waitFor(() => expect(screen.getByLabelText(/^Storage tier/)).toHaveTextContent('fast'));
-    expect(screen.getByText('Locked by catalog')).toBeInTheDocument();
+    expect(screen.queryByText('Locked by catalog')).not.toBeInTheDocument();
     expect(screen.getByLabelText(/^Storage tier/)).toBeDisabled();
   });
 
@@ -127,7 +144,6 @@ describe('VmStorageStep — additional disks', () => {
   it('renders the additional-disks array field with no rows initially', () => {
     renderStep(makeCatalogItem());
 
-    expect(screen.getByText('No additional disks added.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add disk' })).toBeInTheDocument();
   });
 

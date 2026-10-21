@@ -35,7 +35,7 @@ const { useInstanceType } = await import('../../../api/v1/instance-types');
 
 const vm = {
   id: 'vm-1',
-  metadata: { name: 'web-01' },
+  metadata: { name: 'web-01', project: 'project alpha' },
   spec: {
     instanceType: { id: 'standard-4-8' },
     catalogItem: { id: 'catalog-vm-1', name: 'General purpose VM' },
@@ -59,12 +59,20 @@ describe('VmDetails', () => {
     renderDetails();
 
     expect(screen.getByRole('heading', { name: 'Overview' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Lifecycle' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Configuration' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Access & initial run' })).toBeInTheDocument();
+    expect(screen.getByText('Alerts')).toBeInTheDocument();
+    expect(screen.getByText('No alerts')).toBeInTheDocument();
+    expect(screen.getByText('Recent activity')).toBeInTheDocument();
+    expect(screen.getByText('No recent activity')).toBeInTheDocument();
     expect(screen.getByText('Networking tab')).toBeInTheDocument();
-    expect(screen.getByText('Console')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'General purpose VM' })).toHaveAttribute(
       'href',
       '/vms/create/catalog-vm-1',
+    );
+    expect(screen.getByRole('link', { name: 'project alpha' })).toHaveAttribute(
+      'href',
+      '/projects/project%20alpha',
     );
     expect(screen.getByRole('link', { name: 'alice-laptop-key' })).toHaveAttribute(
       'href',

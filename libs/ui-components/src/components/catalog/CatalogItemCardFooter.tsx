@@ -17,10 +17,15 @@ type CatalogItemCardFooterProps = {
   isWizardMode: boolean;
 };
 
+interface RateValues {
+  hourly: number;
+  monthly: number;
+}
+
 const RATE_HOURLY_ANNOTATION = 'osac.io/rate-hourly';
 const RATE_MONTHLY_ANNOTATION = 'osac.io/rate-monthly';
 
-const formatRate = (catalogItem: CatalogItem): string | undefined => {
+const getRateValues = (catalogItem: CatalogItem): RateValues | undefined => {
   const annotations = catalogItem.metadata?.annotations;
   const hourlyRate = Number(annotations?.[RATE_HOURLY_ANNOTATION]);
   const monthlyRate = Number(annotations?.[RATE_MONTHLY_ANNOTATION]);
@@ -29,7 +34,15 @@ const formatRate = (catalogItem: CatalogItem): string | undefined => {
     return undefined;
   }
 
-  return `$${hourlyRate.toFixed(2)}/hr · $${monthlyRate.toLocaleString('en-US', {
+  return { hourly: hourlyRate, monthly: monthlyRate };
+};
+
+const formatRate = (rateValues: RateValues | undefined): string | undefined => {
+  if (!rateValues) {
+    return undefined;
+  }
+
+  return `$${rateValues.hourly.toFixed(2)}/hr · $${rateValues.monthly.toLocaleString('en-US', {
     maximumFractionDigits: 0,
   })}/mo per instance`;
 };
@@ -53,7 +66,8 @@ const CatalogItemCardFooter: FC<CatalogItemCardFooterProps> = ({
   isWizardMode,
 }) => {
   const { t } = useTranslation();
-  const rate = formatRate(catalogItem);
+  const rateValues = getRateValues(catalogItem);
+  const rate = formatRate(rateValues);
 
   const renderFooterText = () => {
     if (role === 'tenant-user') {
@@ -100,18 +114,40 @@ const CatalogItemCardFooter: FC<CatalogItemCardFooterProps> = ({
   return (
     <CardFooter className="catalog-item-card__footer">
       <Flex direction={{ default: 'column' }} gap={{ default: 'gapMd' }}>
-        {rate ? (
+        {isWizardMode && rateValues ? (
+          <FlexItem className="catalog-item-card__estimate">
+            <Content component="small">{t('Estimate cost')}</Content>
+            <Flex
+              className="catalog-item-card__estimate-values"
+              flexWrap={{ default: 'wrap' }}
+              spaceItems={{ default: 'spaceItemsLg' }}
+            >
+              <FlexItem>
+                <strong>
+                  ${rateValues.hourly.toFixed(2)}/{t('hour')}
+                </strong>
+              </FlexItem>
+              <FlexItem>
+                <strong>
+                  ${rateValues.monthly.toFixed(2)}/{t('month')}
+                </strong>
+              </FlexItem>
+            </Flex>
+          </FlexItem>
+        ) : rate && !isWizardMode ? (
           <FlexItem>
             <Content component="small" className="catalog-item-card__rate">
               <strong>{t('Rate')}</strong> {rate}
             </Content>
           </FlexItem>
         ) : null}
-        <FlexItem>
-          <Content component="small" className="pf-v6-u-color-text-subtle">
-            {renderFooterText()}
-          </Content>
-        </FlexItem>
+        {!isWizardMode ? (
+          <FlexItem>
+            <Content component="small" className="pf-v6-u-color-text-subtle">
+              {renderFooterText()}
+            </Content>
+          </FlexItem>
+        ) : null}
         {!isWizardMode && role !== 'admin' ? (
           <FlexItem>
             <CatalogItemLaunchButton

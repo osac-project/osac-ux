@@ -37,6 +37,7 @@ const ExternalIpPoolCard = ({ pool }: ExternalIpPoolCardProps) => {
           <ResourceNameField
             resource={pool}
             detailsUrl={`/admin/infrastructure/external-ip-pools/${encodeURIComponent(pool.id)}`}
+            nameLinkClassName="external-ip-pool-card__title-link"
           />
           <span className="external-ip-pool-card__pool-meta">
             {t('{{inUse}} in use · {{available}} available', {

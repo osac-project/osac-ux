@@ -13,6 +13,7 @@ import {
 } from '@osac/types';
 import {
   ClusterTemplateReferenceSchema,
+  ComputeInstanceCatalogItemSchema,
   ComputeInstanceTemplateReferenceSchema,
   HostTypeReferenceSchema,
   InstanceTypeState,
@@ -54,7 +55,8 @@ export const clickWizardNext = async (user: UserEvent) => {
   await user.click(nextButton);
 };
 
-const catalogItemGroup = () => screen.getByRole('radiogroup', { name: 'Catalog item' });
+const catalogItemGroup = () =>
+  screen.getByRole('radiogroup', { name: /Catalog item|Select template/ });
 
 const expectCatalogItemVisible = async (title: string) => {
   await waitFor(() => {
@@ -68,7 +70,8 @@ const expectCatalogItemSelected = (title: string) => {
   if (!card) {
     throw new Error(`Catalog card not found for ${title}`);
   }
-  expect(within(card).getByRole('radio')).toBeChecked();
+  expect(card).toHaveAttribute('role', 'radio');
+  expect(card).toHaveAttribute('aria-checked', 'true');
 };
 
 const selectCatalogItem = async (user: UserEvent, title: string) => {
@@ -78,7 +81,7 @@ const selectCatalogItem = async (user: UserEvent, title: string) => {
   if (!card) {
     throw new Error(`Catalog card not found for ${title}`);
   }
-  await user.click(within(card).getByRole('radio'));
+  await user.click(card);
 };
 
 const clickWizardBack = async (user: UserEvent) => {
@@ -145,12 +148,15 @@ const advanceToNetworkingStep = async (user: UserEvent, catalogItemTitle: string
   await fillStorageStep(user);
   await clickWizardNext(user);
   await waitFor(() => {
-    expect(screen.getByLabelText(/Use tenant default network/)).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Tenant default/ })).toBeInTheDocument();
   });
 };
 
 const enableCustomNetworking = async (user: UserEvent) => {
-  await user.click(screen.getByLabelText(/Use tenant default network/));
+  const tenantDefaultCard = screen.getByRole('radio', { name: /Tenant default/ });
+  if (tenantDefaultCard.getAttribute('aria-checked') === 'true') {
+    await user.click(screen.getByRole('radio', { name: /Custom network/ }));
+  }
   await waitFor(() => {
     expect(screen.getByLabelText(/^Virtual network/)).toBeInTheDocument();
   });
@@ -169,6 +175,7 @@ const advanceToReviewStep = async (user: UserEvent, catalogItemTitle: string) =>
   await advanceToNetworkingStep(user, catalogItemTitle);
   await enableCustomNetworking(user);
   await selectNetworkingPickers(user);
+  await clickWizardNext(user);
   await clickWizardNext(user);
   await waitFor(() => {
     expect(screen.getByRole('button', { name: 'Create' })).toBeInTheDocument();
@@ -204,6 +211,16 @@ const vmCatalogItem: ComputeInstanceCatalogItem = {
   title: 'RHEL 9 catalog',
   description: 'RHEL 9 base image',
   template: create(ComputeInstanceTemplateReferenceSchema, { id: 'tpl-rhel-9' }),
+  fields: create(ComputeInstanceCatalogItemSchema, {
+    fields: {
+      instanceType: {
+        behavior: {
+          case: 'editable',
+          value: { defaultValue: { id: 'standard-4-8' } },
+        },
+      },
+    },
+  }).fields,
   published: true,
   templateParameters: {},
 };
@@ -644,7 +661,7 @@ describe('CatalogProvisionWizard', () => {
     });
   });
 
-  it('preserves configuration values after navigating back from networking', async () => {
+  it('preserves storage values after navigating back from networking', async () => {
     const { user } = renderWizard();
 
     await advanceToNetworkingStep(user, vmCatalogItem.metadata?.name ?? '');
@@ -652,11 +669,21 @@ describe('CatalogProvisionWizard', () => {
     await waitFor(() => {
       expect(screen.getByLabelText(/Boot disk/)).toBeInTheDocument();
     });
-    await clickWizardBack(user);
+  });
+
+  it('shows SSH public key and user data on Access & Initial Run', async () => {
+    const { user } = renderWizard();
+
+    await advanceToNetworkingStep(user, vmCatalogItem.metadata?.name ?? '');
+    await enableCustomNetworking(user);
+    await selectNetworkingPickers(user);
+    await clickWizardNext(user);
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/^Instance type/)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Access & Initial Run' })).toBeInTheDocument();
     });
+    expect(screen.getByLabelText(/^SSH public key/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Cloud-init/)).toBeInTheDocument();
   });
 
   it('shows only active instance types when deprecated and active share a name', async () => {

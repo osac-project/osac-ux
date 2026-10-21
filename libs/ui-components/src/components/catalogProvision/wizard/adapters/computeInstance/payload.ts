@@ -10,10 +10,11 @@ import {
 } from '../../../../Form/resourceSelectValue';
 import { getCatalogFieldOverlay, readCatalogFieldDefinitions } from '../../catalogOverlay';
 
-export const createEmptyComputeInstanceValues = (): ComputeInstanceWizardValues => ({
+export const createEmptyComputeInstanceValues = (project = ''): ComputeInstanceWizardValues => ({
   catalogItemId: '',
-  metadata: { name: '', project: '' },
+  metadata: { name: '', project, description: '' },
   spec: {
+    diskImage: emptyResourceSelectValue(),
     sshKey: { name: '' },
     instanceType: '',
     userDataSource: 'inline',
@@ -27,6 +28,7 @@ export const createEmptyComputeInstanceValues = (): ComputeInstanceWizardValues 
       subnet: emptyResourceSelectValue(),
       securityGroups: [],
       autoExternalIpAttachment: false,
+      additionalNetworks: [],
     },
   },
 });
@@ -61,17 +63,37 @@ export const buildComputeInstanceCreatePayload = (
     runStrategy: ComputeInstanceRunStrategy.COMPUTE_INSTANCE_RUN_STRATEGY_ALWAYS,
   };
 
+  const diskImageId = values.spec.diskImage?.id.trim() ?? '';
+  const diskImageName = values.spec.diskImage?.name.trim() ?? '';
+  if (diskImageId || diskImageName) {
+    spec.diskImage = {
+      ...(diskImageId ? { id: diskImageId } : {}),
+      ...(diskImageName ? { name: diskImageName } : {}),
+    };
+  }
+
   if (!values.spec.networking.useDefaultNetwork) {
-    const subnetId = values.spec.networking.subnet.id.trim();
-    if (subnetId) {
-      spec.networkAttachments = [
-        {
+    const networkAttachments = [
+      values.spec.networking,
+      ...(values.spec.networking.additionalNetworks ?? []),
+    ]
+      .filter((network) => !network.useDefaultNetwork)
+      .map((network) => {
+        const subnetId = network.subnet.id.trim();
+        if (!subnetId) {
+          return undefined;
+        }
+        return {
           subnet: { id: subnetId },
-          securityGroups: values.spec.networking.securityGroups
+          securityGroups: network.securityGroups
             .filter((sg) => sg.id.trim())
             .map((sg) => ({ id: sg.id })),
-        },
-      ];
+        };
+      })
+      .filter((network): network is NonNullable<typeof network> => network !== undefined);
+
+    if (networkAttachments.length > 0) {
+      spec.networkAttachments = networkAttachments;
     }
   }
 
@@ -115,7 +137,13 @@ export const buildComputeInstanceCreatePayload = (
   }
 
   return {
-    metadata: { name: values.metadata.name.trim(), project: values.metadata.project },
+    metadata: {
+      name: values.metadata.name.trim(),
+      project: values.metadata.project,
+      ...(values.metadata.description?.trim()
+        ? { description: values.metadata.description.trim() }
+        : {}),
+    },
     spec,
   };
 };

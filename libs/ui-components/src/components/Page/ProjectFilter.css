@@ -1,0 +1,14 @@
+.project-filter {
+  --project-filter-width: calc(var(--pf-t--global--spacer--500) * 8);
+
+  flex: 0 0 var(--project-filter-width);
+  inline-size: var(--project-filter-width);
+  min-inline-size: var(--project-filter-width);
+  max-inline-size: var(--project-filter-width);
+}
+
+.project-filter .pf-v6-c-select,
+.project-filter .pf-v6-c-menu-toggle {
+  inline-size: 100%;
+  max-inline-size: 100%;
+}

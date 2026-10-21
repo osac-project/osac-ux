@@ -1,4 +1,4 @@
-import { type CSSProperties, useState } from 'react';
+import { type CSSProperties, type ReactNode, useState } from 'react';
 import {
   Alert,
   Divider,
@@ -36,6 +36,8 @@ interface HierarchicalSelectProps {
   placeholder: string;
   /** Label for the "clear all" option at the top of the list */
   clearLabel: string;
+  /** Optional icon shown next to the clear-all option */
+  clearIcon?: ReactNode;
   isLoading?: boolean;
   /** Human-readable error string — renders an inline danger alert */
   error?: string;
@@ -51,6 +53,7 @@ export const HierarchicalSelect = ({
   onSelectionChange,
   placeholder,
   clearLabel,
+  clearIcon,
   isLoading = false,
   error,
 }: HierarchicalSelectProps) => {
@@ -88,17 +91,20 @@ export const HierarchicalSelect = ({
         <MenuToggle
           ref={ref}
           isExpanded={isOpen}
+          isFullWidth
           onClick={() => setIsOpen((o) => !o)}
           aria-label={ariaLabel}
         >
-          {toggleLabel}
+          <span className="hierarchical-select__toggle-label">{toggleLabel}</span>
         </MenuToggle>
       )}
       shouldFocusToggleOnSelect
       aria-label={ariaLabel}
     >
       <SelectList>
-        <SelectOption value={CLEAR_SENTINEL}>{clearLabel}</SelectOption>
+        <SelectOption value={CLEAR_SENTINEL} icon={clearIcon}>
+          {clearLabel}
+        </SelectOption>
         <Divider />
 
         {isLoading ? (

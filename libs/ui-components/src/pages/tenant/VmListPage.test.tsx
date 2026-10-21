@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ComputeInstance } from '@osac/types';
@@ -58,6 +58,7 @@ const renderPage = () =>
 
 describe('VmListPage', () => {
   beforeEach(() => {
+    localStorage.removeItem('vms-view-type');
     vi.mocked(useComputeInstances).mockReturnValue({
       data: [vm],
       isLoading: false,
@@ -106,5 +107,28 @@ describe('VmListPage', () => {
     expect(await screen.findByText('An error occurred')).toBeInTheDocument();
     expect(screen.getByText('VMs unavailable')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'web-01' })).not.toBeInTheDocument();
+  });
+
+  it('shows power state, operating system, and hardware device filters', async () => {
+    renderPage();
+
+    expect(
+      await screen.findByRole('button', { name: 'Filter by power state' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Filter by operating system' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Filter by hardware devices' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Filter virtual machines by status' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('switches between card and list views', async () => {
+    renderPage();
+
+    expect(screen.queryByRole('columnheader', { name: 'Name' })).not.toBeInTheDocument();
+    fireEvent.click(await screen.findByRole('button', { name: 'List view' }));
+
+    expect(await screen.findByRole('columnheader', { name: 'Name' })).toBeInTheDocument();
+    expect(localStorage.getItem('vms-view-type')).toBe('list');
   });
 });

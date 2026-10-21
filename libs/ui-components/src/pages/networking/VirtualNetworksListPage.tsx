@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   FormSelect,
   FormSelectOption,
@@ -40,6 +40,8 @@ import { useTranslation } from '../../hooks/useTranslation';
 
 export const VIRTUAL_NETWORKS_VIEW_KEY = 'virtual-networks';
 const STATUS_PARAM = 'status';
+const CREATE_PARAM = 'create';
+const CREATE_VIRTUAL_NETWORK_VALUE = 'virtual-network';
 
 const STATUS_FILTER_OPTIONS = [
   { value: 'ready', state: VirtualNetworkState.READY },
@@ -56,7 +58,8 @@ export const VirtualNetworksListPage = () => {
   const { t } = useTranslation();
   const [search, setSearch] = usePageFilter(SEARCH_PARAM);
   const [statusFilter, setStatusFilter] = usePageFilter(STATUS_PARAM);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isCreateModalOpen = searchParams.get(CREATE_PARAM) === CREATE_VIRTUAL_NETWORK_VALUE;
   const [viewTypePref] = useUserPreferences(getViewTypePrefKey(VIRTUAL_NETWORKS_VIEW_KEY));
   const viewType: ViewType = isViewType(viewTypePref) ? viewTypePref : DEFAULT_VIEW_TYPE;
 
@@ -110,6 +113,18 @@ export const VirtualNetworksListPage = () => {
 
   const pageError = error ?? natGatewaysError ?? securityGroupsError;
 
+  const setCreateModalOpen = (isOpen: boolean) => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+
+    if (isOpen) {
+      nextSearchParams.set(CREATE_PARAM, CREATE_VIRTUAL_NETWORK_VALUE);
+    } else {
+      nextSearchParams.delete(CREATE_PARAM);
+    }
+
+    setSearchParams(nextSearchParams);
+  };
+
   return (
     <>
       <ListPage
@@ -117,7 +132,7 @@ export const VirtualNetworksListPage = () => {
         description={t('Manage virtual networks for your compute instances.')}
         error={pageError}
         actions={
-          <CreateButton onClick={() => setIsCreateModalOpen(true)}>
+          <CreateButton onClick={() => setCreateModalOpen(true)}>
             {t('Create virtual network')}
           </CreateButton>
         }
@@ -211,9 +226,7 @@ export const VirtualNetworksListPage = () => {
         </ListPageBody>
       </ListPage>
 
-      {isCreateModalOpen && (
-        <VirtualNetworkCreateModal onClose={() => setIsCreateModalOpen(false)} />
-      )}
+      {isCreateModalOpen && <VirtualNetworkCreateModal onClose={() => setCreateModalOpen(false)} />}
     </>
   );
 };

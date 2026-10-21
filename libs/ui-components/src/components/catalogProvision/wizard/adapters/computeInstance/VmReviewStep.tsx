@@ -104,6 +104,12 @@ export const VmReviewStep = ({ catalogItem }: Props) => {
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
+            <DescriptionListTerm>{t('Description')}</DescriptionListTerm>
+            <DescriptionListDescription>
+              {formatReviewScalar(values.metadata.description)}
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+          <DescriptionListGroup>
             <DescriptionListTerm>{t('SSH public key')}</DescriptionListTerm>
             <DescriptionListDescription>
               {formatReviewScalar(values.spec.sshKey.name)}

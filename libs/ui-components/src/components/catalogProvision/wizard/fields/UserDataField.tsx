@@ -5,12 +5,15 @@ import { RadioButtonField } from '@osac/ui-components/components/Form/RadioButto
 import SecretSelectionField from '@osac/ui-components/components/Form/SecretSelectionField';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
+import UserDataSourceCards from './UserDataSourceCards';
+
 type UserDataFieldProps = {
   sourceName: string;
   secretRefName: string;
   inlineName: string;
   currentSource: 'secret' | 'inline';
   projectName: string;
+  useCards?: boolean;
 };
 
 const UserDataField = ({
@@ -19,20 +22,25 @@ const UserDataField = ({
   inlineName,
   currentSource,
   projectName,
+  useCards = false,
 }: UserDataFieldProps) => {
   const { t } = useTranslation();
 
   return (
     <>
-      <RadioButtonField
-        name={sourceName}
-        label={t('User data')}
-        fieldId="user-data-source"
-        options={[
-          { value: 'inline', label: t('Enter value') },
-          { value: 'secret', label: t('Select secret') },
-        ]}
-      />
+      {useCards ? (
+        <UserDataSourceCards name={sourceName} currentSource={currentSource} />
+      ) : (
+        <RadioButtonField
+          name={sourceName}
+          label={t('User data')}
+          fieldId="user-data-source"
+          options={[
+            { value: 'inline', label: t('Enter value') },
+            { value: 'secret', label: t('Select secret') },
+          ]}
+        />
+      )}
       {currentSource === 'secret' ? (
         <SecretSelectionField
           label={t('User data secret')}
@@ -48,11 +56,18 @@ const UserDataField = ({
         />
       ) : (
         <InputField
-          label={t('User data')}
+          label={useCards ? t('Cloud-init') : t('User data')}
           name={inlineName}
           fieldId="inline-user-data"
           multiline
-          helperText={t('Optional cloud-init user data (max 64 KB).')}
+          placeholder={useCards ? t('Add cloud-init configuration') : undefined}
+          helperText={
+            useCards
+              ? t(
+                  'Optional user data applied when the virtual machine starts. Supported on Fedora and RHEL images.',
+                )
+              : t('Optional cloud-init user data (max 64 KB).')
+          }
           asFormGroup={false}
         />
       )}

@@ -3,3 +3,10 @@
     var(--hierarchical-select-depth, 0) * var(--pf-t--global--spacer--lg)
   );
 }
+
+.hierarchical-select__toggle-label {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

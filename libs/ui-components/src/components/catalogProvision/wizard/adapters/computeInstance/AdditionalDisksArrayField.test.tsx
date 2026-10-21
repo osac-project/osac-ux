@@ -86,7 +86,7 @@ describe('AdditionalDisksArrayField', () => {
     await user.click(screen.getByRole('button', { name: 'Add disk' }));
 
     expect(screen.queryByText('No additional disks added.')).not.toBeInTheDocument();
-    expect(screen.getByRole('spinbutton', { name: 'Size (GiB)' })).toHaveValue(30);
+    expect(screen.getByRole('textbox', { name: 'Boot disk size (GiB)' })).toHaveValue('30');
     await waitFor(() => expect(screen.getByLabelText(/^Storage tier/)).toBeInTheDocument());
   });
 
@@ -96,7 +96,7 @@ describe('AdditionalDisksArrayField', () => {
     await user.click(screen.getByRole('button', { name: 'Add disk' }));
     await user.click(screen.getByRole('button', { name: 'Add disk' }));
 
-    const sizeInputs = screen.getAllByRole('spinbutton', { name: 'Size (GiB)' });
+    const sizeInputs = screen.getAllByRole('textbox', { name: 'Boot disk size (GiB)' });
     expect(sizeInputs).toHaveLength(2);
 
     await user.clear(sizeInputs[0]);
@@ -152,7 +152,7 @@ describe('AdditionalDisksArrayField', () => {
     const { user } = renderField();
 
     await user.click(screen.getByRole('button', { name: 'Add disk' }));
-    const sizeInputs1 = screen.getAllByRole('spinbutton', { name: 'Size (GiB)' });
+    const sizeInputs1 = screen.getAllByRole('textbox', { name: 'Boot disk size (GiB)' });
     await user.clear(sizeInputs1[0]);
     await user.type(sizeInputs1[0], '77');
 
@@ -160,7 +160,7 @@ describe('AdditionalDisksArrayField', () => {
 
     await user.click(screen.getAllByRole('button', { name: 'Remove disk' })[1]);
 
-    const remaining = screen.getAllByRole('spinbutton', { name: 'Size (GiB)' });
+    const remaining = screen.getAllByRole('textbox', { name: 'Boot disk size (GiB)' });
     expect(remaining).toHaveLength(1);
     expect(remaining[0]).toHaveValue(77);
   });
@@ -169,7 +169,7 @@ describe('AdditionalDisksArrayField', () => {
     const { user } = renderField([{ sizeGib: '40', storageTier: { id: 'id-fast', name: 'fast' } }]);
 
     expect(screen.queryByText('No additional disks added.')).not.toBeInTheDocument();
-    const sizeInput = screen.getByRole('spinbutton', { name: 'Size (GiB)' });
+    const sizeInput = screen.getByRole('textbox', { name: 'Boot disk size (GiB)' });
     expect(sizeInput).toHaveValue(40);
     await waitFor(() => expect(screen.getByLabelText(/^Storage tier/)).toHaveTextContent('fast'));
 

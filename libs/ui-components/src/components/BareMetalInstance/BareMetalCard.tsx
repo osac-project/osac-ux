@@ -1,4 +1,5 @@
 import {
+  Button,
   Card,
   CardBody,
   CardHeader,
@@ -51,6 +52,7 @@ const BareMetalCard = ({ instance }: BareMetalCardProps) => {
             <ResourceNameField
               resource={instance}
               detailsUrl={isDeleting ? undefined : `/bare-metal/${encodeURIComponent(instance.id)}`}
+              nameLinkClassName="baremetal-card__title-link"
             />
             <Content component="small" className="baremetal-card__secondary-cell">
               {instance.spec?.catalogItem?.name ?? t('Bare metal instance')}
@@ -88,6 +90,16 @@ const BareMetalCard = ({ instance }: BareMetalCardProps) => {
                 </dd>
               </div>
             </dl>
+            <div className="baremetal-card__ssh">
+              <Button
+                variant="primary"
+                isBlock
+                isDisabled={isDeleting}
+                className="baremetal-card__ssh-button"
+              >
+                {t('Connect via SSH')}
+              </Button>
+            </div>
           </StackItem>
         </Stack>
       </CardBody>

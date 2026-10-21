@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { type ReactNode, useRef } from 'react';
 import {
   FormGroup,
   NumberInput,
@@ -25,9 +25,11 @@ interface InputFieldProps {
   resizeOrientation?: 'vertical' | 'horizontal' | 'both' | 'none';
   type?: 'text' | 'number' | 'password';
   helperText?: string;
+  labelInfo?: ReactNode;
   placeholder?: string;
   onBlur?: () => void;
   inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+  useNumberInputControls?: boolean;
   min?: number;
   max?: number;
   step?: number;
@@ -45,9 +47,11 @@ export const InputField = ({
   resizeOrientation = 'vertical',
   type = 'text',
   helperText,
+  labelInfo,
   placeholder,
   onBlur,
   inputMode,
+  useNumberInputControls = true,
   min,
   max,
   step,
@@ -127,7 +131,7 @@ export const InputField = ({
       ) : (
         <Split hasGutter>
           <SplitItem isFilled>
-            {type === 'number' ? (
+            {type === 'number' && useNumberInputControls ? (
               <NumberInput
                 value={numberValue}
                 min={min}
@@ -182,7 +186,7 @@ export const InputField = ({
   );
 
   return asFormGroup ? (
-    <FormGroup label={label} fieldId={fieldId} isRequired={isRequired}>
+    <FormGroup label={label} fieldId={fieldId} isRequired={isRequired} labelInfo={labelInfo}>
       {textComponent}
     </FormGroup>
   ) : (

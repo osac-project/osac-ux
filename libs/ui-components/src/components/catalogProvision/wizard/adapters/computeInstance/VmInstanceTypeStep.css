@@ -1,0 +1,43 @@
+.catalog-provision__vm-instance-type-form > .pf-v6-l-stack {
+  --pf-v6-l-stack--m-gutter--Gap: var(--pf-t--global--spacer--lg);
+}
+
+.catalog-provision__instance-type-toggle {
+  min-block-size: calc(var(--pf-t--global--spacer--xl) * 2);
+  padding-block: var(--pf-t--global--spacer--sm);
+  text-align: start;
+}
+
+.catalog-provision__instance-type-toggle-content {
+  min-inline-size: 0;
+  text-align: start;
+}
+
+.catalog-provision__instance-type-name {
+  color: var(--pf-t--global--text--color--regular);
+  font-size: var(--pf-t--global--font--size--body--md);
+  font-weight: var(--pf-t--global--font--weight--body--bold);
+}
+
+.catalog-provision__instance-type-sizing {
+  color: var(--pf-t--global--text--color--subtle);
+  font-size: var(--pf-t--global--font--size--body--sm);
+}
+
+.catalog-provision__instance-type-menu {
+  min-inline-size: 100%;
+  padding-block-start: var(--pf-t--global--spacer--sm);
+}
+
+.catalog-provision__instance-type-menu > .pf-v6-c-search-input {
+  margin-inline: var(--pf-t--global--spacer--sm);
+}
+
+.catalog-provision__instance-type-menu > .pf-v6-c-divider {
+  margin-block-start: var(--pf-t--global--spacer--sm);
+}
+
+.catalog-provision__instance-type-menu .pf-v6-c-select__menu-list {
+  max-block-size: calc(var(--pf-t--global--spacer--2xl) * 8);
+  overflow-y: auto;
+}

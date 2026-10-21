@@ -11,13 +11,16 @@ import {
   createEmptyComputeInstanceValues,
 } from './computeInstance/payload';
 import { buildComputeInstanceStepSchema } from './computeInstance/schemas';
+import { VmAccessAndInitialRunStep } from './computeInstance/VmAccessAndInitialRunStep';
 import { VmConfigurationStep } from './computeInstance/VmConfigurationStep';
 import VmGeneralStep from './computeInstance/VmGeneralStep';
+import { VmInstanceTypeStep } from './computeInstance/VmInstanceTypeStep';
 import { VmNetworkingStep } from './computeInstance/VmNetworkingStep';
 import { VmReviewStep } from './computeInstance/VmReviewStep';
 import { VmStorageStep } from './computeInstance/VmStorageStep';
 import type { CatalogProvisionAdapter } from './types';
 import { useComputeInstanceCatalogItems } from '../../../../api/v1/compute-instance-catalog-item';
+import { useSession } from '../../../../hooks/use-session';
 import { useTranslation } from '../../../../hooks/useTranslation';
 
 export {
@@ -31,6 +34,8 @@ export const useComputeInstanceAdapter = (): CatalogProvisionAdapter<
   MessageInitShape<typeof ComputeInstanceSchema>
 > => {
   const { t } = useTranslation();
+  const { projects } = useSession();
+  const defaultProject = projects.length === 1 ? projects[0] : '';
 
   return useMemo(
     () => ({
@@ -46,11 +51,13 @@ export const useComputeInstanceAdapter = (): CatalogProvisionAdapter<
           },
         };
       },
-      getInitialValues: (_catalogItem) => createEmptyComputeInstanceValues(),
+      getInitialValues: (_catalogItem) => createEmptyComputeInstanceValues(defaultProject),
       buildCreatePayload: buildComputeInstanceCreatePayload,
       ConfigurationStep: VmConfigurationStep,
+      InstanceTypeStep: VmInstanceTypeStep,
       StorageStep: VmStorageStep,
       NetworkingStep: VmNetworkingStep,
+      AccessAndInitialRunStep: VmAccessAndInitialRunStep,
       GeneralStep: VmGeneralStep,
       getStepValidationSchema: (catalogItem, stepId) =>
         buildComputeInstanceStepSchema(catalogItem, stepId, t),
@@ -58,18 +65,18 @@ export const useComputeInstanceAdapter = (): CatalogProvisionAdapter<
       onCatalogItemSelected: (item, helpers) => {
         helpers.resetForm({
           values: {
-            ...createEmptyComputeInstanceValues(),
+            ...createEmptyComputeInstanceValues(defaultProject),
             catalogItemId: item.id,
           },
         });
         applyVmCatalogConfigurationDefaults(item, helpers, t);
         applyVmCatalogGeneralDefaults(item, helpers);
       },
-      wizardTitleKey: 'catalogProvision.vm.wizardTitle',
+      wizardTitleKey: 'Create virtual machine',
       wizardDescriptionKey: 'catalogProvision.vm.wizardDescription',
       breadcrumbCreateLabelKey: 'catalogProvision.vm.breadcrumbCreate',
       ariaLabelKey: 'catalogProvision.vm.ariaLabel',
     }),
-    [t],
+    [defaultProject, t],
   );
 };

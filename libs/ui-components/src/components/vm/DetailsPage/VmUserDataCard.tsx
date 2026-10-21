@@ -11,6 +11,8 @@ import type { ComputeInstance } from '@osac/types';
 
 import { useTranslation } from '../../../hooks/useTranslation';
 
+import './VmUserDataCard.css';
+
 interface VmUserDataCardProps {
   vm: ComputeInstance;
 }
@@ -43,7 +45,7 @@ const VmUserDataCard = ({ vm }: VmUserDataCardProps) => {
       </CardHeader>
       <CardExpandableContent>
         <CardBody>
-          <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{userData}</pre>
+          <pre className="vm-user-data-card__content">{userData}</pre>
         </CardBody>
       </CardExpandableContent>
     </Card>

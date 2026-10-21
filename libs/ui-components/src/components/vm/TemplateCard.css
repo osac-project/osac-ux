@@ -5,7 +5,8 @@
 /* PF v6 removes the default card ::before border for clickable/selectable cards.
    Apply an explicit border on catalog cards (wizard + catalog page). */
 .tenant-vm-template-card.pf-v6-c-card {
-  border: 1px solid var(--pf-t--global--border--color--default);
+  border: var(--pf-t--global--border--width--regular) solid
+    var(--pf-t--global--border--color--default);
   border-radius: var(--pf-t--global--border--radius--medium);
 }
 
@@ -27,7 +28,7 @@
 
 .tenant-vm-template-card__subtitle {
   color: var(--pf-t--global--text--color--subtle);
-  line-height: 1.35;
+  line-height: var(--pf-t--global--font--line-height--body);
   margin: 0;
 }
 

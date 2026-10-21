@@ -1,11 +1,15 @@
 import type { ResourceSelectValue } from '../../../../Form/resourceSelectValue';
 
-export interface ComputeInstanceNetworkingValues {
+export interface ComputeInstanceNetworkAttachmentValues {
   useDefaultNetwork: boolean;
   virtualNetwork: ResourceSelectValue;
   subnet: ResourceSelectValue;
   securityGroups: ResourceSelectValue[];
   autoExternalIpAttachment: boolean;
+}
+
+export interface ComputeInstanceNetworkingValues extends ComputeInstanceNetworkAttachmentValues {
+  additionalNetworks?: ComputeInstanceNetworkAttachmentValues[];
 }
 
 export interface ComputeInstanceDiskValues {
@@ -18,8 +22,10 @@ export interface ComputeInstanceWizardValues {
   metadata: {
     name: string;
     project: string;
+    description?: string;
   };
   spec: {
+    diskImage?: ResourceSelectValue;
     sshKey: {
       name: string;
     };

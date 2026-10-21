@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import { Content, Label, Stack, StackItem, Title } from '@patternfly/react-core';
+import LockIcon from '@patternfly/react-icons/dist/esm/icons/lock-icon';
 
 import type { ComputeInstanceCatalogItem } from '@osac/types';
 
@@ -8,6 +10,8 @@ import { InputField } from '../../../../Form/InputField';
 import OsacForm from '../../../../Form/OsacForm';
 import { StorageTierSelectField } from '../../../../Form/StorageTierSelectField';
 import { getCatalogFieldOverlay, readCatalogFieldDefinitions } from '../../catalogOverlay';
+
+import './VmStorageStep.css';
 
 interface Props {
   catalogItem: ComputeInstanceCatalogItem | null;
@@ -32,20 +36,41 @@ export const VmStorageStep = ({ catalogItem }: Props) => {
   }
 
   return (
-    <OsacForm>
+    <OsacForm className="catalog-provision__vm-storage-form pf-m-limit-width">
+      <Stack hasGutter className="catalog-provision__vm-storage-intro">
+        <StackItem>
+          <Title headingLevel="h2">{t('Storage')}</Title>
+        </StackItem>
+        <StackItem>
+          <Content component="p">
+            {t(
+              'Set the boot disk size and storage tier. Add additional disks if you need more storage.',
+            )}
+          </Content>
+        </StackItem>
+      </Stack>
       <InputField
         name="spec.bootDisk.sizeGib"
-        label={bootDiskOverlay.label}
+        label={t('Boot disk size (GiB)')}
         fieldId="vm-boot-disk-size"
         type="number"
+        useNumberInputControls={false}
         isRequired
-        helperText={t('Size in GiB')}
+        helperText={t('Starting default from the template.')}
         isDisabled={!bootDiskOverlay.editable}
+        labelInfo={
+          bootDiskOverlay.editable ? undefined : (
+            <Label color="grey" icon={<LockIcon aria-hidden />}>
+              {t('Size locked')}
+            </Label>
+          )
+        }
       />
       <StorageTierSelectField
         name="spec.bootDisk.storageTier"
         label={storageTierOverlay.label}
         fieldId="vm-boot-disk-storage-tier"
+        helperText={t('Storage tiers are defined by your cloud provider administrator.')}
         isLocked={!storageTierOverlay.editable}
       />
       <AdditionalDisksArrayField />

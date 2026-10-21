@@ -54,8 +54,12 @@ const TenantCard = ({ tenant }: TenantCardProps) => {
       <CardBody>
         <div className="tenant-card__main">
           <Stack hasGutter>
-            <StackItem className="tenant-card__name">
-              <ResourceNameField resource={tenant} detailsUrl={`/admin/tenants/${tenant.id}`} />
+            <StackItem>
+              <ResourceNameField
+                resource={tenant}
+                detailsUrl={`/admin/tenants/${tenant.id}`}
+                nameLinkClassName="tenant-card__title-link"
+              />
             </StackItem>
             <Divider />
             <StackItem>

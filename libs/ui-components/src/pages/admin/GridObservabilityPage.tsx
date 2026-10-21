@@ -89,12 +89,12 @@ const MetricChart = ({ metric }: MetricChartProps) => {
     .join(' ');
 
   const colorMap: Record<string, string> = {
-    gpu: 'var(--pf-t--global--color--blue--40)',
-    requests: 'var(--pf-t--global--color--green--40)',
-    errors: 'var(--pf-t--global--color--red--40)',
-    latency: 'var(--pf-t--global--color--purple--40)',
+    gpu: 'var(--pf-t--color--blue--40)',
+    requests: 'var(--pf-t--color--green--40)',
+    errors: 'var(--pf-t--color--red--40)',
+    latency: 'var(--pf-t--color--purple--40)',
   };
-  const color = colorMap[metric.key] || 'var(--pf-t--global--color--blue--40)';
+  const color = colorMap[metric.key] || 'var(--pf-t--color--blue--40)';
 
   const hoveredPoint = hoveredIndex !== null ? points[hoveredIndex] : undefined;
 
@@ -154,7 +154,7 @@ const MetricChart = ({ metric }: MetricChartProps) => {
               x2="554"
               y1={y(90)}
               y2={y(90)}
-              stroke="var(--pf-t--global--color--orange--40)"
+                stroke="var(--pf-t--color--orange--40)"
               strokeDasharray="4 3"
             />
           )}
@@ -318,7 +318,7 @@ const GridObservabilityPage = () => {
             )}
 
             <StackItem>
-              <p style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--color--text--secondary)' }}>
+              <p className="grid-observability__metadata">
                 {t('Inventory')}: {data.inventorySource.toUpperCase()} · {t('Retrieved')}{' '}
                 {new Date(data.updatedAt).toLocaleString()} · {t('Metrics')}:{' '}
                 {data.metricsSource === 'demo' || data.demo ? t('Demo') : 'Thanos'}
@@ -330,8 +330,9 @@ const GridObservabilityPage = () => {
               <Title headingLevel="h2" size="lg">
                 {t('Overview')}
               </Title>
-              <p style={{ fontSize: '0.875rem', marginBottom: 'var(--pf-t--global--spacer--md)' }}>
-                {t('Metrics summarize the selected')} {range} {t('window. Cluster availability is current ACM inventory.')}
+              <p className="grid-observability__description">
+                {t('Metrics summarize the selected')} {range}{' '}
+                {t('window. Cluster availability is current ACM inventory.')}
               </p>
               <Flex spaceItems={{ default: 'spaceItemsSm' }}>
                 <StatCard

@@ -1,6 +1,7 @@
 import type { TFunction } from 'i18next';
 import * as yup from 'yup';
 
+import type { ComputeInstanceCatalogItem } from '@osac/types';
 import { buildNetworkAttachmentSchemas } from '@osac/ui-components/validation/network-attachment';
 import { resourceNameSchema } from '@osac/ui-components/validation/resource-name';
 import { userDataSchema } from '@osac/ui-components/validation/user-data';
@@ -62,7 +63,7 @@ const buildComputeInstanceFieldDefinitions = (catalogItem: unknown, t: TFunction
     ),
     specNetworking: (() => {
       const na = buildNetworkAttachmentSchemas(t);
-      return yup.object({
+      const networkAttachmentSchema = yup.object({
         useDefaultNetwork: yup.boolean(),
         virtualNetwork: yup.object().when('useDefaultNetwork', {
           is: false,
@@ -76,6 +77,9 @@ const buildComputeInstanceFieldDefinitions = (catalogItem: unknown, t: TFunction
         }),
         securityGroups: na.securityGroupsSchema,
         autoExternalIpAttachment: yup.boolean(),
+      });
+      return networkAttachmentSchema.shape({
+        additionalNetworks: yup.array(networkAttachmentSchema),
       });
     })(),
   };
@@ -106,19 +110,38 @@ export const buildComputeInstanceStepSchema = (
       return yup.object({
         catalogItemId: yup.string().required(t('Select a catalog item')),
       });
-    case 'general':
+    case 'general': {
+      const diskImagePolicy = (catalogItem as ComputeInstanceCatalogItem | null)?.fields?.diskImage;
+      const diskImageSchema = yup.object({
+        id: yup.string(),
+        name: yup.string(),
+      });
+      const requiredDiskImageSchema =
+        diskImagePolicy?.behavior.case === 'locked' || diskImagePolicy?.behavior.case === 'editable'
+          ? diskImageSchema.test('disk-image-reference', t('Disk image is required'), (value) =>
+              Boolean(value?.id?.trim() || value?.name?.trim()),
+            )
+          : diskImageSchema;
       return yup.object({
         metadata: yup.object({
           name: resourceNameSchema(t),
         }),
         spec: yup.object({
+          diskImage: requiredDiskImageSchema,
           sshKey: yup.object({ name: yup.string() }),
         }),
       });
-    case 'configuration':
+    }
+    case 'instance-type':
       return yup.object({
         spec: yup.object({
           instanceType: yup.string().required(t('Instance type is required')),
+        }),
+      });
+    case 'configuration':
+    case 'access-and-initial-run':
+      return yup.object({
+        spec: yup.object({
           userData: yup.string().when('userDataSource', {
             is: 'inline',
             then: () => userDataSchema(t),

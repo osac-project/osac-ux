@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Content, Flex, FlexItem } from '@patternfly/react-core';
 
@@ -12,6 +13,7 @@ export interface ResourceNameFieldProps {
   };
   title?: string; // Used to override the name/id used as the title
   subTitle?: string;
+  titleAdornment?: ReactNode;
   detailsUrl?: string;
   nameLinkClassName?: string;
   maxCharsDisplayed?: number;
@@ -21,6 +23,7 @@ const ResourceNameField = ({
   resource,
   title,
   subTitle,
+  titleAdornment,
   detailsUrl,
   nameLinkClassName,
   maxCharsDisplayed = 0,
@@ -34,15 +37,21 @@ const ResourceNameField = ({
     );
 
   return (
-    <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsSm' }}>
+    <Flex
+      direction={{ default: 'column' }}
+      spaceItems={{ default: subTitle ? 'spaceItemsNone' : 'spaceItemsSm' }}
+    >
       <FlexItem className="pf-v6-u-font-size-md">
-        {detailsUrl ? (
-          <Link className={nameLinkClassName ?? 'pf-v6-u-font-weight-bold'} to={detailsUrl}>
-            {renderContent(titleValue)}
-          </Link>
-        ) : (
-          renderContent(titleValue)
-        )}
+        <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
+          {detailsUrl ? (
+            <Link className={nameLinkClassName ?? 'pf-v6-u-font-weight-bold'} to={detailsUrl}>
+              {renderContent(titleValue)}
+            </Link>
+          ) : (
+            renderContent(titleValue)
+          )}
+          {titleAdornment}
+        </Flex>
       </FlexItem>
       {subTitle ? (
         <FlexItem>

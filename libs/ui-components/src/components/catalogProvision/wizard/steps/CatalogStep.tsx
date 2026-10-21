@@ -22,7 +22,10 @@ import { useCatalogItemResourceLookups } from '../../../catalog/catalogItemResou
 import { getVisibleFieldError } from '../../../Form/fieldError';
 import { useShowFieldValidationErrors } from '../../../Form/FieldValidationContext';
 import { FormFieldHelper } from '../../../Form/FormFieldHelper';
+import ProjectFilter from '../../../Page/ProjectFilter';
 import type { CatalogProvisionAdapter } from '../adapters/types';
+
+import './CatalogStep.css';
 
 interface Props<TValues extends { catalogItemId: string }, TPayload> {
   adapter: CatalogProvisionAdapter<CatalogItem, TValues, TPayload>;
@@ -53,6 +56,10 @@ export const CatalogStep = <TValues extends { catalogItemId: string }, TPayload>
   });
 
   const count = filtered.length;
+  const catalogCardMinWidth =
+    adapter.kind === 'compute_instance'
+      ? 'calc(var(--pf-t--global--spacer--4xl) * 4)'
+      : 'calc(var(--pf-t--global--spacer--4xl) * 6)';
   const countPhrase = t('catalogProvision.catalog.count', { count });
   const showValidationErrors = useShowFieldValidationErrors();
   const catalogItemError = getVisibleFieldError(
@@ -73,6 +80,11 @@ export const CatalogStep = <TValues extends { catalogItemId: string }, TPayload>
           alignItems={{ default: 'alignItemsFlexEnd' }}
           gap={{ default: 'gapMd' }}
         >
+          {adapter.kind === 'compute_instance' ? (
+            <FlexItem className="catalog-provision__project-filter">
+              <ProjectFilter />
+            </FlexItem>
+          ) : null}
           <FlexItem flex={{ default: 'flex_1' }}>
             <SearchInput
               placeholder={t('catalogProvision.catalog.searchPlaceholder')}
@@ -113,9 +125,13 @@ export const CatalogStep = <TValues extends { catalogItemId: string }, TPayload>
       <StackItem>
         <Gallery
           hasGutter
-          minWidths={{ default: '300px' }}
+          minWidths={{ default: catalogCardMinWidth }}
           role="radiogroup"
-          aria-label={t('catalogProvision.steps.catalog.title')}
+          aria-label={
+            adapter.kind === 'compute_instance'
+              ? t('Select template')
+              : t('catalogProvision.steps.catalog.title')
+          }
         >
           {catalogLoading ? (
             <GalleryItem>

@@ -25,7 +25,7 @@
 .vm-util-tile__abs {
   font-size: var(--pf-t--global--font--size--body--md);
   font-weight: var(--pf-t--global--font--weight--heading--bold);
-  line-height: 1.2;
+  line-height: var(--pf-t--global--font--line-height--heading);
 }
 
 .vm-util-tile__abs-sub {
@@ -61,7 +61,8 @@
   stroke: var(--pf-t--global--color--brand--default);
   stroke-width: 10;
   stroke-linecap: round;
-  transition: stroke-dasharray 0.4s ease;
+  transition: stroke-dasharray var(--pf-t--global--motion--duration--fade--default)
+    var(--pf-t--global--motion--timing-function--default);
 }
 
 .vm-util-donut__center {

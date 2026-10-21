@@ -20,11 +20,11 @@
 }
 
 .osac-guest-os-icon--windows {
-  color: #0078d4;
+  color: var(--pf-t--color--blue--40);
 }
 
 .osac-guest-os-icon--rhel {
-  color: #ee0000;
+  color: var(--pf-t--color--red--50);
 }
 
 .osac-guest-os-icon--linux {

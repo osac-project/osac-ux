@@ -64,11 +64,13 @@ export const VmCreatePage = () => {
               </Button>
             </BreadcrumbItem>
             <BreadcrumbItem isActive>
-              {t('catalogProvision.vm.breadcrumbLaunchInstance')}
+              {t('catalogProvision.vm.breadcrumbLaunchInstance', {
+                defaultValue: 'Create virtual machine',
+              })}
             </BreadcrumbItem>
           </Breadcrumb>
           <Title headingLevel="h1" size="3xl">
-            {t('catalogProvision.vm.wizardTitle')}
+            {t('Create virtual machine')}
           </Title>
           <Content component="p">{t('catalogProvision.vm.wizardDescription')}</Content>
         </Stack>

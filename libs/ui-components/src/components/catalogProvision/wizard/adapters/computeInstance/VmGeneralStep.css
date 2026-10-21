@@ -1,0 +1,17 @@
+.catalog-provision__vm-general-form.pf-v6-c-form {
+  --pf-v6-c-form--GridGap: var(--pf-t--global--spacer--md);
+}
+
+.catalog-provision__vm-general-intro.pf-v6-l-stack {
+  --pf-v6-l-stack--m-gutter--Gap: var(--pf-t--global--spacer--sm);
+}
+
+.catalog-provision__project-alert {
+  border: var(--pf-t--global--border--width--box--clicked) solid
+    var(--pf-t--global--border--color--status--info--default);
+  border-radius: var(--pf-t--global--border--radius--large);
+}
+
+.catalog-provision__project-alert-icon {
+  color: var(--pf-t--global--icon--color--status--info--default);
+}

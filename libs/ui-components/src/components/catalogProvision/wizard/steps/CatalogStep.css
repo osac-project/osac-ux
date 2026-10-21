@@ -1,0 +1,13 @@
+.catalog-provision__project-filter {
+  --catalog-provision-project-filter-width: calc(var(--pf-t--global--spacer--500) * 8);
+  flex: 0 0 var(--catalog-provision-project-filter-width);
+  inline-size: var(--catalog-provision-project-filter-width);
+  max-inline-size: var(--catalog-provision-project-filter-width);
+  min-inline-size: 0;
+}
+
+.catalog-provision__project-filter .pf-v6-c-select,
+.catalog-provision__project-filter .pf-v6-c-menu-toggle {
+  inline-size: 100%;
+  min-inline-size: 0;
+}

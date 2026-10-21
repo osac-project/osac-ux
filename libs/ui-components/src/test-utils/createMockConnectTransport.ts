@@ -246,16 +246,16 @@ const matchesStringEqualityFilter = (
   field: string,
   value: string | undefined,
 ): boolean => {
-  const prefix = field + ' == "';
-  if (!filter?.startsWith(prefix)) {
+  if (!filter) {
     return true;
   }
-  if (!filter.endsWith('"')) {
-    return false;
+  const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = filter.match(new RegExp(`${escapedField} == "([^"]*)"`));
+  if (!match) {
+    return true;
   }
-  const encodedValue = filter.slice(prefix.length, -1);
   try {
-    return value === JSON.parse('"' + encodedValue + '"');
+    return value === JSON.parse(`"${match[1]}"`);
   } catch {
     return false;
   }

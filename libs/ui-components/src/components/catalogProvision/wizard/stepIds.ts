@@ -6,20 +6,27 @@ import { CatalogProvisionKind } from '../catalogFieldDefinition';
 export const WIZARD_STEP_IDS = [
   'catalog',
   'general',
+  'instance-type',
   'configuration',
   'storage',
   'networking',
+  'access-and-initial-run',
   'review',
 ];
 
 export type WizardStepId = (typeof WIZARD_STEP_IDS)[number];
 
-export const STEP_LABEL_KEYS = (t: TFunction): Record<WizardStepId, string> => ({
-  catalog: t('Catalog item'),
-  general: t('General'),
+export const STEP_LABEL_KEYS = (
+  t: TFunction,
+  kind?: CatalogProvisionKind,
+): Record<WizardStepId, string> => ({
+  catalog: kind === 'compute_instance' ? t('Select template') : t('Catalog item'),
+  general: kind === 'compute_instance' ? t('Details') : t('General'),
+  'instance-type': t('Instance type'),
   configuration: t('Configuration'),
   storage: t('Storage'),
   networking: t('Networking'),
+  'access-and-initial-run': t('Access & Initial Run'),
   review: t('Review'),
 });
 
@@ -40,14 +47,15 @@ const BARE_METAL_WIZARD_STEPS: readonly WizardStepId[] = [
   'review',
 ];
 
-// Compute instances get a dedicated Storage step between Configuration and Networking.
-// Other kinds (cluster, bare metal) deliberately omit it.
+// Compute instances get dedicated Instance type and Storage steps before Networking.
+// Other kinds (cluster, bare metal) keep their Configuration step.
 const COMPUTE_INSTANCE_WIZARD_STEPS: readonly WizardStepId[] = [
   'catalog',
   'general',
-  'configuration',
+  'instance-type',
   'storage',
   'networking',
+  'access-and-initial-run',
   'review',
 ];
 

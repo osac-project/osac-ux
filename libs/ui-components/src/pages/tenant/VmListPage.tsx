@@ -1,14 +1,9 @@
 import { useMemo } from 'react';
 import {
   Alert,
-  Flex,
-  FlexItem,
-  Label,
   SearchInput,
   Stack,
   StackItem,
-  ToggleGroup,
-  ToggleGroupItem,
   Toolbar,
   ToolbarContent,
   ToolbarGroup,
@@ -22,38 +17,91 @@ import ListPage from '@osac/ui-components/components/Page/ListPage';
 import ListPageBody from '@osac/ui-components/components/Page/ListPageBody';
 import ProjectFilter from '@osac/ui-components/components/Page/ProjectFilter';
 import CreateButton from '@osac/ui-components/components/Primitives/CreateButton.tsx';
+import type { ViewType } from '@osac/ui-components/components/Primitives/ViewSwitcher';
+import {
+  DEFAULT_VIEW_TYPE,
+  getViewTypePrefKey,
+  isViewType,
+} from '@osac/ui-components/components/Primitives/ViewSwitcher';
+import ViewSwitcher from '@osac/ui-components/components/Primitives/ViewSwitcher';
 import { SubtleContent } from '@osac/ui-components/components/SubtleContent/SubtleContent';
+import VmsCards from '@osac/ui-components/components/vm/VmsCards';
 import { VmTable } from '@osac/ui-components/components/vm/VmTable';
 import {
   SEARCH_PARAM,
   useArrayPageFilter,
   usePageFilter,
 } from '@osac/ui-components/hooks/use-page-filter';
+import { useUserPreferences } from '@osac/ui-components/hooks/use-user-preferences';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
+import VmListFilterSelect, {
+  type VmListFilterOption,
+} from '@osac/ui-components/pages/tenant/VmListFilterSelect';
 import { getErrorMessage } from '@osac/ui-components/utils/error';
 
-type VmStatusFilter = 'running' | 'stopped';
+type VmPowerStateFilter = 'running' | 'stopped' | 'paused';
+type VmOperatingSystemFilter = 'linux' | 'windows';
+type VmHardwareFilter = 'gpu' | 'host';
 
-const STATUS_FILTER_PARAM = 'status';
+const POWER_STATE_FILTER_PARAM = 'powerState';
+const OPERATING_SYSTEM_FILTER_PARAM = 'operatingSystem';
+const HARDWARE_FILTER_PARAM = 'hardware';
+export const VMS_VIEW_KEY = 'vms';
 
-const isVmStatusFilter = (value: string): value is VmStatusFilter =>
-  value === 'running' || value === 'stopped';
+const isVmPowerStateFilter = (value: string): value is VmPowerStateFilter =>
+  value === 'running' || value === 'stopped' || value === 'paused';
+const isVmOperatingSystemFilter = (value: string): value is VmOperatingSystemFilter =>
+  value === 'linux' || value === 'windows';
+const isVmHardwareFilter = (value: string): value is VmHardwareFilter =>
+  value === 'gpu' || value === 'host';
 
-const vmMatchesStatusFilter = (vm: ComputeInstance, filter: VmStatusFilter): boolean => {
+const vmMatchesPowerStateFilter = (vm: ComputeInstance, filter: VmPowerStateFilter): boolean => {
   const state = vm.status?.state;
-  if (filter === 'running') {
-    return state === ComputeInstanceState.RUNNING;
-  }
-  return state === ComputeInstanceState.STOPPED;
+  const states: Record<VmPowerStateFilter, ComputeInstanceState> = {
+    running: ComputeInstanceState.RUNNING,
+    stopped: ComputeInstanceState.STOPPED,
+    paused: ComputeInstanceState.PAUSED,
+  };
+  return state === states[filter];
+};
+
+const vmMatchesOperatingSystemFilter = (
+  vm: ComputeInstance,
+  filter: VmOperatingSystemFilter,
+): boolean => {
+  const diskImageName = vm.spec?.diskImage?.name?.toLowerCase() ?? '';
+  return filter === 'windows'
+    ? diskImageName.includes('windows')
+    : !diskImageName.includes('windows');
+};
+
+const vmMatchesHardwareFilter = (
+  vm: ComputeInstance,
+  filter: VmHardwareFilter,
+  instanceTypes: readonly { id: string; spec?: { gpu?: unknown } }[],
+): boolean => {
+  const instanceType = instanceTypes.find((type) => type.id === vm.spec?.instanceType?.id);
+  const hasGpu = Boolean(instanceType?.spec?.gpu);
+  return filter === 'gpu' ? hasGpu : !hasGpu;
 };
 
 export const VmListPage = () => {
   const { t } = useTranslation();
   const [search, setSearch] = usePageFilter(SEARCH_PARAM);
-  const [statusFilters, setStatusFilters] = useArrayPageFilter(
-    STATUS_FILTER_PARAM,
-    isVmStatusFilter,
+  const [powerStateFilters, setPowerStateFilters] = useArrayPageFilter(
+    POWER_STATE_FILTER_PARAM,
+    isVmPowerStateFilter,
   );
+  const [operatingSystemFilters, setOperatingSystemFilters] = useArrayPageFilter(
+    OPERATING_SYSTEM_FILTER_PARAM,
+    isVmOperatingSystemFilter,
+  );
+  const [hardwareFilters, setHardwareFilters] = useArrayPageFilter(
+    HARDWARE_FILTER_PARAM,
+    isVmHardwareFilter,
+  );
+  const [viewTypePref] = useUserPreferences(getViewTypePrefKey(VMS_VIEW_KEY));
+  const viewType: ViewType = isViewType(viewTypePref) ? viewTypePref : DEFAULT_VIEW_TYPE;
 
   const { data: vms = [], isLoading, error } = useComputeInstances();
   const {
@@ -62,35 +110,45 @@ export const VmListPage = () => {
     error: instanceTypesError,
   } = useInstanceTypes();
 
-  const statusFilterOptions = useMemo<ReadonlyArray<{ value: VmStatusFilter; label: string }>>(
-    () => [
-      { value: 'running', label: t('Running') },
-      { value: 'stopped', label: t('Stopped') },
-    ],
-    [t],
-  );
-
-  const statusCounts = useMemo(
-    () => ({
-      running: vms.filter((vm) => vmMatchesStatusFilter(vm, 'running')).length,
-      stopped: vms.filter((vm) => vmMatchesStatusFilter(vm, 'stopped')).length,
-    }),
-    [vms],
-  );
+  const powerStateOptions: readonly VmListFilterOption<VmPowerStateFilter>[] = [
+    { value: 'running', label: t('Running') },
+    { value: 'stopped', label: t('Stopped') },
+    { value: 'paused', label: t('Paused') },
+  ];
+  const operatingSystemOptions: readonly VmListFilterOption<VmOperatingSystemFilter>[] = [
+    { value: 'linux', label: t('Linux') },
+    { value: 'windows', label: t('Windows') },
+  ];
+  const hardwareOptions: readonly VmListFilterOption<VmHardwareFilter>[] = [
+    { value: 'gpu', label: t('GPU devices') },
+    { value: 'host', label: t('Host devices') },
+  ];
 
   const filteredVms = useMemo(() => {
     const searchTerm = search.trim().toLowerCase();
-    if (statusFilters.length === 0 && !searchTerm) {
+    if (
+      powerStateFilters.length === 0 &&
+      operatingSystemFilters.length === 0 &&
+      hardwareFilters.length === 0 &&
+      !searchTerm
+    ) {
       return vms;
     }
     return vms.filter((vm) => {
       const name = vm.metadata?.name ?? '';
       const matchesSearch = !searchTerm || name.toLowerCase().includes(searchTerm);
-      const matchesStatus =
-        !statusFilters.length || statusFilters.some((filter) => vmMatchesStatusFilter(vm, filter));
-      return matchesSearch && matchesStatus;
+      const matchesPowerState =
+        !powerStateFilters.length ||
+        powerStateFilters.some((filter) => vmMatchesPowerStateFilter(vm, filter));
+      const matchesOperatingSystem =
+        !operatingSystemFilters.length ||
+        operatingSystemFilters.some((filter) => vmMatchesOperatingSystemFilter(vm, filter));
+      const matchesHardware =
+        !hardwareFilters.length ||
+        hardwareFilters.some((filter) => vmMatchesHardwareFilter(vm, filter, instanceTypes));
+      return matchesSearch && matchesPowerState && matchesOperatingSystem && matchesHardware;
     });
-  }, [search, statusFilters, vms]);
+  }, [hardwareFilters, instanceTypes, operatingSystemFilters, powerStateFilters, search, vms]);
 
   const showEmptyState = !isLoading && !error && filteredVms.length === 0;
 
@@ -108,30 +166,34 @@ export const VmListPage = () => {
               <ToolbarContent>
                 <ToolbarGroup>
                   <ToolbarItem>
-                    <ProjectFilter />
+                    <ProjectFilter showAllProjectsIcon />
                   </ToolbarItem>
                   <ToolbarItem>
-                    <ToggleGroup aria-label={t('Filter virtual machines by status')}>
-                      {statusFilterOptions.map((option) => (
-                        <ToggleGroupItem
-                          key={option.value}
-                          text={
-                            <Flex
-                              spaceItems={{ default: 'spaceItemsSm' }}
-                              flexWrap={{ default: 'nowrap' }}
-                            >
-                              <FlexItem>{option.label}</FlexItem>
-                              <FlexItem>
-                                <Label isCompact>{statusCounts[option.value]}</Label>
-                              </FlexItem>
-                            </Flex>
-                          }
-                          buttonId={`vm-filter-status-${option.value}`}
-                          isSelected={statusFilters.includes(option.value)}
-                          onChange={() => setStatusFilters(option.value)}
-                        />
-                      ))}
-                    </ToggleGroup>
+                    <VmListFilterSelect
+                      allLabel={t('All power states')}
+                      ariaLabel={t('Filter by power state')}
+                      options={powerStateOptions}
+                      selected={powerStateFilters}
+                      onToggle={setPowerStateFilters}
+                    />
+                  </ToolbarItem>
+                  <ToolbarItem>
+                    <VmListFilterSelect
+                      allLabel={t('All operating systems')}
+                      ariaLabel={t('Filter by operating system')}
+                      options={operatingSystemOptions}
+                      selected={operatingSystemFilters}
+                      onToggle={setOperatingSystemFilters}
+                    />
+                  </ToolbarItem>
+                  <ToolbarItem>
+                    <VmListFilterSelect
+                      allLabel={t('Hardware devices')}
+                      ariaLabel={t('Filter by hardware devices')}
+                      options={hardwareOptions}
+                      selected={hardwareFilters}
+                      onToggle={setHardwareFilters}
+                    />
                   </ToolbarItem>
                   <ToolbarItem>
                     <SearchInput
@@ -142,6 +204,11 @@ export const VmListPage = () => {
                       aria-label={t('Search virtual machines')}
                       isDisabled={isLoading || !!error}
                     />
+                  </ToolbarItem>
+                </ToolbarGroup>
+                <ToolbarGroup align={{ default: 'alignEnd' }}>
+                  <ToolbarItem>
+                    <ViewSwitcher pageKey={VMS_VIEW_KEY} />
                   </ToolbarItem>
                 </ToolbarGroup>
               </ToolbarContent>
@@ -157,18 +224,22 @@ export const VmListPage = () => {
           <StackItem>
             {showEmptyState ? (
               <SubtleContent component="p">
-                {statusFilters.length === 0
-                  ? t('Choose one or more statuses above to filter virtual machines.')
+                {powerStateFilters.length === 0 &&
+                operatingSystemFilters.length === 0 &&
+                hardwareFilters.length === 0
+                  ? t('Choose one or more filters above to filter virtual machines.')
                   : search || vms.length > 0
                     ? t('No virtual machines match your search.')
                     : t('No virtual machines yet. Create one to get started.')}
               </SubtleContent>
-            ) : (
-              <VmTable
+            ) : viewType === 'cards' ? (
+              <VmsCards
                 vms={filteredVms}
                 instanceTypes={instanceTypes}
                 isInstanceTypesLoading={isInstanceTypesLoading}
               />
+            ) : (
+              <VmTable vms={filteredVms} />
             )}
           </StackItem>
         </Stack>

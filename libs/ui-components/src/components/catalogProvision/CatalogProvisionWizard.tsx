@@ -39,6 +39,8 @@ import {
 import { CatalogStep } from './wizard/steps/WizardSteps';
 import { WizardValidationProvider } from './wizard/WizardValidationContext';
 
+import './CatalogProvisionWizard.css';
+
 export type {
   CatalogProvisionPayload,
   CatalogProvisionWizardValues,
@@ -231,13 +233,15 @@ const WizardStepBody = ({
   const { t } = useTranslation();
   const ConfigurationStep = adapter.ConfigurationStep;
   const StorageStep = adapter.StorageStep;
+  const InstanceTypeStep = adapter.InstanceTypeStep;
   const NetworkingStep = adapter.NetworkingStep;
+  const AccessAndInitialRunStep = adapter.AccessAndInitialRunStep;
   const GeneralStepComponent = adapter.GeneralStep;
   const ReviewStepComponent = adapter.ReviewStep;
 
   return (
     <FieldValidationProvider showErrors={validationAlert}>
-      <Stack hasGutter>
+      <Stack hasGutter className="catalog-provision__wizard-step-body">
         {validationAlert ? (
           <StackItem>
             <Alert variant="danger" isInline title={t('catalogProvision.validation.stepInvalid')} />
@@ -252,9 +256,15 @@ const WizardStepBody = ({
         ) : null}
         {stepId === 'catalog' ? <CatalogStep adapter={adapter} /> : null}
         {stepId === 'general' ? <GeneralStepComponent catalogItem={catalogItem} /> : null}
+        {stepId === 'instance-type' && InstanceTypeStep ? (
+          <InstanceTypeStep catalogItem={catalogItem} />
+        ) : null}
         {stepId === 'configuration' ? <ConfigurationStep catalogItem={catalogItem} /> : null}
         {stepId === 'storage' && StorageStep ? <StorageStep catalogItem={catalogItem} /> : null}
         {stepId === 'networking' ? <NetworkingStep catalogItem={catalogItem} /> : null}
+        {stepId === 'access-and-initial-run' && AccessAndInitialRunStep ? (
+          <AccessAndInitialRunStep catalogItem={catalogItem} />
+        ) : null}
         {stepId === 'review' ? <ReviewStepComponent catalogItem={catalogItem} /> : null}
       </Stack>
     </FieldValidationProvider>
@@ -509,7 +519,7 @@ const CatalogProvisionWizardForm = ({
             }
           >
             {orderedSteps.map((stepId) => (
-              <WizardStep key={stepId} id={stepId} name={STEP_LABEL_KEYS(t)[stepId]}>
+              <WizardStep key={stepId} id={stepId} name={STEP_LABEL_KEYS(t, adapter.kind)[stepId]}>
                 <WizardStepBody
                   adapter={adapter}
                   stepId={stepId}

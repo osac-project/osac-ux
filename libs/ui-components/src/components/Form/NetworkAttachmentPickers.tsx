@@ -1,11 +1,24 @@
-import { useMemo } from 'react';
-import { Alert, Button, FormGroup } from '@patternfly/react-core';
+import { type ReactNode, useMemo } from 'react';
+import {
+  Alert,
+  Button,
+  Card,
+  CardBody,
+  Divider,
+  FormGroup,
+  Stack,
+  StackItem,
+  Switch,
+  Title,
+} from '@patternfly/react-core';
 import { MultiTypeaheadSelect, type MultiTypeaheadSelectOption } from '@patternfly/react-templates';
 import { useField } from 'formik';
 
 import { SecurityGroups, Subnets, VirtualNetworks } from '@osac/types';
 
 import { CheckboxField } from './CheckboxField';
+import { FormFieldHelper } from './FormFieldHelper';
+import NetworkSelectionCards from './NetworkSelectionCards';
 import { ResourceSelectField, type ResourceSelectValue } from './ResourceSelectField';
 import { emptyResourceSelectValue } from './resourceSelectValue';
 import { useListResource } from '../../api/use-resource';
@@ -15,6 +28,8 @@ import {
   virtualNetworkFilterForSubnetList,
 } from '../../api/v1/networking';
 import { useTranslation } from '../../hooks/useTranslation';
+
+import './NetworkSelectionCards.css';
 
 interface NetworkAttachmentPickersProps {
   /** Formik field-path prefix, e.g. "spec.networkAttachment". */
@@ -27,7 +42,35 @@ interface NetworkAttachmentPickersProps {
   autoExternalIpName: string;
   /** Helper text displayed below the auto external IP checkbox. */
   autoExternalIpHelperText?: string;
+  /** Uses the card-based network choice shown in the VM wizard. */
+  useNetworkSelectionCards?: boolean;
+  /** Hides the default-network control for additional custom attachments. */
+  showDefaultNetworkToggle?: boolean;
+  /** Hides the external IP control for additional custom attachments. */
+  showExternalIp?: boolean;
+  /** Content rendered between network fields and the external IP control. */
+  children?: ReactNode;
 }
+
+interface NetworkSummaryValue {
+  name: string;
+  description: string;
+}
+
+const TENANT_DEFAULT_NETWORK_SUMMARY = {
+  virtualNetwork: {
+    name: 'tenant-workload',
+    description: 'Primary tenant compute network',
+  },
+  subnet: {
+    name: 'bm-compute-a',
+    description: '10.42.0.0/24 · VLAN 200',
+  },
+  securityGroups: {
+    name: 'allow-ssh-https',
+    description: 'SSH + HTTPS ingress',
+  },
+} satisfies Record<string, NetworkSummaryValue>;
 
 /**
  * Reusable VirtualNetwork → Subnet → SecurityGroups cascade pickers
@@ -49,10 +92,16 @@ export const NetworkAttachmentPickers = ({
   useDefaultNetworkName,
   autoExternalIpName,
   autoExternalIpHelperText,
+  useNetworkSelectionCards = false,
+  showDefaultNetworkToggle = true,
+  showExternalIp = true,
+  children,
 }: NetworkAttachmentPickersProps) => {
   const { t } = useTranslation();
 
-  const [{ value: defaultNetwork }] = useField<boolean>(useDefaultNetworkName);
+  const [defaultNetworkField, , defaultNetworkHelpers] = useField<boolean>(useDefaultNetworkName);
+  const [autoExternalIpField, , autoExternalIpHelpers] = useField<boolean>(autoExternalIpName);
+  const defaultNetwork = defaultNetworkField.value;
 
   const [vnField] = useField<ResourceSelectValue>(`${fieldPrefix}.virtualNetwork`);
   const [, , subnetHelpers] = useField<ResourceSelectValue>(`${fieldPrefix}.subnet`);
@@ -100,11 +149,51 @@ export const NetworkAttachmentPickers = ({
 
   return (
     <>
-      <CheckboxField
-        name={useDefaultNetworkName}
-        label={t('Use tenant default network')}
-        fieldId={`${fieldIdPrefix}-use-default-network`}
-      />
+      {useNetworkSelectionCards ? (
+        <>
+          <NetworkSelectionCards
+            selected={defaultNetwork}
+            onSelect={(useDefault) => {
+              void defaultNetworkHelpers.setValue(useDefault);
+            }}
+          />
+          {defaultNetwork ? (
+            <Card className="network-default-summary">
+              <CardBody>
+                <Stack>
+                  <StackItem className="network-default-summary__row">
+                    <strong>{t('Virtual network')}</strong>
+                    <span className="network-default-summary__value">
+                      <strong>{TENANT_DEFAULT_NETWORK_SUMMARY.virtualNetwork.name}</strong>
+                      <small>{TENANT_DEFAULT_NETWORK_SUMMARY.virtualNetwork.description}</small>
+                    </span>
+                  </StackItem>
+                  <StackItem className="network-default-summary__row">
+                    <strong>{t('Subnet')}</strong>
+                    <span className="network-default-summary__value">
+                      <strong>{TENANT_DEFAULT_NETWORK_SUMMARY.subnet.name}</strong>
+                      <small>{TENANT_DEFAULT_NETWORK_SUMMARY.subnet.description}</small>
+                    </span>
+                  </StackItem>
+                  <StackItem className="network-default-summary__row">
+                    <strong>{t('Security groups')}</strong>
+                    <span className="network-default-summary__value">
+                      <strong>{TENANT_DEFAULT_NETWORK_SUMMARY.securityGroups.name}</strong>
+                      <small>{TENANT_DEFAULT_NETWORK_SUMMARY.securityGroups.description}</small>
+                    </span>
+                  </StackItem>
+                </Stack>
+              </CardBody>
+            </Card>
+          ) : null}
+        </>
+      ) : showDefaultNetworkToggle ? (
+        <CheckboxField
+          name={useDefaultNetworkName}
+          label={t('Use tenant default network')}
+          fieldId={`${fieldIdPrefix}-use-default-network`}
+        />
+      ) : null}
       {!defaultNetwork && (
         <>
           <ResourceSelectField
@@ -126,6 +215,7 @@ export const NetworkAttachmentPickers = ({
             label={t('Subnet')}
             fieldId={`${fieldIdPrefix}-subnet`}
             service={Subnets}
+            isRequired
             request={
               virtualNetworkId
                 ? { filter: virtualNetworkFilterForSubnetList(virtualNetworkId) }
@@ -134,6 +224,8 @@ export const NetworkAttachmentPickers = ({
             isDisabled={!virtualNetworkId}
             autoSelectSingleOption
             placeholder={t('Select subnet')}
+            isSearchable
+            searchPlaceholder={t('Search subnets')}
             loadErrorTitle={t('Could not load subnets')}
           />
 
@@ -175,12 +267,43 @@ export const NetworkAttachmentPickers = ({
           </FormGroup>
         </>
       )}
-      <CheckboxField
-        name={autoExternalIpName}
-        label={t('Auto External IP Attachment')}
-        fieldId={`${fieldIdPrefix}-auto-external-ip`}
-        helperText={autoExternalIpHelperText}
-      />
+      {useNetworkSelectionCards ? (
+        <>
+          <Divider />
+          <Stack hasGutter className="network-external-ip">
+            <StackItem>
+              <Title headingLevel="h3" size="lg">
+                {t('External IP')}
+              </Title>
+            </StackItem>
+            <StackItem>
+              <FormGroup fieldId={`${fieldIdPrefix}-auto-external-ip`}>
+                <Switch
+                  id={`${fieldIdPrefix}-auto-external-ip`}
+                  label={t('Auto-attach external IP')}
+                  isChecked={autoExternalIpField.value}
+                  onChange={(_event, checked) => {
+                    void autoExternalIpHelpers.setValue(checked);
+                  }}
+                  onBlur={autoExternalIpField.onBlur}
+                />
+                <FormFieldHelper
+                  description={autoExternalIpHelperText}
+                  fieldId={`${fieldIdPrefix}-auto-external-ip`}
+                />
+              </FormGroup>
+            </StackItem>
+          </Stack>
+        </>
+      ) : showExternalIp ? (
+        <CheckboxField
+          name={autoExternalIpName}
+          label={t('Auto External IP Attachment')}
+          fieldId={`${fieldIdPrefix}-auto-external-ip`}
+          helperText={autoExternalIpHelperText}
+        />
+      ) : null}
+      {children}
     </>
   );
 };

@@ -6,6 +6,8 @@ import {
   DescriptionListTerm,
   Flex,
   FlexItem,
+  Stack,
+  StackItem,
 } from '@patternfly/react-core';
 
 import { ComputeInstanceCatalogItem } from '@osac/types';
@@ -34,11 +36,13 @@ import { GuestOsIcon } from '../shared/GuestOsIcon';
 interface ComputeCatalogItemResourcesProps {
   catalogItem: ComputeInstanceCatalogItem;
   resourceLookups: CatalogItemResourceLookups;
+  hideLockedBadges?: boolean;
 }
 
 const ComputeCatalogItemResources = ({
   catalogItem,
   resourceLookups,
+  hideLockedBadges = false,
 }: ComputeCatalogItemResourcesProps) => {
   const { t } = useTranslation();
   const fields = computeCatalogItemFields(catalogItem);
@@ -76,7 +80,11 @@ const ComputeCatalogItemResources = ({
           <Flex flexWrap={{ default: 'nowrap' }} gap={{ default: 'gapXs' }}>
             <FlexItem>{vCpuLabel || '-'}</FlexItem>
             <FlexItem>
-              <CatalogFieldEditabilityLabel behavior={instanceTypePolicyBehavior} />
+              <CatalogFieldEditabilityLabel
+                behavior={instanceTypePolicyBehavior}
+                showLocked={!hideLockedBadges}
+                showEditable={!hideLockedBadges}
+              />
             </FlexItem>
           </Flex>
         </DescriptionListDescription>
@@ -87,7 +95,11 @@ const ComputeCatalogItemResources = ({
           <Flex flexWrap={{ default: 'nowrap' }} gap={{ default: 'gapXs' }}>
             <FlexItem>{memoryLabel || '-'}</FlexItem>
             <FlexItem>
-              <CatalogFieldEditabilityLabel behavior={instanceTypePolicyBehavior} />
+              <CatalogFieldEditabilityLabel
+                behavior={instanceTypePolicyBehavior}
+                showLocked={!hideLockedBadges}
+                showEditable={!hideLockedBadges}
+              />
             </FlexItem>
           </Flex>
         </DescriptionListDescription>
@@ -98,7 +110,11 @@ const ComputeCatalogItemResources = ({
           <Flex flexWrap={{ default: 'nowrap' }} gap={{ default: 'gapXs' }}>
             <FlexItem>{storageLabel || '-'}</FlexItem>
             <FlexItem>
-              <CatalogFieldEditabilityLabel behavior={bootDiskSizePolicyBehavior} />
+              <CatalogFieldEditabilityLabel
+                behavior={bootDiskSizePolicyBehavior}
+                showLocked={!hideLockedBadges}
+                showEditable={!hideLockedBadges}
+              />
             </FlexItem>
           </Flex>
         </DescriptionListDescription>
@@ -106,21 +122,28 @@ const ComputeCatalogItemResources = ({
       <DescriptionListGroup>
         <DescriptionListTerm>{t('Disk image')}</DescriptionListTerm>
         <DescriptionListDescription>
-          <Flex
-            flexWrap={{ default: 'nowrap' }}
-            gap={{ default: 'gapXs' }}
-            alignItems={{ default: 'alignItemsCenter' }}
-          >
-            {diskImageOsIcon ? (
-              <FlexItem>
-                <GuestOsIcon os={diskImageOsIcon} size="sm" />
-              </FlexItem>
-            ) : null}
-            <FlexItem>{diskImageLabel || '-'}</FlexItem>
-            <FlexItem>
-              <CatalogFieldEditabilityLabel behavior={diskImagePolicyBehavior} />
-            </FlexItem>
-          </Flex>
+          <Stack>
+            <StackItem>
+              <Flex
+                flexWrap={{ default: 'nowrap' }}
+                gap={{ default: 'gapXs' }}
+                alignItems={{ default: 'alignItemsCenter' }}
+              >
+                {diskImageOsIcon ? (
+                  <FlexItem>
+                    <GuestOsIcon os={diskImageOsIcon} size="sm" />
+                  </FlexItem>
+                ) : null}
+                <FlexItem>{diskImageLabel || '-'}</FlexItem>
+              </Flex>
+            </StackItem>
+            <StackItem>
+              <CatalogFieldEditabilityLabel
+                behavior={diskImagePolicyBehavior}
+                showLocked={!hideLockedBadges}
+              />
+            </StackItem>
+          </Stack>
         </DescriptionListDescription>
       </DescriptionListGroup>
     </DescriptionList>

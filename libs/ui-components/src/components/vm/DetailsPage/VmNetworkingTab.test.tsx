@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router-dom';
 import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -12,7 +13,24 @@ vi.mock('./useVmNetworkAttachmentRows', () => ({
 
 const { useVmNetworkAttachmentRows } = await import('./useVmNetworkAttachmentRows');
 
-const renderTab = (vm: ComputeInstance) => renderWithProviders(<VmNetworkingTab vm={vm} />);
+const LocationProbe = () => {
+  const location = useLocation();
+
+  return (
+    <output data-testid="location">
+      {location.pathname}
+      {location.search}
+    </output>
+  );
+};
+
+const renderTab = (vm: ComputeInstance) =>
+  renderWithProviders(
+    <>
+      <VmNetworkingTab vm={vm} />
+      <LocationProbe />
+    </>,
+  );
 
 describe('VmNetworkingTab', () => {
   it('renders resolved networking names', () => {
@@ -30,6 +48,7 @@ describe('VmNetworkingTab', () => {
 
     const vm = {
       id: 'vm-1',
+      status: { internalIpAddress: '10.0.0.5' },
       spec: {
         networkAttachments: [
           {
@@ -43,6 +62,8 @@ describe('VmNetworkingTab', () => {
     renderTab(vm);
 
     expect(screen.getByRole('button', { name: 'Add network' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Internal IP' })).toBeInTheDocument();
+    expect(screen.getByText('10.0.0.5')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'prod-vn' })).toHaveAttribute(
       'href',
       '/networking/virtual-networks/vn-1',
@@ -58,6 +79,18 @@ describe('VmNetworkingTab', () => {
     expect(screen.getByRole('link', { name: 'default-sg' })).toHaveAttribute(
       'href',
       '/networking/security-groups/sg-2',
+    );
+  });
+
+  it('opens the virtual network create modal from the add network action', async () => {
+    vi.mocked(useVmNetworkAttachmentRows).mockReturnValue([]);
+
+    const { user } = renderTab({ id: 'vm-1', spec: {} } as ComputeInstance);
+
+    await user.click(screen.getByRole('button', { name: 'Add network' }));
+
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      '/networking/virtual-networks?create=virtual-network',
     );
   });
 

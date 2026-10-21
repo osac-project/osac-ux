@@ -67,6 +67,7 @@ const ClusterCard = ({ cluster, clusterVersion }: ClusterCardProps) => {
             <ResourceNameField
               resource={cluster}
               detailsUrl={isDeleting ? undefined : `/clusters/${encodeURIComponent(cluster.id)}`}
+              nameLinkClassName="cluster-card__title-link"
             />
             <Content component="small" className="cluster-card__secondary-cell">
               {cluster.spec?.catalogItem?.name ?? t('OpenShift cluster')}

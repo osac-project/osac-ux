@@ -2,10 +2,14 @@
   padding-block-end: 0;
 }
 
+.vm-details__header-actions {
+  margin-inline-start: auto;
+}
+
 /* .vm-details__content-grid, __main-column, __rail-column → see shared/details-page.css */
 
 .vm-details__overview-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .vm-details__overview-grid > .pf-v6-l-grid__item {
@@ -17,6 +21,10 @@
   color: var(--pf-t--global--text--color--regular);
   font-size: var(--pf-t--global--font--size--heading--md);
   font-weight: var(--pf-t--global--font--weight--body--default);
+}
+
+.vm-details__instance-type-title {
+  font-weight: var(--pf-t--global--font--weight--body--bold);
 }
 
 /* DL term override → see shared/details-page.css (.details-page__overview) */
@@ -48,10 +56,6 @@
 }
 
 /* .vm-details__rail-card → see shared/details-page.css (.details-page__rail-card) */
-
-.vm-details__console-body {
-  min-height: 25rem;
-}
 
 .vm-details__section-divider {
   margin-block: var(--pf-t--global--spacer--md);

@@ -1,0 +1,15 @@
+.vm-list-filter-select__toggle {
+  --vm-list-filter-width: calc(var(--pf-t--global--spacer--2xl) * 5);
+
+  flex: 0 0 var(--vm-list-filter-width);
+  inline-size: var(--vm-list-filter-width);
+  min-inline-size: var(--vm-list-filter-width);
+  max-inline-size: var(--vm-list-filter-width);
+}
+
+.vm-list-filter-select__toggle .pf-v6-c-menu-toggle__text {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

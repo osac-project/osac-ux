@@ -1,0 +1,8 @@
+.vm-networking-step__title {
+  margin-block-end: var(--pf-t--global--spacer--sm);
+}
+
+.vm-networking-step__description {
+  color: var(--pf-t--global--text--color--subtle);
+  margin-block-end: var(--pf-t--global--spacer--xl);
+}

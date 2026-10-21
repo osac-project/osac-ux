@@ -1,0 +1,7 @@
+.catalog-provision__vm-storage-intro {
+  margin-block-end: var(--pf-t--global--spacer--lg);
+}
+
+.catalog-provision__vm-storage-form > .pf-v6-c-form__group {
+  margin-block-end: var(--pf-t--global--spacer--lg);
+}

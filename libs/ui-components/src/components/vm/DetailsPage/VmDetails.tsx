@@ -22,24 +22,23 @@ import {
 } from '@patternfly/react-core';
 import PencilAltIcon from '@patternfly/react-icons/dist/esm/icons/pencil-alt-icon';
 
-import type { ComputeInstance } from '@osac/types';
+import { type ComputeInstance, GuestOSFamily } from '@osac/types';
 
 import VmDetailsActionButtons from './VmDetailsActionButtons';
+import VmExternalIpSection from './VmExternalIpSection';
 import VmNetworkingTab from './VmNetworkingTab';
 import VmResizeModal from './VmResizeModal';
 import VmStorageCard from './VmStorageCard';
-import VmUserDataCard from './VmUserDataCard';
 import VmUtilizationSection from './VmUtilizationSection';
+import { useDiskImage } from '../../../api/v1/disk-image';
 import { useInstanceType } from '../../../api/v1/instance-types';
 import { useTranslation } from '../../../hooks/useTranslation';
 import { displayValue } from '../../../utils/detailFormatters';
 import { getErrorMessage } from '../../../utils/error';
 import { VmStatusLabel } from '../../../VmStatusLabel';
-import { formatBootDiskSizeForReview } from '../../catalogProvision/wizard/catalogOverlay';
+import { guestOsFamilyLabels } from '../../DiskImage/DiskImageTable';
 import { Timestamp } from '../../Primitives/Timestamp';
-import { ResourceConditionsTable } from '../../Resource/ResourceConditionsTable';
 import { ResourceDetailHeader } from '../../Resource/ResourceDetailHeader';
-import VmConsoleTab from '../console/VmConsoleTab';
 
 import './VmDetails.css';
 import '../../shared/details-page.css';
@@ -54,10 +53,9 @@ const VmDetails = ({ vm }: Props) => {
   const { data: instanceType, error: instanceTypeError } = useInstanceType(
     vm.spec?.instanceType?.id,
   );
-  const conditions = vm.status?.conditions ?? [];
+  const { data: diskImage } = useDiskImage(vm.spec?.diskImage?.id);
+  const guestOsFamilyText = guestOsFamilyLabels(t);
   const catalogItem = vm.spec?.catalogItem;
-  const diskImage = vm.spec?.diskImage;
-  const bootDisk = vm.spec?.bootDisk;
 
   return (
     <>
@@ -89,7 +87,7 @@ const VmDetails = ({ vm }: Props) => {
                   titleSize="3xl"
                 />
               </FlexItem>
-              <FlexItem>
+              <FlexItem className="vm-details__header-actions">
                 <VmDetailsActionButtons vm={vm} />
               </FlexItem>
             </Flex>
@@ -106,7 +104,7 @@ const VmDetails = ({ vm }: Props) => {
             <Stack hasGutter>
               <StackItem>
                 <Grid hasGutter className="vm-details__overview-grid">
-                  <GridItem md={6}>
+                  <GridItem md={4}>
                     <Title headingLevel="h2" size="md" className="vm-details__section-title">
                       {t('Overview')}
                     </Title>
@@ -115,6 +113,24 @@ const VmDetails = ({ vm }: Props) => {
                       className="details-page__overview"
                       aria-label={t('Virtual machine overview')}
                     >
+                      <DescriptionListGroup>
+                        <DescriptionListTerm>{t('Project')}</DescriptionListTerm>
+                        <DescriptionListDescription>
+                          {vm.metadata?.project ? (
+                            <Link to={`/projects/${encodeURIComponent(vm.metadata.project)}`}>
+                              {vm.metadata.project}
+                            </Link>
+                          ) : (
+                            displayValue(undefined)
+                          )}
+                        </DescriptionListDescription>
+                      </DescriptionListGroup>
+                      <DescriptionListGroup>
+                        <DescriptionListTerm>{t('Created')}</DescriptionListTerm>
+                        <DescriptionListDescription>
+                          <Timestamp value={vm.metadata?.creationTimestamp} />
+                        </DescriptionListDescription>
+                      </DescriptionListGroup>
                       <DescriptionListGroup>
                         <DescriptionListTerm>{t('Catalog item')}</DescriptionListTerm>
                         <DescriptionListDescription>
@@ -130,23 +146,37 @@ const VmDetails = ({ vm }: Props) => {
                           )}
                         </DescriptionListDescription>
                       </DescriptionListGroup>
+                    </DescriptionList>
+                  </GridItem>
+
+                  <GridItem md={4}>
+                    <Title headingLevel="h2" size="md" className="vm-details__section-title">
+                      {t('Configuration')}
+                    </Title>
+                    <DescriptionList
+                      isCompact
+                      className="details-page__overview"
+                      aria-label={t('Virtual machine configuration')}
+                    >
                       <DescriptionListGroup>
-                        <DescriptionListTerm>{t('Boot disk')}</DescriptionListTerm>
+                        <DescriptionListTerm>{t('Guest OS family')}</DescriptionListTerm>
                         <DescriptionListDescription>
-                          {bootDisk
-                            ? `${formatBootDiskSizeForReview(bootDisk.sizeGib)}, ${displayValue(bootDisk.storageTier?.name || bootDisk.storageTier?.id)}`
+                          {diskImage?.spec?.guestOsFamily !== undefined
+                            ? guestOsFamilyText[
+                                diskImage.spec.guestOsFamily ??
+                                  GuestOSFamily.GUEST_OS_FAMILY_UNSPECIFIED
+                              ]
                             : displayValue(undefined)}
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                       <DescriptionListGroup>
-                        <DescriptionListTerm>{t('Instance type')}</DescriptionListTerm>
-                        <DescriptionListDescription>
+                        <DescriptionListTerm>
                           <Flex
                             spaceItems={{ default: 'spaceItemsSm' }}
                             alignItems={{ default: 'alignItemsCenter' }}
                           >
-                            <FlexItem>
-                              {displayValue(instanceType?.metadata?.name || vm.spec?.instanceType?.id)}
+                            <FlexItem className="vm-details__instance-type-title">
+                              {t('Instance type')}
                             </FlexItem>
                             <FlexItem>
                               <Button
@@ -157,134 +187,46 @@ const VmDetails = ({ vm }: Props) => {
                               />
                             </FlexItem>
                           </Flex>
+                        </DescriptionListTerm>
+                        <DescriptionListDescription>
+                          <DescriptionList isCompact aria-label={t('Instance type details')}>
+                            <DescriptionListGroup>
+                              <DescriptionListTerm>{t('Name')}</DescriptionListTerm>
+                              <DescriptionListDescription>
+                                {displayValue(
+                                  instanceType?.metadata?.name || vm.spec?.instanceType?.id,
+                                )}
+                              </DescriptionListDescription>
+                            </DescriptionListGroup>
+                            <DescriptionListGroup>
+                              <DescriptionListTerm>{t('vCPUs')}</DescriptionListTerm>
+                              <DescriptionListDescription>
+                                {instanceType?.spec?.vcpus ?? '—'}
+                              </DescriptionListDescription>
+                            </DescriptionListGroup>
+                            <DescriptionListGroup>
+                              <DescriptionListTerm>{t('Memory')}</DescriptionListTerm>
+                              <DescriptionListDescription>
+                                {instanceType?.spec?.memoryGib !== undefined
+                                  ? `${instanceType.spec.memoryGib} GiB`
+                                  : '—'}
+                              </DescriptionListDescription>
+                            </DescriptionListGroup>
+                          </DescriptionList>
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                     </DescriptionList>
                   </GridItem>
 
-                  <GridItem md={6}>
+                  <GridItem md={4}>
                     <Title headingLevel="h2" size="md" className="vm-details__section-title">
-                      {t('Lifecycle')}
+                      {t('Access & initial run')}
                     </Title>
                     <DescriptionList
                       isCompact
                       className="details-page__overview"
-                      aria-label={t('Virtual machine lifecycle')}
+                      aria-label={t('Virtual machine access and initial run')}
                     >
-                      <DescriptionListGroup>
-                        <DescriptionListTerm>{t('Created')}</DescriptionListTerm>
-                        <DescriptionListDescription>
-                          <Timestamp value={vm.metadata?.creationTimestamp} />
-                        </DescriptionListDescription>
-                      </DescriptionListGroup>
-                      <DescriptionListGroup>
-                        <DescriptionListTerm>{t('Creator')}</DescriptionListTerm>
-                        <DescriptionListDescription>
-                          {displayValue(vm.metadata?.creator)}
-                        </DescriptionListDescription>
-                      </DescriptionListGroup>
-                      <DescriptionListGroup>
-                        <DescriptionListTerm>{t('Last restarted')}</DescriptionListTerm>
-                        <DescriptionListDescription>
-                          <Timestamp value={vm.status?.lastRestartedAt} />
-                        </DescriptionListDescription>
-                      </DescriptionListGroup>
-                    </DescriptionList>
-                  </GridItem>
-                </Grid>
-              </StackItem>
-
-              <StackItem>
-                <Divider className="vm-details__section-divider" />
-              </StackItem>
-
-              <StackItem>
-                <VmUtilizationSection vm={vm} />
-              </StackItem>
-
-              <StackItem>
-                <Divider className="vm-details__section-divider" />
-              </StackItem>
-
-              <StackItem>
-                <VmNetworkingTab vm={vm} />
-              </StackItem>
-
-              <StackItem>
-                <VmStorageCard vm={vm} />
-              </StackItem>
-
-              <StackItem>
-                <Divider className="vm-details__section-divider" />
-              </StackItem>
-
-              <StackItem>
-                <Card>
-                  <CardTitle>{t('Console')}</CardTitle>
-                  <CardBody className="vm-details__console-body">
-                    <VmConsoleTab vm={vm} />
-                  </CardBody>
-                </Card>
-              </StackItem>
-
-              <StackItem>
-                <Divider className="vm-details__section-divider" />
-              </StackItem>
-
-              <StackItem>
-                <Stack hasGutter className="vm-details__conditions">
-                  <StackItem>
-                    <Title headingLevel="h2" size="lg">
-                      {t('Conditions')}
-                    </Title>
-                  </StackItem>
-                  <StackItem>
-                    <ResourceConditionsTable
-                      ariaLabel={t('Virtual machine conditions')}
-                      conditions={conditions}
-                      conditionResourceKind="compute_instance"
-                    />
-                  </StackItem>
-                </Stack>
-              </StackItem>
-            </Stack>
-          </GridItem>
-
-          <GridItem md={4} className="details-page__column">
-            <Stack hasGutter>
-              <StackItem>
-                <Card variant="secondary" className="details-page__rail-card">
-                  <CardTitle>{t('Specifications')}</CardTitle>
-                  <CardBody>
-                    <DescriptionList isCompact aria-label={t('Virtual machine specifications')}>
-                      <DescriptionListGroup>
-                        <DescriptionListTerm>{t('External IP')}</DescriptionListTerm>
-                        <DescriptionListDescription>
-                          {displayValue(vm.status?.externalIpAddress)}
-                        </DescriptionListDescription>
-                      </DescriptionListGroup>
-                      <DescriptionListGroup>
-                        <DescriptionListTerm>{t('Internal IP')}</DescriptionListTerm>
-                        <DescriptionListDescription>
-                          {displayValue(vm.status?.internalIpAddress)}
-                        </DescriptionListDescription>
-                      </DescriptionListGroup>
-                      <DescriptionListGroup>
-                        <DescriptionListTerm>{t('Disk image')}</DescriptionListTerm>
-                        <DescriptionListDescription>
-                          {displayValue(diskImage?.name || diskImage?.id)}
-                        </DescriptionListDescription>
-                      </DescriptionListGroup>
-                    </DescriptionList>
-                  </CardBody>
-                </Card>
-              </StackItem>
-
-              <StackItem>
-                <Card variant="secondary" className="details-page__rail-card">
-                  <CardTitle>{t('Access')}</CardTitle>
-                  <CardBody>
-                    <DescriptionList isCompact aria-label={t('Virtual machine access')}>
                       <DescriptionListGroup>
                         <DescriptionListTerm>{t('SSH public key')}</DescriptionListTerm>
                         <DescriptionListDescription>
@@ -307,12 +249,55 @@ const VmDetails = ({ vm }: Props) => {
                         </DescriptionListDescription>
                       </DescriptionListGroup>
                     </DescriptionList>
-                  </CardBody>
-                </Card>
+                  </GridItem>
+                </Grid>
               </StackItem>
 
               <StackItem>
-                <VmUserDataCard vm={vm} />
+                <Divider className="vm-details__section-divider" />
+              </StackItem>
+
+              <StackItem>
+                <VmUtilizationSection vm={vm} />
+              </StackItem>
+
+              <StackItem>
+                <Divider className="vm-details__section-divider" />
+              </StackItem>
+
+              <StackItem>
+                <VmExternalIpSection vm={vm} />
+              </StackItem>
+
+              <StackItem>
+                <Divider className="vm-details__section-divider" />
+              </StackItem>
+
+              <StackItem>
+                <VmNetworkingTab vm={vm} />
+              </StackItem>
+
+              <StackItem>
+                <VmStorageCard vm={vm} />
+              </StackItem>
+            </Stack>
+          </GridItem>
+
+          <GridItem md={4} className="details-page__column">
+            <Stack hasGutter>
+              <StackItem>
+                <Card variant="secondary" className="details-page__rail-card">
+                  <CardTitle>{t('Alerts')}</CardTitle>
+                  <Divider />
+                  <CardBody>{t('No alerts')}</CardBody>
+                </Card>
+              </StackItem>
+              <StackItem>
+                <Card variant="secondary" className="details-page__rail-card">
+                  <CardTitle>{t('Recent activity')}</CardTitle>
+                  <Divider />
+                  <CardBody>{t('No recent activity')}</CardBody>
+                </Card>
               </StackItem>
             </Stack>
           </GridItem>

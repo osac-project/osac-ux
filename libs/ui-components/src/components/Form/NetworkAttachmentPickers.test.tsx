@@ -99,4 +99,37 @@ describe('NetworkAttachmentPickers', () => {
     expect(screen.queryByText('Virtual network is required')).not.toBeInTheDocument();
     expect(screen.queryByText('Subnet is required')).not.toBeInTheDocument();
   });
+
+  it('renders tenant default and custom network cards when useNetworkSelectionCards is set', () => {
+    renderPickers({ useNetworkSelectionCards: true });
+
+    expect(screen.getByRole('radio', { name: /Tenant default/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Custom network/ })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Auto-attach external IP' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('checkbox', { name: 'Use tenant default network' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows default network summary when tenant default card is selected', () => {
+    renderPickers({ useNetworkSelectionCards: true }, emptyTestValues(true));
+
+    expect(screen.getByRole('radio', { name: /Tenant default/ })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    expect(screen.getByText('tenant-workload')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Virtual network/)).not.toBeInTheDocument();
+  });
+
+  it('shows network pickers when custom network card is selected', async () => {
+    const user = userEvent.setup();
+    renderPickers({ useNetworkSelectionCards: true }, emptyTestValues(true));
+
+    await user.click(screen.getByRole('radio', { name: /Custom network/ }));
+
+    expect(screen.getByLabelText(/^Virtual network/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Subnet/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Security groups/)).toBeInTheDocument();
+  });
 });

@@ -135,12 +135,27 @@ const instanceTypes: InstanceType[] = [
     metadata: { name: 'standard-8-32' },
     spec: { cpuCount: 8, vcpus: 8, memoryGib: 32, state: InstanceTypeState.ACTIVE },
   } as unknown as InstanceType,
+  {
+    id: 'it-gpu',
+    metadata: { name: 'gpu-8-64' },
+    spec: {
+      cpuCount: 8,
+      vcpus: 8,
+      memoryGib: 64,
+      state: InstanceTypeState.ACTIVE,
+      gpu: {
+        pciDeviceSelector: '10DE:20B0',
+        resourceName: 'nvidia.com/A100',
+        count: 1,
+      },
+    },
+  } as unknown as InstanceType,
 ];
 
 const diskImages: DiskImage[] = [
   {
     id: 'di-rhel',
-    metadata: { name: 'rhel-9.4' },
+    metadata: { name: 'rhel-9.4', description: 'Red Hat Enterprise Linux 9.4' },
     spec: {
       lifecycle: DiskImageLifecycle.AVAILABLE,
       guestOsFamily: GuestOSFamily.GUEST_OS_FAMILY_LINUX,
@@ -148,7 +163,7 @@ const diskImages: DiskImage[] = [
   } as unknown as DiskImage,
   {
     id: 'di-fedora',
-    metadata: { name: 'fedora-40' },
+    metadata: { name: 'fedora-40', description: 'Fedora Linux 40' },
     spec: {
       lifecycle: DiskImageLifecycle.AVAILABLE,
       guestOsFamily: GuestOSFamily.GUEST_OS_FAMILY_LINUX,
@@ -300,6 +315,68 @@ const computeInstanceCatalogItems: ComputeInstanceCatalogItem[] = [
         behavior: {
           case: 'locked',
           value: { id: 'di-fedora', name: 'fedora-40', shared: true },
+        },
+      },
+    },
+  } as unknown as ComputeInstanceCatalogItem,
+  {
+    id: 'ci-flexible-vm',
+    published: true,
+    metadata: {
+      name: 'Flexible Linux VM',
+      annotations: { 'osac.io/rate-hourly': '3.75', 'osac.io/rate-monthly': '2500' },
+    },
+    title: 'Flexible Linux VM',
+    description: 'A customizable Linux virtual machine for general workloads.',
+    template: { id: 'tpl-flexible', name: 'Flexible Linux VM', shared: true },
+    spec: { templateId: 'tpl-flexible' },
+    fields: {
+      instanceType: {
+        behavior: {
+          case: 'editable',
+          value: { defaultValue: { id: 'it-small', name: 'standard-2-4', shared: true } },
+        },
+      },
+      bootDisk: {
+        sizeGib: {
+          behavior: { case: 'editable', value: { defaultValue: 60 } },
+        },
+      },
+      diskImage: {
+        behavior: {
+          case: 'editable',
+          value: { defaultValue: { id: 'di-rhel', name: 'rhel-9.4', shared: true } },
+        },
+      },
+    },
+  } as unknown as ComputeInstanceCatalogItem,
+  {
+    id: 'ci-developer-vm',
+    published: true,
+    metadata: {
+      name: 'Developer Sandbox VM',
+      annotations: { 'osac.io/rate-hourly': '5.10', 'osac.io/rate-monthly': '3400' },
+    },
+    title: 'Developer Sandbox VM',
+    description: 'An editable Fedora virtual machine for development and testing.',
+    template: { id: 'tpl-developer', name: 'Developer Sandbox VM', shared: true },
+    spec: { templateId: 'tpl-developer' },
+    fields: {
+      instanceType: {
+        behavior: {
+          case: 'editable',
+          value: { defaultValue: { id: 'it-large', name: 'standard-8-32', shared: true } },
+        },
+      },
+      bootDisk: {
+        sizeGib: {
+          behavior: { case: 'editable', value: { defaultValue: 80 } },
+        },
+      },
+      diskImage: {
+        behavior: {
+          case: 'editable',
+          value: { defaultValue: { id: 'di-fedora', name: 'fedora-40', shared: true } },
         },
       },
     },
@@ -818,10 +895,28 @@ const virtualNetworks: VirtualNetwork[] = [
 const subnets: Subnet[] = [
   {
     id: 'subnet-1',
-    metadata: { name: 'default-subnet' },
+    metadata: {
+      name: 'default-subnet',
+      description: '10.0.1.0/24 · VLAN 200',
+    },
     spec: { ipv4Cidr: '10.0.1.0/24', virtualNetwork: { id: 'vnet-1' } },
     status: { state: SubnetState.READY },
   } as unknown as Subnet,
+  ...virtualNetworks.slice(1).map((virtualNetwork, index) => {
+    const networkNumber = index + 2;
+    return {
+      id: `subnet-${networkNumber}`,
+      metadata: {
+        name: `subnet-${String(networkNumber).padStart(2, '0')}`,
+        description: `10.${networkNumber}.1.0/24 · VLAN ${200 + networkNumber}`,
+      },
+      spec: {
+        ipv4Cidr: `10.${networkNumber}.1.0/24`,
+        virtualNetwork: { id: virtualNetwork.id },
+      },
+      status: { state: SubnetState.READY },
+    } as unknown as Subnet;
+  }),
 ];
 
 const securityGroups: SecurityGroup[] = [
@@ -909,6 +1004,31 @@ const securityGroups: SecurityGroup[] = [
     },
     status: { state: SecurityGroupState.PENDING },
   } as unknown as SecurityGroup,
+  ...virtualNetworks.slice(1).map((virtualNetwork, index) => {
+    const networkNumber = index + 2;
+    return {
+      id: `sg-vnet-${networkNumber}`,
+      metadata: { name: `default-sg-${String(networkNumber).padStart(2, '0')}` },
+      spec: {
+        virtualNetwork: { id: virtualNetwork.id },
+        ingress: [
+          {
+            protocol: Protocol.TCP,
+            portFrom: 22,
+            portTo: 22,
+            ipv4Cidr: `10.${networkNumber}.1.0/24`,
+          },
+        ],
+        egress: [
+          {
+            protocol: Protocol.ALL,
+            ipv4Cidr: '0.0.0.0/0',
+          },
+        ],
+      },
+      status: { state: SecurityGroupState.READY },
+    } as unknown as SecurityGroup;
+  }),
 ];
 
 const externalIpPools: PublicExternalIPPool[] = [
@@ -1055,14 +1175,14 @@ const volumes: Volume[] = [
 const publicStorageTiers: PublicStorageTier[] = [
   {
     id: 'st-fast',
-    metadata: { name: 'fast' },
-    spec: {},
+    metadata: { name: 'fast', displayName: 'Fast SSD' },
+    spec: { description: 'General-purpose SSD for most virtual machines' },
     status: { state: PublicStorageTierState.ACTIVE },
   } as unknown as PublicStorageTier,
   {
     id: 'st-standard',
-    metadata: { name: 'standard' },
-    spec: {},
+    metadata: { name: 'standard', displayName: 'Standard HDD' },
+    spec: { description: 'Lower-cost storage for general workloads' },
     status: { state: PublicStorageTierState.ACTIVE },
   } as unknown as PublicStorageTier,
 ];

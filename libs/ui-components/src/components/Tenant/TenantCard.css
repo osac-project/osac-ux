@@ -2,7 +2,8 @@
   width: 100%;
   height: auto;
   align-self: start;
-  transition: box-shadow 0.18s ease;
+  transition: box-shadow var(--pf-t--global--motion--duration--fade--default)
+    var(--pf-t--global--motion--timing-function--default);
 }
 
 .tenant-card:hover {
@@ -36,8 +37,18 @@
   font-weight: var(--pf-t--global--font--weight--heading--bold);
 }
 
-.tenant-card__name {
-  padding-block-start: var(--pf-t--global--spacer--sm);
+.tenant-card__title-link {
+  color: var(--pf-t--global--text--color--link--default);
+  font-size: var(--pf-t--global--font--size--body--md);
+  font-weight: var(--pf-t--global--font--weight--body--bold);
+  line-height: var(--pf-t--global--font--line-height--heading);
+  text-decoration: none;
+}
+
+.tenant-card__title-link:hover,
+.tenant-card__title-link:focus {
+  color: var(--pf-t--global--text--color--link--hover);
+  text-decoration: none;
 }
 
 .tenant-card .pf-v6-c-card__body {

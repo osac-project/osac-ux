@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import FolderIcon from '@patternfly/react-icons/dist/esm/icons/folder-icon';
 
 import { useAllProjects } from '@osac/ui-components/api/v1/project';
 import { HierarchicalSelect } from '@osac/ui-components/components/Primitives/HierarchicalSelect';
@@ -10,7 +11,13 @@ import { getErrorMessage } from '@osac/ui-components/utils/error';
 import { useTranslation } from '../../hooks/useTranslation';
 import { buildProjectTree, getFullProjectPath, getProjectName } from '../Project/utils';
 
-const ProjectFilter = () => {
+import './ProjectFilter.css';
+
+interface ProjectFilterProps {
+  showAllProjectsIcon?: boolean;
+}
+
+const ProjectFilter = ({ showAllProjectsIcon = false }: ProjectFilterProps) => {
   const { t } = useTranslation();
   const { projects, setProjects } = useSession();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -66,16 +73,19 @@ const ProjectFilter = () => {
   );
 
   return (
-    <HierarchicalSelect
-      items={items}
-      selectedIds={projects}
-      onSelectionChange={setProjects}
-      placeholder={t('All projects')}
-      clearLabel={t('All projects')}
-      isLoading={isLoading}
-      error={error ? getErrorMessage(error) : undefined}
-      aria-label={t('Filter by project')}
-    />
+    <div className="project-filter">
+      <HierarchicalSelect
+        items={items}
+        selectedIds={projects}
+        onSelectionChange={setProjects}
+        placeholder={t('All projects')}
+        clearLabel={t('All projects')}
+        clearIcon={showAllProjectsIcon ? <FolderIcon aria-hidden /> : undefined}
+        isLoading={isLoading}
+        error={error ? getErrorMessage(error) : undefined}
+        aria-label={t('Filter by project')}
+      />
+    </div>
   );
 };
 

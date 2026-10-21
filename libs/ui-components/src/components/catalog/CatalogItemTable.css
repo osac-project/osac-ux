@@ -1,5 +1,6 @@
 .catalog-items-table__name-link {
   color: var(--pf-t--global--text--color--link--default);
+  font-size: var(--pf-t--global--font--size--body--md);
   font-weight: var(--pf-t--global--font--weight--body--bold);
   text-decoration: none;
 }
@@ -7,17 +8,17 @@
 .catalog-items-table__name-link:hover,
 .catalog-items-table__name-link:focus {
   color: var(--pf-t--global--text--color--link--hover);
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .catalog-items-table__name-meta {
   color: var(--pf-t--global--text--color--subtle);
-  font-size: var(--pf-t--global--font--size--body--sm);
+  font-size: var(--pf-t--global--font--size--body--md);
   line-height: var(--pf-t--global--font--line-height--body);
 }
 
 .catalog-items-table__meta {
   color: var(--pf-t--global--text--color--subtle);
-  font-size: var(--pf-t--global--font--size--body--sm);
+  font-size: var(--pf-t--global--font--size--body--md);
   line-height: var(--pf-t--global--font--line-height--body);
 }
