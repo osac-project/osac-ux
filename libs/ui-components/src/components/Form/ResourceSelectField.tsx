@@ -35,6 +35,7 @@ export interface ResourceListItem {
   id: string;
   metadata?: { name?: string; displayName?: string; description?: string };
   spec?: { description?: string };
+  type?: number;
 }
 
 export interface ResourceSelectFieldProps {
@@ -55,6 +56,8 @@ export interface ResourceSelectFieldProps {
   loadErrorTitle?: string;
   emptyTitle?: string;
   emptyDescription?: string;
+  itemDescription?: (item: ResourceListItem) => string | undefined;
+  menuFooter?: ReactNode;
   /** Called after a new resource is selected. Use to trigger cascade resets. */
   onSelectResource?: (value: ResourceSelectValue) => void;
 }
@@ -85,6 +88,8 @@ export const ResourceSelectField = ({
   loadErrorTitle,
   emptyTitle,
   emptyDescription,
+  itemDescription,
+  menuFooter,
   onSelectResource,
 }: ResourceSelectFieldProps) => {
   const [field, meta, helpers] = useField<ResourceSelectValue>(name);
@@ -118,7 +123,9 @@ export const ResourceSelectField = ({
   const selectedItem = items.find((item) => item.id === selectedId);
   const selectedName =
     selectedItem?.metadata?.displayName || selectedItem?.metadata?.name || field.value?.name;
-  const selectedDescription = selectedItem ? resourceDescription(selectedItem) : undefined;
+  const getItemDescription = (item: ResourceListItem): string | undefined =>
+    itemDescription?.(item) ?? resourceDescription(item);
+  const selectedDescription = selectedItem ? getItemDescription(selectedItem) : undefined;
   const validated = error ? 'error' : 'default';
 
   useEffect(() => {
@@ -220,21 +227,39 @@ export const ResourceSelectField = ({
                   <SelectOption
                     key={item.id}
                     value={item.id}
-                    description={resourceDescription(item)}
+                    description={getItemDescription(item)}
                   >
                     {item.metadata?.displayName || item.metadata?.name}
                   </SelectOption>
                 ))}
               </SelectList>
+              {menuFooter ? (
+                <>
+                  <Divider />
+                  <div className="resource-select__menu-footer">{menuFooter}</div>
+                </>
+              ) : null}
             </div>
           ) : (
-            <SelectList>
-              {filteredItems.map((item) => (
-                <SelectOption key={item.id} value={item.id} description={resourceDescription(item)}>
-                  {item.metadata?.displayName || item.metadata?.name}
-                </SelectOption>
-              ))}
-            </SelectList>
+            <>
+              <SelectList>
+                {filteredItems.map((item) => (
+                  <SelectOption
+                    key={item.id}
+                    value={item.id}
+                    description={getItemDescription(item)}
+                  >
+                    {item.metadata?.displayName || item.metadata?.name}
+                  </SelectOption>
+                ))}
+              </SelectList>
+              {menuFooter ? (
+                <>
+                  <Divider />
+                  <div className="resource-select__menu-footer">{menuFooter}</div>
+                </>
+              ) : null}
+            </>
           )}
         </Select>
         <FormFieldHelper error={error} description={helperText} fieldId={fieldId} />

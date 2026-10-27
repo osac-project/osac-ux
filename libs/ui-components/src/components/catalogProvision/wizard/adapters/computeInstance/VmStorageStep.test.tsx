@@ -88,7 +88,7 @@ describe('VmStorageStep', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/^Storage tier/)).toHaveTextContent('fast');
+      expect(screen.getByLabelText(/^Storage tier/)).toHaveTextContent('Fast SSD');
       expect(screen.getByLabelText(/^Storage tier/)).not.toBeDisabled();
     });
     expect(screen.queryByText('Locked by catalog')).not.toBeInTheDocument();
@@ -123,7 +123,7 @@ describe('VmStorageStep', () => {
       { id: 'id-fast', name: 'fast' },
     );
 
-    await waitFor(() => expect(screen.getByLabelText(/^Storage tier/)).toHaveTextContent('fast'));
+    await waitFor(() => expect(screen.getByLabelText(/^Storage tier/)).toHaveTextContent('Fast SSD'));
     expect(screen.queryByText('Locked by catalog')).not.toBeInTheDocument();
     expect(screen.getByLabelText(/^Storage tier/)).toBeDisabled();
   });
@@ -131,8 +131,10 @@ describe('VmStorageStep', () => {
   it('leaves the tier picker editable and unset when the catalog defines no default', async () => {
     renderStep(makeCatalogItem());
 
-    await waitFor(() => expect(screen.getByLabelText(/^Storage tier/)).not.toBeDisabled());
-    expect(screen.getByLabelText(/^Storage tier/)).toHaveTextContent('Select a storage tier');
+    await waitFor(() => expect(screen.getByLabelText(/^Boot storage tier/)).not.toBeDisabled());
+    expect(screen.getByLabelText(/^Boot storage tier/)).toHaveTextContent(
+      'Select a storage tier',
+    );
     expect(screen.queryByText('Locked by catalog')).not.toBeInTheDocument();
   });
 });
@@ -152,8 +154,8 @@ describe('VmStorageStep — additional disks', () => {
 
     await user.click(screen.getByRole('button', { name: 'Add disk' }));
 
-    await waitFor(() => expect(screen.getAllByLabelText(/^Storage tier/)).toHaveLength(2));
+    await waitFor(() => expect(screen.getAllByLabelText(/storage tier/i)).toHaveLength(2));
     // Boot disk's picker renders before the additional-disks array field in this step.
-    expect(screen.getAllByLabelText(/^Storage tier/)[0]).toHaveTextContent('fast');
+    expect(screen.getAllByLabelText(/storage tier/i)[0]).toHaveTextContent('Fast SSD');
   });
 });

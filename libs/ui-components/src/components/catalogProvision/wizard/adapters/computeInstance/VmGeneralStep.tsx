@@ -2,7 +2,6 @@ import {
   Card,
   CardBody,
   Content,
-  Divider,
   Flex,
   FlexItem,
   Stack,
@@ -14,7 +13,6 @@ import { useFormikContext } from 'formik';
 
 import type { ComputeInstanceCatalogItem } from '@osac/types';
 
-import DiskImageSelectionField from './DiskImageSelectionField';
 import type { ComputeInstanceWizardValues } from './fields';
 import { useTranslation } from '../../../../../hooks/useTranslation';
 import { InputField } from '../../../../Form/InputField';
@@ -78,8 +76,6 @@ const VmGeneralStep = ({ catalogItem }: VmGeneralStepProps) => {
         multiline
         rows={4}
       />
-      <Divider />
-      <DiskImageSelectionField catalogItem={catalogItem} />
     </OsacForm>
   );
 };

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Code, ConnectError } from '@connectrpc/connect';
 import { screen, waitFor } from '@testing-library/react';
 import { Formik, type FormikErrors } from 'formik';
@@ -26,11 +27,13 @@ const renderSelect = ({
   autoSelectSingleOption = false,
   initialValue = emptyResourceSelectValue(),
   tenants = [makeTenant('only-1', 'Only tenant')],
+  menuFooter,
   transportOverrides,
 }: {
   autoSelectSingleOption?: boolean;
   initialValue?: ResourceSelectValue;
   tenants?: Tenant[];
+  menuFooter?: ReactNode;
   transportOverrides?: MockTransportOverrides;
 } = {}) => {
   let latestErrors: FormikErrors<{ tenant: ResourceSelectValue }> = {};
@@ -58,6 +61,7 @@ const renderSelect = ({
             loadErrorTitle="Failed to fetch tenants"
             emptyTitle="No registered tenants"
             emptyDescription="Register a tenant before creating and assigning an external IP pool."
+            menuFooter={menuFooter}
           />
           <output aria-label="formik-value">{JSON.stringify(values.tenant)}</output>
           <button
@@ -112,6 +116,23 @@ describe('ResourceSelectField', () => {
       );
     });
     expect(screen.getByLabelText(/^Tenant/)).toHaveTextContent('globex');
+  });
+
+  it('renders an optional footer below the resource list', async () => {
+    const { user } = renderSelect({
+      tenants: [makeTenant('t-1', 'acme')],
+      menuFooter: <a href="/tenants/create">Create tenant</a>,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^Tenant/)).not.toBeDisabled();
+    });
+    await user.click(screen.getByLabelText(/^Tenant/));
+
+    expect(screen.getByRole('link', { name: 'Create tenant' })).toHaveAttribute(
+      'href',
+      '/tenants/create',
+    );
   });
 
   it('auto-selects a single listed resource as id and name', async () => {

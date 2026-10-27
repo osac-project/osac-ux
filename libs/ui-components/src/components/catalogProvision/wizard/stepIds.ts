@@ -22,7 +22,7 @@ export const STEP_LABEL_KEYS = (
 ): Record<WizardStepId, string> => ({
   catalog: kind === 'compute_instance' ? t('Select template') : t('Catalog item'),
   general: kind === 'compute_instance' ? t('Details') : t('General'),
-  'instance-type': t('Instance type'),
+  'instance-type': t('Compute configuration'),
   configuration: t('Configuration'),
   storage: t('Storage'),
   networking: t('Networking'),

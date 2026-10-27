@@ -1,7 +1,6 @@
 .resource-select__toggle {
   min-block-size: calc(var(--pf-t--global--spacer--xl) * 2);
   padding-block: var(--pf-t--global--spacer--sm);
-  border-radius: var(--pf-t--global--border--radius--small);
   text-align: start;
 }
 
@@ -38,4 +37,8 @@
 .resource-select__menu .pf-v6-c-select__menu-list {
   max-block-size: calc(var(--pf-t--global--spacer--2xl) * 8);
   overflow-y: auto;
+}
+
+.resource-select__menu-footer {
+  padding: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md);
 }

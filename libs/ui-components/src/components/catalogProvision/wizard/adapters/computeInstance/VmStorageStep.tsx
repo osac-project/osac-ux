@@ -27,7 +27,8 @@ export const VmStorageStep = ({ catalogItem }: Props) => {
     [definitions, t],
   );
   const storageTierOverlay = useMemo(
-    () => getCatalogFieldOverlay('spec.boot_disk.storage_tier', definitions, t('Storage tier')),
+    () =>
+      getCatalogFieldOverlay('spec.boot_disk.storage_tier', definitions, t('Boot storage tier')),
     [definitions, t],
   );
 

@@ -301,6 +301,10 @@ describe('buildComputeInstanceCreatePayload — useDefaultNetwork', () => {
 });
 
 describe('buildComputeInstanceCreatePayload — autoExternalIpAttachment', () => {
+  it('selects autoExternalIpAttachment by default', () => {
+    expect(createEmptyComputeInstanceValues().spec.networking.autoExternalIpAttachment).toBe(true);
+  });
+
   it('omits autoExternalIpAttachment when disabled', () => {
     const values = baseValues();
     values.spec.networking.autoExternalIpAttachment = false;

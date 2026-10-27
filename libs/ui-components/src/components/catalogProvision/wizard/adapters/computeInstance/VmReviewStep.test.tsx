@@ -40,14 +40,14 @@ describe('VmReviewStep — Storage section', () => {
     expect(await screen.findByText('40 GB, unknown-tier')).toBeInTheDocument();
   });
 
-  it('no longer lists the boot disk under the Configuration section', async () => {
+  it('lists the boot disk under Storage instead of Compute configuration', async () => {
     renderReviewStep({
       bootDisk: { sizeGib: '40', storageTier: { id: 'id-balanced', name: 'balanced' } },
     });
 
     await screen.findByText('Storage');
-    expect(screen.getByText('Configuration')).toBeInTheDocument();
-    // "Boot disk" label appears exactly once — inside the Storage section, not Configuration.
+    expect(screen.getByText('Compute configuration')).toBeInTheDocument();
+    // "Boot disk" label appears exactly once — inside the Storage section.
     expect(screen.getAllByText('Boot disk')).toHaveLength(1);
   });
 });

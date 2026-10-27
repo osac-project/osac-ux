@@ -133,7 +133,7 @@ const fillStorageStep = async (user: UserEvent) => {
     await user.clear(bootDisk);
     await user.type(bootDisk, '40');
   }
-  const storageTierToggle = (await screen.findAllByLabelText(/^Storage tier/))[0];
+  const storageTierToggle = (await screen.findAllByLabelText(/^Boot storage tier/))[0];
   await waitFor(() => {
     expect(storageTierToggle).not.toBeDisabled();
   });
@@ -966,7 +966,7 @@ describe('CatalogProvisionWizard', () => {
     await waitFor(() => {
       expect(screen.getByLabelText(/Boot disk/)).toBeInTheDocument();
     });
-    expect(screen.getByText('Storage tier')).toBeInTheDocument();
+    expect(screen.getByText('Boot storage tier')).toBeInTheDocument();
     expect(screen.queryByLabelText(/^Instance type/)).not.toBeInTheDocument();
   });
 

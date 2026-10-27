@@ -24,6 +24,7 @@ import { useField, useFormikContext } from 'formik';
 
 import type { ComputeInstanceCatalogItem, InstanceType } from '@osac/types';
 
+import DiskImageSelectionField from './DiskImageSelectionField';
 import type { ComputeInstanceWizardValues } from './fields';
 import {
   INSTANCE_TYPE_ACTIVE_LIST_FILTER,
@@ -183,14 +184,17 @@ export const VmInstanceTypeStep = ({ catalogItem }: Props) => {
     <OsacForm className="catalog-provision__vm-instance-type-form pf-m-limit-width">
       <Stack hasGutter>
         <StackItem>
-          <Title headingLevel="h2">{t('Instance type')}</Title>
+          <Title headingLevel="h2">{t('Compute configuration')}</Title>
         </StackItem>
         <StackItem>
           <Content component="p">
             {t(
-              'Choose an instance type. Use the GPU checkbox to switch between instance types with and without a GPU.',
+              'Choose a disk image and instance type for your virtual machine. Use the GPU checkbox to switch between instance types with and without a GPU.',
             )}
           </Content>
+        </StackItem>
+        <StackItem>
+          <DiskImageSelectionField catalogItem={catalogItem} />
         </StackItem>
         <StackItem>
           <Checkbox

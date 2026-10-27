@@ -27,7 +27,7 @@ export const createEmptyComputeInstanceValues = (project = ''): ComputeInstanceW
       virtualNetwork: emptyResourceSelectValue(),
       subnet: emptyResourceSelectValue(),
       securityGroups: [],
-      autoExternalIpAttachment: false,
+      autoExternalIpAttachment: true,
       additionalNetworks: [],
     },
   },

@@ -1,0 +1,17 @@
+.catalog-provision__vm-review-intro {
+  margin-block-end: var(--pf-t--global--spacer--sm);
+}
+
+.catalog-provision__vm-review-description {
+  color: var(--pf-t--global--text--color--subtle);
+  font-size: var(--pf-t--global--font--size--body--lg);
+}
+
+.catalog-provision__vm-review-section-title.pf-v6-c-title {
+  color: var(--pf-t--global--color--brand--default);
+  margin-block-start: var(--pf-t--global--spacer--lg);
+}
+
+.catalog-provision__vm-review-list .pf-v6-c-description-list__group {
+  margin-block-end: var(--pf-t--global--spacer--sm);
+}
