@@ -10,7 +10,7 @@ This package is for shared, reusable UI building blocks used across multiple app
 
 ## Keep components in `apps/app-frontend` when
 
-- The component is tied to a single route/feature flow.
+- The component is tied to a single route or feature flow.
 - It depends on page-local behavior, route assumptions, or feature-specific orchestration.
 - It is still evolving quickly and not yet reused.
 
