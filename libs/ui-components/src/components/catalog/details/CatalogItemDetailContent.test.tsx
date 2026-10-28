@@ -29,7 +29,13 @@ const vmItem: ComputeInstanceCatalogItem = {
   title: 'RHEL 9 catalog',
   description: 'RHEL 9 base image',
   published: true,
-  template: undefined,
+  template: {
+    $typeName: 'osac.public.v1.ComputeInstanceTemplateReference',
+    id: 'tpl-rhel-9',
+    name: 'RHEL 9 template',
+    project: 'foo',
+    shared: true,
+  },
   templateParameters: {},
 };
 
@@ -39,5 +45,7 @@ describe('CatalogItemDetailContent', () => {
 
     expect(screen.getByText('catalog-rhel-9')).toBeInTheDocument();
     expect(screen.getByText('RHEL 9 base image')).toBeInTheDocument();
+    expect(screen.getByText('RHEL 9 template')).toBeInTheDocument();
+    expect(screen.getByText('tpl-rhel-9')).toBeInTheDocument();
   });
 });

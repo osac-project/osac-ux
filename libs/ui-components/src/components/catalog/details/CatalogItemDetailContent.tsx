@@ -56,6 +56,23 @@ export const CatalogItemDetailContent = ({ item }: CatalogItemDetailContentProps
                 </DescriptionListGroup>
               ) : null}
 
+              {item.template ? (
+                <>
+                  <DescriptionListGroup>
+                    <DescriptionListTerm>{t('Provisioning template')}</DescriptionListTerm>
+                    <DescriptionListDescription>
+                      {item.template.name || '—'}
+                    </DescriptionListDescription>
+                  </DescriptionListGroup>
+                  <DescriptionListGroup>
+                    <DescriptionListTerm>{t('Provisioning template ID')}</DescriptionListTerm>
+                    <DescriptionListDescription>
+                      {item.template.id || '—'}
+                    </DescriptionListDescription>
+                  </DescriptionListGroup>
+                </>
+              ) : null}
+
               {resources.length > 0 ? (
                 <DescriptionListGroup>
                   <DescriptionListTerm>{t('Default resources')}</DescriptionListTerm>
