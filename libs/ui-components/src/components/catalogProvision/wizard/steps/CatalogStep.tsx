@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Bullseye,
@@ -15,6 +15,7 @@ import {
 } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 
+import { useSession } from '../../../../hooks/use-session';
 import { useTranslation } from '../../../../hooks/useTranslation';
 import CatalogItemCard from '../../../catalog/CatalogItemCard';
 import { CatalogItem, filterCatalogItemsBySearch } from '../../../catalog/catalogItemDisplay';
@@ -38,6 +39,18 @@ export const CatalogStep = <TValues extends { catalogItemId: string }, TPayload>
   const [search, setSearch] = useState('');
   const formik = useFormikContext<TValues>();
   const { values } = formik;
+  const { projects } = useSession();
+
+  useEffect(() => {
+    if (adapter.kind !== 'compute_instance') {
+      return;
+    }
+
+    const selectedProject = projects.length === 1 ? projects[0] : '';
+    if (formik.getFieldMeta('metadata.project').value !== selectedProject) {
+      void formik.setFieldValue('metadata.project', selectedProject, false);
+    }
+  }, [adapter.kind, formik, projects]);
 
   const {
     data: catalogItems = [],

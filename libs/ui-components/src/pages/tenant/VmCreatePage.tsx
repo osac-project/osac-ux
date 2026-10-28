@@ -15,9 +15,9 @@ import { ComputeInstanceSchema } from '@osac/types';
 import { useProvisionComputeInstance } from '@osac/ui-components/api/v1/compute-instance';
 import {
   type CatalogProvisionPayload,
-  CatalogProvisionWizard,
-  type CatalogProvisionWizardCloseHandler,
-} from '@osac/ui-components/components/catalogProvision/CatalogProvisionWizard';
+  VmCreateWizard,
+  type VmCreateWizardCloseHandler,
+} from '@osac/ui-components/components/vm/CreateWizard/VmCreateWizard';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 export const VmCreatePage = () => {
@@ -25,9 +25,9 @@ export const VmCreatePage = () => {
   const navigate = useNavigate();
   const { catalogItemId } = useParams<{ catalogItemId?: string }>();
   const provisionVm = useProvisionComputeInstance();
-  const [closeHandler, setCloseHandler] = useState<CatalogProvisionWizardCloseHandler | null>(null);
+  const [closeHandler, setCloseHandler] = useState<VmCreateWizardCloseHandler | null>(null);
 
-  const handleCloseHandlerChange = useCallback((handler: CatalogProvisionWizardCloseHandler) => {
+  const handleCloseHandlerChange = useCallback((handler: VmCreateWizardCloseHandler) => {
     setCloseHandler(handler);
   }, []);
 
@@ -75,8 +75,7 @@ export const VmCreatePage = () => {
           <Content component="p">{t('catalogProvision.vm.wizardDescription')}</Content>
         </Stack>
       </PageSection>
-      <CatalogProvisionWizard
-        kind="compute_instance"
+      <VmCreateWizard
         initialCatalogItemId={catalogItemId}
         onProvision={handleWizardProvision}
         onClosed={handleWizardClosed}

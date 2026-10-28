@@ -14,10 +14,10 @@ import {
 import { BareMetalInstanceSchema } from '@osac/types';
 import { useCreateBareMetalInstance } from '@osac/ui-components/api/v1/baremetal-instance';
 import {
-  CatalogProvisionPayload,
-  CatalogProvisionWizard,
-  type CatalogProvisionWizardCloseHandler,
-} from '@osac/ui-components/components/catalogProvision/CatalogProvisionWizard';
+  type CatalogProvisionPayload,
+  BareMetalInstanceCreateWizard,
+  type BareMetalInstanceCreateWizardCloseHandler,
+} from '@osac/ui-components/components/BareMetalInstance/CreateWizard/BareMetalInstanceCreateWizard';
 import { hasBareMetalAuthentication } from '@osac/ui-components/components/catalogProvision/wizard/adapters/bareMetalInstance/fields';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
@@ -26,10 +26,10 @@ export const BareMetalCreatePage = () => {
   const navigate = useNavigate();
   const { catalogItemId } = useParams<{ catalogItemId?: string }>();
   const createBareMetalInstance = useCreateBareMetalInstance();
-  const [closeHandler, setCloseHandler] = useState<CatalogProvisionWizardCloseHandler | null>(null);
+  const [closeHandler, setCloseHandler] = useState<BareMetalInstanceCreateWizardCloseHandler | null>(null);
   const provisionInFlightRef = useRef<Promise<void> | null>(null);
 
-  const handleCloseHandlerChange = useCallback((handler: CatalogProvisionWizardCloseHandler) => {
+  const handleCloseHandlerChange = useCallback((handler: BareMetalInstanceCreateWizardCloseHandler) => {
     setCloseHandler(handler);
   }, []);
 
@@ -99,8 +99,7 @@ export const BareMetalCreatePage = () => {
           </Content>
         </Stack>
       </PageSection>
-      <CatalogProvisionWizard
-        kind="bare_metal_instance"
+      <BareMetalInstanceCreateWizard
         initialCatalogItemId={catalogItemId}
         onProvision={handleWizardProvision}
         onClosed={handleWizardClosed}

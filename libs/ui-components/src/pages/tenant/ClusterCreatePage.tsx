@@ -15,9 +15,9 @@ import { ClusterSchema } from '@osac/types';
 import { useProvisionCluster } from '@osac/ui-components/api/v1/cluster';
 import {
   type CatalogProvisionPayload,
-  CatalogProvisionWizard,
-  type CatalogProvisionWizardCloseHandler,
-} from '@osac/ui-components/components/catalogProvision/CatalogProvisionWizard';
+  ClusterCreateWizard,
+  type ClusterCreateWizardCloseHandler,
+} from '@osac/ui-components/components/Cluster/CreateWizard/ClusterCreateWizard';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 export const ClusterCreatePage = () => {
@@ -25,9 +25,9 @@ export const ClusterCreatePage = () => {
   const navigate = useNavigate();
   const { catalogItemId } = useParams<{ catalogItemId?: string }>();
   const provisionCluster = useProvisionCluster();
-  const [closeHandler, setCloseHandler] = useState<CatalogProvisionWizardCloseHandler | null>(null);
+  const [closeHandler, setCloseHandler] = useState<ClusterCreateWizardCloseHandler | null>(null);
 
-  const handleCloseHandlerChange = useCallback((handler: CatalogProvisionWizardCloseHandler) => {
+  const handleCloseHandlerChange = useCallback((handler: ClusterCreateWizardCloseHandler) => {
     setCloseHandler(handler);
   }, []);
 
@@ -73,8 +73,7 @@ export const ClusterCreatePage = () => {
           </Content>
         </Stack>
       </PageSection>
-      <CatalogProvisionWizard
-        kind="cluster"
+      <ClusterCreateWizard
         initialCatalogItemId={catalogItemId}
         onProvision={handleWizardProvision}
         onClosed={handleWizardClosed}

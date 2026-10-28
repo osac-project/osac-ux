@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   type ClusterCatalogItem,
   type ComputeInstanceCatalogItem,
+  type Project,
   type Secret,
   SecretType,
 } from '@osac/types';
@@ -252,6 +253,28 @@ const catalogItemWithDistinctDefaults: ComputeInstanceCatalogItem = {
   templateParameters: {},
 };
 
+const project: Project = {
+  $typeName: 'osac.public.v1.Project',
+  id: 'project-alpha',
+  metadata: {
+    $typeName: 'osac.public.v1.Metadata',
+    displayName: '',
+    description: '',
+    name: 'project-alpha',
+    annotations: {},
+    creator: 'foo',
+    labels: {},
+    project: '',
+    tenant: 'foo',
+    version: 1,
+  },
+  spec: {
+    $typeName: 'osac.public.v1.ProjectSpec',
+    title: 'Project Alpha',
+    description: '',
+  },
+} as Project;
+
 const apiFixtures: MockApiFixtures = {
   secrets: [
     {
@@ -275,6 +298,7 @@ const apiFixtures: MockApiFixtures = {
   ],
   catalogItems: [vmCatalogItem],
   clusterCatalogItems: [clusterCatalogItem],
+  projects: [project],
   clusterTemplates: [
     {
       $typeName: 'osac.public.v1.ClusterTemplate',
@@ -493,6 +517,18 @@ const expectConfigurationDefaults = async () => {
 };
 
 describe('CatalogProvisionWizard', () => {
+  it('shows the project selected on the template step on review', async () => {
+    const { user } = renderWizard();
+
+    await expectCatalogItemVisible('catalog-rhel-9');
+    await user.click(screen.getByLabelText('Filter by project'));
+    await user.click(screen.getByText('Project Alpha'));
+
+    await advanceToReviewStep(user, vmCatalogItem.metadata?.name ?? '');
+
+    expect(screen.getByText('Project Alpha')).toBeInTheDocument();
+  });
+
   it('blocks Next on catalog step when no catalog item is selected', async () => {
     const { user } = renderWizard();
 

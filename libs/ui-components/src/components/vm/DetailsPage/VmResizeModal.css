@@ -1,8 +1,12 @@
 .vm-resize-modal__instance-type-toggle {
   min-block-size: calc(var(--pf-t--global--spacer--xl) * 2);
   padding-block: var(--pf-t--global--spacer--sm);
-  border-radius: var(--pf-t--global--border--radius--small);
   text-align: start;
+}
+
+.vm-resize-modal__instance-type-toggle,
+.vm-resize-modal__instance-type-toggle::before {
+  border-radius: var(--pf-t--global--border--radius--200);
 }
 
 .vm-resize-modal__instance-type-toggle-content {
