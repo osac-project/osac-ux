@@ -1,12 +1,12 @@
+import { Link } from 'react-router-dom';
 import { Flex, FlexItem } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
-import { Link } from 'react-router-dom';
 
 import { Secret, SecretType } from '@osac/types';
 import SecretActionsMenu from '@osac/ui-components/components/Secret/SecretActionsMenu';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
-import { getSecretType } from './utils.ts';
+import { getSecretType, getSecretTypeDataKeys } from './utils.ts';
 import { Timestamp } from '../Primitives/Timestamp.tsx';
 
 import './SecretTable.css';
@@ -28,6 +28,7 @@ const SecretTable = ({ items, onEdit, onDelete }: SecretTableProps) => {
           <Th>{t('Name')}</Th>
           <Th>{t('Project')}</Th>
           <Th>{t('Type')}</Th>
+          <Th>{t('Key')}</Th>
           <Th>{t('Created')}</Th>
           <Th aria-label={t('Actions')} />
         </Tr>
@@ -54,6 +55,7 @@ const SecretTable = ({ items, onEdit, onDelete }: SecretTableProps) => {
               <Td dataLabel={t('Type')}>
                 {secretTypes[secret.type] || secretTypes[SecretType.UNSPECIFIED]}
               </Td>
+              <Td dataLabel={t('Key')}>{getSecretTypeDataKeys(secret.type) || '—'}</Td>
               <Td dataLabel={t('Created')}>
                 <Timestamp value={secret.metadata?.creationTimestamp} />
               </Td>

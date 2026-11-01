@@ -8,7 +8,6 @@ import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import type { Project } from '@osac/types';
 
 import ProjectActionsMenu from './ProjectActionsMenu';
-import ProjectStatusLabel from './ProjectStatusLabel';
 import { getFullProjectPath, getProjectName, getProjectParentPath } from './utils';
 import { useTranslation } from '../../hooks/useTranslation';
 
@@ -126,7 +125,6 @@ const ProjectTreeTable = ({ projects, rootPath }: ProjectTreeTableProps) => {
       <Thead>
         <Tr>
           <Th>{t('Name')}</Th>
-          <Th>{t('Status')}</Th>
           <Th>{t('Services')}</Th>
           <Th>{t('Project members')}</Th>
           <Th>{t('IP pool')}</Th>
@@ -171,9 +169,6 @@ const ProjectTreeTable = ({ projects, rootPath }: ProjectTreeTableProps) => {
                     </Content>
                   </div>
                 </div>
-              </Td>
-              <Td dataLabel={t('Status')}>
-                <ProjectStatusLabel project={project} />
               </Td>
               <Td dataLabel={t('Services')}>{getProjectServices(project, t)}</Td>
               <Td dataLabel={t('Project members')}>

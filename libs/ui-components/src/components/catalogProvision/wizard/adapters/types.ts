@@ -40,6 +40,8 @@ export interface CatalogProvisionAdapter<TItem extends CatalogItem, TValues, TPa
   /** Optional — only kinds whose ordered steps include access and initial run set this. */
   AccessAndInitialRunStep?: ComponentType<{ catalogItem: TItem | null }>;
   GeneralStep: ComponentType<{ catalogItem: TItem | null }>;
+  /** Optional — cluster adapters use this dedicated version-selection step. */
+  ClusterVersionStep?: ComponentType<{ catalogItem: TItem | null }>;
   ReviewStep: ComponentType<{ catalogItem: TItem | null }>;
   getStepValidationSchema: (
     catalogItem: TItem | null,

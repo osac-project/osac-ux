@@ -1,4 +1,5 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Role, RoleBinding, User } from '@osac/types';
@@ -108,36 +109,25 @@ describe('RoleBindingsPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Role Bindings' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Roles' })).toBeInTheDocument();
     });
   });
 
-  it('renders role binding rows with resolved role and user count', async () => {
+  it('renders one row per user with name, email and role badge', async () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Viewer')).toBeInTheDocument();
-      expect(screen.getByText('2 users')).toBeInTheDocument();
+      expect(screen.getByText('alice@example.com')).toBeInTheDocument();
     });
-    expect(screen.getByText('1 user')).toBeInTheDocument();
+
+    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+    expect(screen.getByText('charlie@example.com')).toBeInTheDocument();
+
+    // Each user shows its role as a badge
+    const viewerLabels = screen.getAllByText('Viewer');
+    expect(viewerLabels).toHaveLength(2); // alice and bob share the Viewer binding
+
     expect(screen.getByText('Editor')).toBeInTheDocument();
-  });
-
-  it('displays status column', async () => {
-    renderPage();
-
-    await waitFor(() => {
-      expect(screen.getByText('Viewer')).toBeInTheDocument();
-    });
-
-    const rows = screen.getAllByRole('row');
-    const viewerRow = rows.find((row) => within(row).queryByText('Viewer'));
-    expect(viewerRow).toBeDefined();
-    expect(within(viewerRow as HTMLElement).getByText('Ready')).toBeInTheDocument();
-
-    const editorRow = rows.find((row) => within(row).queryByText('Editor'));
-    expect(editorRow).toBeDefined();
-    expect(within(editorRow as HTMLElement).getByText('Pending')).toBeInTheDocument();
   });
 
   it('shows empty state when there are no role bindings', async () => {
@@ -157,14 +147,85 @@ describe('RoleBindingsPage', () => {
     });
   });
 
-  it('renders actions menu for each row', async () => {
+  it('renders an actions menu for each user row', async () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Viewer')).toBeInTheDocument();
+      expect(screen.getByText('alice@example.com')).toBeInTheDocument();
     });
 
-    const actionButtons = screen.getAllByRole('button', { name: 'Actions' });
-    expect(actionButtons).toHaveLength(2);
+    const actionButtons = screen.getAllByRole('button', { name: /Actions for/ });
+    expect(actionButtons).toHaveLength(3);
+  });
+
+  it('opens a confirmation modal when remove is clicked', async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('alice@example.com')).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Actions for user-1' }));
+    expect(screen.queryByRole('menuitem', { name: 'Edit' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Remove' }));
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText(/Remove user-1/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+  });
+
+  it('renders the search input and role filter', async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('alice@example.com')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('searchbox', { name: 'Search users' })).toBeInTheDocument();
+    expect(screen.getByText(/Role:/)).toBeInTheDocument();
+  });
+
+  it('filters users by free-text search on name', async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('alice@example.com')).toBeInTheDocument();
+    });
+
+    const search = screen.getByRole('searchbox', { name: 'Search users' });
+    await userEvent.type(search, 'alice');
+
+    expect(screen.getByText('alice@example.com')).toBeInTheDocument();
+    expect(screen.queryByText('bob@example.com')).not.toBeInTheDocument();
+    expect(screen.queryByText('charlie@example.com')).not.toBeInTheDocument();
+  });
+
+  it('filters users by free-text search on email', async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+    });
+
+    const search = screen.getByRole('searchbox', { name: 'Search users' });
+    await userEvent.type(search, 'bob@example');
+
+    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+    expect(screen.queryByText('alice@example.com')).not.toBeInTheDocument();
+  });
+
+  it('shows no-results message when search matches nothing', async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('alice@example.com')).toBeInTheDocument();
+    });
+
+    const search = screen.getByRole('searchbox', { name: 'Search users' });
+    await userEvent.type(search, 'zzz-no-match');
+
+    expect(screen.getByText('No users match your filters.')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 });

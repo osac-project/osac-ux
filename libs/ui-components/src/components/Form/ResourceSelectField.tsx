@@ -165,7 +165,7 @@ export const ResourceSelectField = ({
     <MenuToggle
       ref={toggleRef}
       id={fieldId}
-      className="resource-select__toggle"
+      className={`resource-select__toggle${selectedName ? ' resource-select__toggle--selected' : ''}`}
       onClick={() => setIsOpen((wasOpen) => !wasOpen)}
       isExpanded={isOpen}
       isDisabled={controlDisabled}

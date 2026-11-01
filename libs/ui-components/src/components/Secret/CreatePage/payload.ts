@@ -2,6 +2,7 @@ import type { MessageInitShape } from '@bufbuild/protobuf';
 
 import { SecretSchema, SecretType } from '@osac/types';
 
+import { SOURCE_FILENAME_ANNOTATION } from '../annotations';
 import type { SecretDataEntry, SecretValues } from './values';
 
 const getEntryBytes = (entry: SecretDataEntry): Uint8Array => entry.value;
@@ -40,6 +41,9 @@ export const buildSecretCreatePayload = (
     name: values.metadata.name,
     project: values.metadata.project,
     description: values.metadata.description,
+    annotations: values.sourceFilename
+      ? { [SOURCE_FILENAME_ANNOTATION]: values.sourceFilename }
+      : {},
   },
   type: values.type,
   data: buildTypedData(values),

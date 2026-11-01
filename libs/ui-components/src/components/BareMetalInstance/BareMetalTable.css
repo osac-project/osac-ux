@@ -21,3 +21,31 @@
   font-size: var(--pf-t--global--font--size--body--sm);
   line-height: var(--pf-t--global--font--line-height--body);
 }
+
+.bare-metal-table__configuration {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-t--global--spacer--xs);
+  margin: 0;
+  font-size: var(--pf-t--global--font--size--body--sm);
+}
+
+.bare-metal-table__configuration > div {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  gap: var(--pf-t--global--spacer--md);
+}
+
+.bare-metal-table__configuration dt {
+  font-weight: var(--pf-t--global--font--weight--body--bold);
+}
+
+.bare-metal-table__configuration dd {
+  margin: 0;
+}
+
+.bare-metal-table__os-image {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pf-t--global--spacer--sm);
+}

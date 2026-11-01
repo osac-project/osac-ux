@@ -11,12 +11,13 @@ const makeIdentityProvider = (id: string, title: string, phase?: IdentityProvide
   ({
     id,
     metadata: {
+      name: 'north-summit-bank',
       creationTimestamp: { seconds: BigInt(1717000000), nanos: 0 },
     },
     spec: {
       title,
       enabled: true,
-      config: { case: 'oidc' as const, value: {} },
+      config: { case: 'oidc' as const, value: { issuer: 'https://sso.example.com' } },
     },
     status: phase !== undefined ? { phase, message: '', conditions: [] } : undefined,
   }) as IdentityProvider;
@@ -62,12 +63,18 @@ describe('IdentityProviderListPage', () => {
     expect(screen.getByText('Error')).toBeInTheDocument();
   });
 
-  it('renders type column showing OIDC', async () => {
+  it('renders protocol and issuer URL columns from the API', async () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getAllByText('OIDC')).toHaveLength(2);
+      expect(screen.getAllByText('OpenID Connect (OIDC)')).toHaveLength(2);
+      expect(screen.getAllByText('https://sso.example.com')).toHaveLength(2);
+      expect(screen.getAllByText('north-summit-bank')).toHaveLength(2);
     });
+    expect(screen.getByRole('columnheader', { name: 'Protocol' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Issuer URL' })).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Type' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Created' })).not.toBeInTheDocument();
   });
 
   it('shows empty state when there are no identity providers', async () => {

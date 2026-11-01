@@ -28,6 +28,28 @@ const servicesChildren = (role: UserRole) =>
   findSection(role, 'nav-tenant-services')?.children ?? [];
 
 describe('navRowsForRole', () => {
+  it('orders tenant navigation as Catalog, Services, Projects, Networking, Storage, Secrets', () => {
+    expect(navRowsForRole('tenant-user', tIdentity, allServices).map((row) => row.id)).toEqual([
+      'catalog',
+      'nav-tenant-services',
+      'projects',
+      'nav-tenant-networking',
+      'secrets',
+    ]);
+  });
+
+  it('orders tenant-admin navigation as Catalog, Services, Projects, Networking, Storage, Identity, Secrets', () => {
+    expect(navRowsForRole('tenant-admin', tIdentity, allServices).map((row) => row.id)).toEqual([
+      'catalog',
+      'nav-tenant-services',
+      'projects',
+      'nav-tenant-networking',
+      'nav-tenant-storage',
+      'nav-tenant-identity',
+      'secrets',
+    ]);
+  });
+
   it('includes Virtual Machines, Clusters, and Bare Metal under Services for tenant roles', () => {
     for (const role of nonIdpRoles) {
       expect(servicesChildren(role)).toEqual([
@@ -92,59 +114,36 @@ describe('navRowsForRole', () => {
     );
   });
 
-  it('exposes MaaS only in the admin AI Grid navigation surface', () => {
+  it('hides MaaS navigation from the cloud-provider-admin surface', () => {
     const rows = navRowsForRole('tenant-user', tIdentity, [ServiceTier.MAAS]);
 
     expect(rows.some((row) => isNavSection(row) && row.id === 'nav-tenant-services')).toBe(false);
     expect(rows).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'catalog' })]));
     expect(findSection('tenant-user', 'nav-ai-grid')).toBeUndefined();
-    expect(findSection('admin', 'nav-ai-grid')?.children).toEqual([
-      {
-        kind: 'link',
-        id: 'ai-grid',
-        label: 'Grid',
-        path: '/admin/ai-grid',
-        service: ServiceTier.MAAS,
-      },
-      {
-        kind: 'link',
-        id: 'observability',
-        label: 'Observability',
-        path: '/admin/observability',
-        service: ServiceTier.MAAS,
-      },
-      {
-        kind: 'link',
-        id: 'maas-governance',
-        label: 'MaaS Governance',
-        path: '/admin/ai-grid/governance',
-        service: ServiceTier.MAAS,
-      },
-      {
-        kind: 'link',
-        id: 'maas-models',
-        label: 'Models',
-        path: '/admin/ai-grid/models',
-        service: ServiceTier.MAAS,
-      },
-    ]);
+    expect(findSection('admin', 'nav-ai-grid')).toBeUndefined();
   });
 
-  it('excludes Services section for admin (cloud-provider-admin) role', () => {
-    expect(findSection('admin', 'nav-tenant-services')).toBeUndefined();
+  it('removes tenant navigation sections from the cloud-provider-admin surface', () => {
+    expect(
+      navRowsForRole('admin', tIdentity, allServices)
+        .slice(0, 4)
+        .map((row) => row.id),
+    ).toEqual(['catalog', 'nav-administration', 'nav-infrastructure', 'secrets']);
   });
 
-  it('includes Catalog and Projects for admin and tenant roles but not IDP manager', () => {
+  it('includes Catalog for admin and tenant roles but not IDP manager', () => {
     for (const role of [...nonIdpRoles, 'admin'] as UserRole[]) {
       expect(findLink(role, 'catalog')).toBeDefined();
-      expect(findLink(role, 'projects')).toBeDefined();
     }
+    expect(findLink('tenant-user', 'projects')).toBeDefined();
+    expect(findLink('tenant-admin', 'projects')).toBeDefined();
+    expect(findLink('admin', 'projects')).toBeUndefined();
     expect(findLink('tenant-idp-manager', 'catalog')).toBeUndefined();
     expect(findLink('tenant-idp-manager', 'projects')).toBeUndefined();
   });
 
   it('includes Networking section for all roles except IDP manager', () => {
-    for (const role of [...nonIdpRoles, 'admin'] as UserRole[]) {
+    for (const role of ['tenant-admin'] as UserRole[]) {
       const networking = findSection(role, 'nav-tenant-networking');
       expect(networking).toBeDefined();
       expect(networking?.children).toEqual([
@@ -168,6 +167,20 @@ describe('navRowsForRole', () => {
         },
       ]);
     }
+    expect(findSection('tenant-user', 'nav-tenant-networking')?.children).toEqual([
+      {
+        kind: 'link',
+        id: 'virtual-networks',
+        label: 'Virtual networks',
+        path: '/networking/virtual-networks',
+      },
+      {
+        kind: 'link',
+        id: 'external-ips',
+        label: 'External IPs',
+        path: '/networking/external-ips',
+      },
+    ]);
     const networking = findSection('tenant-idp-manager', 'nav-tenant-networking');
     expect(networking).toBeUndefined();
   });
@@ -186,8 +199,8 @@ describe('navRowsForRole', () => {
     ]);
   });
 
-  it('keeps the AI Grid section separate from Administration', () => {
-    expect(findSection('admin', 'nav-ai-grid')).toBeDefined();
+  it('does not show AI Grid for the cloud-provider-admin role', () => {
+    expect(findSection('admin', 'nav-ai-grid')).toBeUndefined();
     expect(findSection('admin', 'nav-administration')?.children).toEqual([
       { kind: 'link', id: 'tenant', label: 'Tenants', path: '/admin/tenants' },
       { kind: 'link', id: 'billing', label: 'Billing', path: '/admin/billing' },
@@ -239,14 +252,13 @@ describe('navRowsForRole', () => {
     }
   });
 
-  it('includes Storage section with Volumes link for tenant roles', () => {
-    for (const role of nonIdpRoles) {
-      const storage = findSection(role, 'nav-tenant-storage');
-      expect(storage).toBeDefined();
-      expect(storage?.children).toEqual([
-        { kind: 'link', id: 'volumes', label: 'Volumes', path: '/storage/volumes' },
-      ]);
-    }
+  it('includes Storage section with Volumes link for tenant admins', () => {
+    const storage = findSection('tenant-admin', 'nav-tenant-storage');
+    expect(storage).toBeDefined();
+    expect(storage?.children).toEqual([
+      { kind: 'link', id: 'volumes', label: 'Volumes', path: '/storage/volumes' },
+    ]);
+    expect(findSection('tenant-user', 'nav-tenant-storage')).toBeUndefined();
   });
 
   it('excludes tenant Storage section for admin role', () => {
@@ -263,7 +275,7 @@ describe('navRowsForRole', () => {
     expect(findSection('tenant-admin', 'nav-tenant-identity')).toEqual({
       kind: 'section',
       id: 'nav-tenant-identity',
-      label: 'Identity',
+      label: 'Administration',
       children: [
         {
           kind: 'link',
@@ -274,8 +286,14 @@ describe('navRowsForRole', () => {
         {
           kind: 'link',
           id: 'role-bindings',
-          label: 'Role Bindings',
+          label: 'Roles',
           path: '/tenant/role-binding',
+        },
+        {
+          kind: 'link',
+          id: 'billing',
+          label: 'Billing',
+          path: '/tenant/billing',
         },
       ],
     });

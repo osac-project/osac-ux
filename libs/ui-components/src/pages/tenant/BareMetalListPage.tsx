@@ -9,7 +9,10 @@ import {
 } from '@patternfly/react-core';
 
 import { BareMetalInstanceState } from '@osac/types';
-import { useBareMetalInstances } from '@osac/ui-components/api/v1/baremetal-instance';
+import {
+  useBareMetalInstanceTypes,
+  useBareMetalInstances,
+} from '@osac/ui-components/api/v1/baremetal-instance';
 import BareMetalCards from '@osac/ui-components/components/BareMetalInstance/BareMetalCards';
 import { BareMetalTable } from '@osac/ui-components/components/BareMetalInstance/BareMetalTable';
 import ListPage from '@osac/ui-components/components/Page/ListPage';
@@ -53,6 +56,9 @@ export const BareMetalListPage = () => {
   const [viewTypePref] = useUserPreferences(getViewTypePrefKey(BARE_METAL_VIEW_KEY));
   const viewType: ViewType = isViewType(viewTypePref) ? viewTypePref : DEFAULT_VIEW_TYPE;
   const { data: instances = [], isLoading, error } = useBareMetalInstances();
+  const { data: instanceTypes = [] } = useBareMetalInstanceTypes(
+    viewType === 'cards' || viewType === 'list',
+  );
   const selectedStatus: StatusFilterValue | 'all' = isStatusFilterValue(statusFilter)
     ? statusFilter
     : 'all';
@@ -136,9 +142,9 @@ export const BareMetalListPage = () => {
               : t('No bare metal instances yet. Create one to get started.')}
           </SubtleContent>
         ) : viewType === 'cards' ? (
-          <BareMetalCards instances={filteredInstances} />
+          <BareMetalCards instances={filteredInstances} instanceTypes={instanceTypes} />
         ) : (
-          <BareMetalTable instances={filteredInstances} />
+          <BareMetalTable instances={filteredInstances} instanceTypes={instanceTypes} />
         )}
       </ListPageBody>
     </ListPage>

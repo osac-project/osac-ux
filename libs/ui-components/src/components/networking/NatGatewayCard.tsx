@@ -60,11 +60,7 @@ const NatGatewayCard = ({
         flexWrap={{ default: 'wrap' }}
       >
         <FlexItem>
-          <Title
-            headingLevel="h2"
-            size="md"
-            className="details-page__sidebar-title"
-          >
+          <Title headingLevel="h2" size="md" className="details-page__sidebar-title">
             {t('NAT gateway attachment')}
           </Title>
         </FlexItem>

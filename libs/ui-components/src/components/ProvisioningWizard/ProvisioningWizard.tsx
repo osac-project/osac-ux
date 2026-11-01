@@ -236,6 +236,7 @@ const ProvisioningWizardStepBody = ({
   const NetworkingStep = adapter.NetworkingStep;
   const AccessAndInitialRunStep = adapter.AccessAndInitialRunStep;
   const GeneralStepComponent = adapter.GeneralStep;
+  const ClusterVersionStepComponent = adapter.ClusterVersionStep;
   const ReviewStepComponent = adapter.ReviewStep;
 
   return (
@@ -255,6 +256,9 @@ const ProvisioningWizardStepBody = ({
         ) : null}
         {stepId === 'catalog' ? <CatalogStep adapter={adapter} /> : null}
         {stepId === 'general' ? <GeneralStepComponent catalogItem={catalogItem} /> : null}
+        {stepId === 'cluster-version' && ClusterVersionStepComponent ? (
+          <ClusterVersionStepComponent catalogItem={catalogItem} />
+        ) : null}
         {stepId === 'instance-type' && InstanceTypeStep ? (
           <InstanceTypeStep catalogItem={catalogItem} />
         ) : null}

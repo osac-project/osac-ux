@@ -154,6 +154,7 @@ const CatalogItemCardFooter: FC<CatalogItemCardFooterProps> = ({
               isDisabled={!catalogItem.published}
               className="pf-v6-u-w-100"
               catalogItem={catalogItem}
+              variant={role === 'tenant-user' ? 'primary' : 'secondary'}
             />
           </FlexItem>
         ) : null}

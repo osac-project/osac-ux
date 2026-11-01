@@ -16,7 +16,6 @@ import IdentityProviderStatusLabel from '@osac/ui-components/components/Identity
 import ListPage from '@osac/ui-components/components/Page/ListPage';
 import ListPageBody from '@osac/ui-components/components/Page/ListPageBody';
 import CreateButton from '@osac/ui-components/components/Primitives/CreateButton.tsx';
-import { Timestamp } from '@osac/ui-components/components/Primitives/Timestamp';
 import ResourceNameField from '@osac/ui-components/components/Resource/ResourceNameField.tsx';
 import { SubtleContent } from '@osac/ui-components/components/SubtleContent/SubtleContent';
 import { SEARCH_PARAM, usePageFilter } from '@osac/ui-components/hooks/use-page-filter.ts';
@@ -24,10 +23,10 @@ import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 import { getIdpName } from './utils';
 
-const resolveIdpType = (t: TFunction, configCase: string | undefined): string => {
+const resolveIdpProtocol = (t: TFunction, configCase: string | undefined): string => {
   switch (configCase) {
     case 'oidc':
-      return t('OIDC');
+      return t('OpenID Connect (OIDC)');
     default:
       return '-';
   }
@@ -87,25 +86,29 @@ const IdentityProviderListPage = () => {
           <Table aria-label={t('Identity providers')} variant="compact">
             <Thead>
               <Tr>
-                <Th>{t('Name')}</Th>
+                <Th>{t('Display name')}</Th>
                 <Th>{t('Status')}</Th>
-                <Th>{t('Type')}</Th>
-                <Th>{t('Created')}</Th>
+                <Th>{t('Protocol')}</Th>
+                <Th>{t('Issuer URL')}</Th>
                 <Th aria-label={t('Actions')} />
               </Tr>
             </Thead>
             <Tbody>
               {filteredProviders.map((idp) => (
                 <Tr key={idp.id}>
-                  <Td dataLabel={t('Name')}>
-                    <ResourceNameField resource={idp} title={getIdpName(idp)} />
+                  <Td dataLabel={t('Display name')}>
+                    <ResourceNameField
+                      resource={idp}
+                      title={getIdpName(idp)}
+                      subTitle={idp.metadata?.name}
+                    />
                   </Td>
                   <Td dataLabel={t('Status')}>
                     <IdentityProviderStatusLabel idp={idp} />
                   </Td>
-                  <Td dataLabel={t('Type')}>{resolveIdpType(t, idp.spec?.config.case)}</Td>
-                  <Td dataLabel={t('Created')}>
-                    <Timestamp value={idp.metadata?.creationTimestamp} />
+                  <Td dataLabel={t('Protocol')}>{resolveIdpProtocol(t, idp.spec?.config.case)}</Td>
+                  <Td dataLabel={t('Issuer URL')}>
+                    {idp.spec?.config.case === 'oidc' ? idp.spec.config.value.issuer : '-'}
                   </Td>
                   <Td dataLabel={t('Actions')} isActionCell>
                     <IdentityProviderActionsMenu idp={idp} />

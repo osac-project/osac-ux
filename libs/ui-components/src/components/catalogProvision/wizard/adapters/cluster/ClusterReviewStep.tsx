@@ -136,7 +136,7 @@ export const ClusterReviewStep = ({ catalogItem }: Props) => {
           <DescriptionListGroup>
             <DescriptionListTerm>{t('SSH public key')}</DescriptionListTerm>
             <DescriptionListDescription>
-              {formatReviewScalar(values.spec.sshPublicKey)}
+              {formatReviewScalar(values.spec.sshPublicKeySecret.name)}
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>

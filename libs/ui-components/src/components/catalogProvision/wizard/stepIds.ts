@@ -6,6 +6,7 @@ import { CatalogProvisionKind } from '../catalogFieldDefinition';
 export const WIZARD_STEP_IDS = [
   'catalog',
   'general',
+  'cluster-version',
   'instance-type',
   'configuration',
   'storage',
@@ -21,7 +22,8 @@ export const STEP_LABEL_KEYS = (
   kind?: CatalogProvisionKind,
 ): Record<WizardStepId, string> => ({
   catalog: kind === 'compute_instance' ? t('Select template') : t('Catalog item'),
-  general: kind === 'compute_instance' ? t('Details') : t('General'),
+  general: kind === 'compute_instance' || kind === 'cluster' ? t('Details') : t('General'),
+  'cluster-version': t('Cluster version'),
   'instance-type': t('Compute configuration'),
   configuration: t('Configuration'),
   storage: t('Storage'),
@@ -34,6 +36,7 @@ export const STEP_LABEL_KEYS = (
 const CLUSTER_WIZARD_STEPS: readonly WizardStepId[] = [
   'catalog',
   'general',
+  'cluster-version',
   'configuration',
   'networking',
   'review',

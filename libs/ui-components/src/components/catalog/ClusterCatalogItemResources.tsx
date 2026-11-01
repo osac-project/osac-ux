@@ -9,6 +9,7 @@ import {
 } from '@patternfly/react-core';
 
 import { ClusterCatalogItem } from '@osac/types';
+import { addOnOperatorDisplayName } from '@osac/ui-components/api/v1/add-on-operators';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 import CatalogFieldEditabilityLabel from './CatalogFieldEditabilityLabel';
@@ -20,8 +21,6 @@ import {
   clusterNodeSetMapPolicy,
   clusterVersionReference,
   findClusterVersionForReference,
-  findHostTypeForReference,
-  formatClusterCatalogHostTypeRow,
   formatClusterCatalogNodeSetRow,
   formatClusterCatalogVersionRow,
   primaryClusterCatalogNodeSet,
@@ -46,22 +45,20 @@ const ClusterCatalogItemResources = ({
   const versionPolicyBehavior = catalogFieldPolicyBehavior(fields?.version);
   const nodeSetsPolicyBehavior = catalogFieldPolicyBehavior(nodeSetsPolicy);
 
-  const { clusterVersions, hostTypes } = resourceLookups;
+  const { addOnOperators, clusterVersions } = resourceLookups;
 
   const clusterVersion = useMemo(
     () => findClusterVersionForReference(clusterVersions, versionReference),
     [clusterVersions, versionReference],
   );
 
-  const hostType = useMemo(
-    () => findHostTypeForReference(hostTypes, primaryNodeSet?.nodeSet.hostType),
-    [hostTypes, primaryNodeSet?.nodeSet.hostType],
-  );
-
   const versionLabel = formatClusterCatalogVersionRow(fields, clusterVersion, versionReference);
   const showClusterVersionIcon = Boolean(versionReference || clusterVersion);
   const nodeSetLabel = formatClusterCatalogNodeSetRow(nodeSetsPolicy, primaryNodeSet);
-  const hostTypeLabel = formatClusterCatalogHostTypeRow(nodeSetsPolicy, primaryNodeSet, hostType);
+  const addOnOperatorsLabel = addOnOperators
+    .map(addOnOperatorDisplayName)
+    .filter(Boolean)
+    .join(', ');
 
   return (
     <DescriptionList isHorizontal isCompact>
@@ -97,10 +94,10 @@ const ClusterCatalogItemResources = ({
         </DescriptionListDescription>
       </DescriptionListGroup>
       <DescriptionListGroup>
-        <DescriptionListTerm>{t('Host type')}</DescriptionListTerm>
+        <DescriptionListTerm>{t('Add-on operators')}</DescriptionListTerm>
         <DescriptionListDescription>
           <Flex flexWrap={{ default: 'nowrap' }} gap={{ default: 'gapXs' }}>
-            <FlexItem>{hostTypeLabel || '-'}</FlexItem>
+            <FlexItem>{addOnOperatorsLabel || '-'}</FlexItem>
             <FlexItem>
               <CatalogFieldEditabilityLabel behavior={nodeSetsPolicyBehavior} />
             </FlexItem>

@@ -37,10 +37,17 @@ const getNodeSetSummary = (cluster: Cluster): { pools: number; nodes: number } =
   };
 };
 
+const getAddOnOperatorSummary = (cluster: Cluster): string =>
+  cluster.spec?.addOnOperators
+    .map((operator) => operator.name || operator.id)
+    .filter(Boolean)
+    .join(', ') ?? '';
+
 const ClusterCard = ({ cluster, clusterVersion }: ClusterCardProps) => {
   const { t } = useTranslation();
   const isDeleting = cluster.status?.state === ClusterState.DELETING;
   const nodeSetSummary = getNodeSetSummary(cluster);
+  const addOnOperatorSummary = getAddOnOperatorSummary(cluster);
   const version = clusterVersion?.spec?.version ?? cluster.spec?.version?.name;
 
   return (
@@ -95,6 +102,10 @@ const ClusterCard = ({ cluster, clusterVersion }: ClusterCardProps) => {
                     ? t('{{pools}} pools · {{nodes}} nodes', nodeSetSummary)
                     : '—'}
                 </dd>
+              </div>
+              <div className="cluster-card__spec-row">
+                <dt className="cluster-card__spec-label">{t('Add-on operators')}</dt>
+                <dd className="cluster-card__spec-value">{addOnOperatorSummary || '—'}</dd>
               </div>
             </dl>
           </StackItem>

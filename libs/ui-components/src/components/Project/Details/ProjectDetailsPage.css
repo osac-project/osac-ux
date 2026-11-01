@@ -23,40 +23,43 @@
   margin-block-start: var(--pf-t--global--spacer--sm);
 }
 
-.project-details-page__services {
+.project-details-page__instances {
   display: flex;
   flex-direction: column;
-  gap: var(--pf-t--global--spacer--sm);
-  margin-block-start: var(--pf-t--global--spacer--sm);
+  margin-block-start: var(--pf-t--global--spacer--lg);
 }
 
-.project-details-page__service {
-  display: flex;
+.project-details-page__instance {
+  display: grid;
+  grid-template-columns: var(--pf-t--global--icon--size--md) minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--pf-t--global--spacer--sm);
-  min-block-size: var(--pf-t--global--spacer--lg);
+  column-gap: var(--pf-t--global--spacer--md);
+  padding-block: var(--pf-t--global--spacer--lg);
+  border-block-end: var(--pf-t--global--border--width--divider--default) solid
+    var(--pf-t--global--border--color--default);
 }
 
-.project-details-page__service-icon {
-  flex: 0 0 auto;
-  width: var(--pf-t--global--icon--size--sm);
-  height: var(--pf-t--global--icon--size--sm);
-  color: var(--pf-t--global--text--color--subtle);
+.project-details-page__instance:last-child {
+  border-block-end: 0;
+}
+
+.project-details-page__instance-icon {
+  width: var(--pf-t--global--icon--size--md);
+  height: var(--pf-t--global--icon--size--md);
+  color: var(--pf-t--global--link--color--default);
 }
 
 /* ── Right sidebar card ──────────────────────────────────── */
 
 /* Container + card → see shared/details-page.css (.details-page__sidebar) */
 
-/* ProjectMembership rail header — kept here because ProjectMembershipTable
-   uses a plain <Title> (no sidebar-title class) so we target via descendant. */
-.project-membership__header {
+.project-users__header {
   padding-block-end: var(--pf-t--global--spacer--sm);
   border-block-end: var(--pf-t--global--border--width--regular) solid
     var(--pf-t--global--border--color--default);
 }
 
-.project-membership__header .pf-v6-c-title {
+.project-users__title.pf-v6-c-title {
   margin: 0;
   color: var(--pf-t--global--text--color--subtle);
   font-size: var(--pf-t--global--font--size--body--lg);
@@ -66,44 +69,61 @@
 
 /* ── Project membership people list ─────────────────────── */
 
-.project-membership__people {
+.project-users__people {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.project-membership__person {
-  display: flex;
-  align-items: center;
-  gap: var(--pf-t--global--spacer--sm);
+.project-users__person {
+  display: block;
   padding-block: var(--pf-t--global--spacer--md);
   border-block-end: var(--pf-t--global--border--width--divider--default) solid
     var(--pf-t--global--border--color--default);
 }
 
-.project-membership__person:last-child {
+.project-users__person:last-child {
   border-block-end: 0;
 }
 
-.project-membership__person-main {
-  display: flex;
-  align-items: center;
-  gap: var(--pf-t--global--spacer--sm);
-  flex: 1;
-  min-width: 0;
-}
-
-.project-membership__person-copy {
-  flex: 1;
-  min-width: 0;
-}
-
-.project-membership__primary,
-.project-membership__secondary {
+.project-users__name,
+.project-users__email {
   margin: 0;
 }
 
-.project-membership__secondary {
+.project-users__name {
+  font-weight: var(--pf-t--global--font--weight--body--default);
+  line-height: var(--pf-t--global--font--line-height--body);
+}
+
+.project-users__email,
+.project-details-page__instance-meta {
   color: var(--pf-t--global--text--color--subtle);
   font-size: var(--pf-t--global--font--size--body--sm);
+  line-height: var(--pf-t--global--font--line-height--body);
+}
+
+.project-users__email {
+  margin-block-end: var(--pf-t--global--spacer--sm);
+}
+
+.project-details-page__instance-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.project-details-page__instance-name,
+.project-details-page__instance-meta {
+  margin: 0;
+}
+
+.project-details-page__instance-name {
+  color: var(--pf-t--global--link--color--default);
+  font-size: var(--pf-t--global--font--size--heading--md);
+  font-weight: var(--pf-t--global--font--weight--body--bold);
+  line-height: var(--pf-t--global--font--line-height--body);
+}
+
+.project-details-page__instance-meta {
+  font-size: var(--pf-t--global--font--size--body--lg);
 }

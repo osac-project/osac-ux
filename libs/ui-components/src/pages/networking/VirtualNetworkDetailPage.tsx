@@ -241,10 +241,6 @@ const VirtualNetworkDetailContent = ({ vn, id }: VirtualNetworkDetailContentProp
               </StackItem>
 
               <StackItem>
-                <Divider />
-              </StackItem>
-
-              <StackItem>
                 <Flex
                   alignItems={{ default: 'alignItemsBaseline' }}
                   justifyContent={{ default: 'justifyContentSpaceBetween' }}

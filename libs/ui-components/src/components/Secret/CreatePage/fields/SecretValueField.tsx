@@ -81,6 +81,7 @@ const SecretValueField = ({
       setIsUploading(true);
       await helpers.setValue(new Uint8Array(await file.arrayBuffer()));
       setFileName(file.name);
+      void setFieldValue('sourceFilename', file.name);
     } catch {
       setFieldError(`${name}.value`, t('Failed to read secret file'));
     } finally {
@@ -92,6 +93,7 @@ const SecretValueField = ({
     await helpers.setValue(new Uint8Array());
     await helpers.setTouched(true);
     setFileName('');
+    void setFieldValue('sourceFilename', '');
   };
 
   const handleModeChange = (nextMode: InputMode) => {

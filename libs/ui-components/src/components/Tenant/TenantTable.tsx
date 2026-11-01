@@ -24,7 +24,7 @@ const TenantTable = ({ tenants }: TenantTableProps) => {
         <Tr>
           <Th>{t('Name')}</Th>
           <Th>{t('Status')}</Th>
-          <Th>{t('Primary domain')}</Th>
+          <Th>{t('Domain')}</Th>
           <Th>{t('Billing account')}</Th>
           <Th>{t('Registered')}</Th>
           <Th aria-label={t('Actions')} />

@@ -5,6 +5,8 @@ import { StorageBackendCreatePage } from '@osac/ui-components/pages/admin/Storag
 import { StorageBackendDetailsPage } from '@osac/ui-components/pages/admin/StorageBackendDetailsPage';
 import { StorageManagementPage } from '@osac/ui-components/pages/admin/StorageManagementPage';
 import { StorageTierDetailsPage } from '@osac/ui-components/pages/admin/StorageTierDetailsPage';
+import AdminVolumesListPage from '@osac/ui-components/pages/admin/AdminVolumesListPage';
+import AdminVolumeDetailsPage from '@osac/ui-components/pages/admin/AdminVolumeDetailsPage';
 
 export const StorageRoutes = () => {
   return (
@@ -19,6 +21,8 @@ export const StorageRoutes = () => {
       <Route path="tiers/create" element={<StorageTierCreatePage />} />
       <Route path="tiers/:id" element={<StorageTierDetailsPage />} />
       <Route path="tiers/:id/edit" element={<StorageTierCreatePage />} />
+      <Route path="volumes" element={<AdminVolumesListPage />} />
+      <Route path="volumes/:id" element={<AdminVolumeDetailsPage />} />
     </Routes>
   );
 };

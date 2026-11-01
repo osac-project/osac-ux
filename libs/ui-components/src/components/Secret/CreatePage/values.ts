@@ -1,5 +1,6 @@
 import { Secret, SecretType } from '@osac/types';
 
+import { SOURCE_FILENAME_ANNOTATION } from '../annotations';
 import { TYPE_FILTER_TO_ENUM, type TypeFilterValue } from '../utils';
 
 export const SECRET_FILE_MAX_BYTES = 1024 * 1024;
@@ -11,6 +12,8 @@ export interface SecretValues {
     description: string;
   };
   type: SecretType;
+  /** Original filename when a file was uploaded; empty string when entering value manually. */
+  sourceFilename: string;
   kubeconfig: SecretDataEntry;
   pullsecret: SecretDataEntry;
   userData: SecretDataEntry;
@@ -60,6 +63,7 @@ const getDefaultValues = (type: SecretType): SecretValues => ({
     description: '',
   },
   type,
+  sourceFilename: '',
   kubeconfig: createSecretDataEntry('kubeconfig', emptyValue()),
   pullsecret: createSecretDataEntry('.dockerconfigjson', emptyValue()),
   userData: createSecretDataEntry('userdata', emptyValue()),
@@ -87,6 +91,7 @@ export const getSecretValues = (
       description: secret.metadata?.description || '',
     },
     type,
+    sourceFilename: secret.metadata?.annotations?.[SOURCE_FILENAME_ANNOTATION] || '',
     kubeconfig: getEntry(dataEntries, 'kubeconfig'),
     pullsecret: getEntry(dataEntries, '.dockerconfigjson'),
     userData: getEntry(dataEntries, 'userdata'),

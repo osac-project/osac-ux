@@ -11,7 +11,7 @@ import {
 import RhStandardServerIcon from '@patternfly/react-icons/dist/esm/icons/rh-standard-server-icon';
 
 import { BareMetalInstanceState } from '@osac/types';
-import type { BareMetalInstance } from '@osac/types';
+import type { BareMetalInstance, BareMetalInstanceType } from '@osac/types';
 
 import { BareMetalActionsMenu } from './BareMetalActionsMenu';
 import { BareMetalStatusLabel } from './BareMetalStatusLabel';
@@ -23,9 +23,10 @@ import './BareMetalCard.css';
 
 interface BareMetalCardProps {
   instance: BareMetalInstance;
+  instanceType?: BareMetalInstanceType;
 }
 
-const BareMetalCard = ({ instance }: BareMetalCardProps) => {
+const BareMetalCard = ({ instance, instanceType }: BareMetalCardProps) => {
   const { t } = useTranslation();
   const isDeleting = instance.status?.state === BareMetalInstanceState.DELETING;
 
@@ -61,13 +62,37 @@ const BareMetalCard = ({ instance }: BareMetalCardProps) => {
           <StackItem>
             <dl className="baremetal-card__specs-list">
               <div className="baremetal-card__spec-row">
-                <dt className="baremetal-card__spec-label">{t('Instance type')}</dt>
+                <dt className="baremetal-card__spec-label">{t('CPU')}</dt>
                 <dd className="baremetal-card__spec-value">
-                  {instance.spec?.instanceType?.name ?? '—'}
+                  {instanceType?.spec?.hardware?.cpu?.cores
+                    ? t('{{count}} cores', { count: instanceType.spec.hardware.cpu.cores })
+                    : '—'}
                 </dd>
               </div>
               <div className="baremetal-card__spec-row">
-                <dt className="baremetal-card__spec-label">{t('Disk image')}</dt>
+                <dt className="baremetal-card__spec-label">{t('RAM')}</dt>
+                <dd className="baremetal-card__spec-value">
+                  {instanceType?.spec?.hardware?.memory?.totalGb
+                    ? t('{{count}} GB', {
+                        count: Number(instanceType.spec.hardware.memory.totalGb),
+                      })
+                    : '—'}
+                </dd>
+              </div>
+              <div className="baremetal-card__spec-row">
+                <dt className="baremetal-card__spec-label">{t('GPU')}</dt>
+                <dd className="baremetal-card__spec-value">
+                  {instanceType?.spec?.hardware?.accelerators.length
+                    ? instanceType.spec.hardware.accelerators
+                        .map((accelerator) =>
+                          [accelerator.vendor, accelerator.model].filter(Boolean).join(' '),
+                        )
+                        .join(', ')
+                    : '—'}
+                </dd>
+              </div>
+              <div className="baremetal-card__spec-row">
+                <dt className="baremetal-card__spec-label">{t('OS Image')}</dt>
                 <dd className="baremetal-card__spec-value">
                   {instance.spec?.diskImage?.name ?? '—'}
                 </dd>

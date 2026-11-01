@@ -25,7 +25,6 @@ import { getErrorMessage } from '@osac/ui-components/utils/error';
 
 import { buildIdpCreatePayload, buildIdpUpdatePayload } from './payload';
 import IdpConfigurationStep from './steps/IdpConfigurationStep';
-import IdpGeneralStep from './steps/IdpGeneralStep';
 import IdpReviewStep from './steps/IdpReviewStep';
 import { getIdentityProviderSchema, idpStepHasErrors } from './validation';
 import { IdentityProviderValues, getIdentityProviderValues } from './values';
@@ -52,7 +51,7 @@ const IdentityProviderCreateWizard = ({ idp }: IdentityProviderCreateWizard) => 
     error: updateErr,
     reset: resetUpdate,
   } = useUpdateResource(IdentityProviders);
-  const [currentStep, setCurrentStep] = useState<string>('general');
+  const [currentStep, setCurrentStep] = useState<string>('identity-provider');
 
   const handleErrorReset = useCallback(() => {
     resetCreate();
@@ -124,11 +123,8 @@ const IdentityProviderCreateWizard = ({ idp }: IdentityProviderCreateWizard) => 
                 setCurrentStep(step.id as string);
               }}
             >
-              <WizardStep id="general" name={t('General')}>
-                {currentStep === 'general' && <IdpGeneralStep isEdit={!!idp} />}
-              </WizardStep>
-              <WizardStep id="configuration" name={t('Configuration')}>
-                {currentStep === 'configuration' && <IdpConfigurationStep />}
+              <WizardStep id="identity-provider" name={t('Identity provider')}>
+                {currentStep === 'identity-provider' && <IdpConfigurationStep isEdit={!!idp} />}
               </WizardStep>
               <WizardStep id="review" name={t('Review')}>
                 {currentStep === 'review' && <IdpReviewStep />}

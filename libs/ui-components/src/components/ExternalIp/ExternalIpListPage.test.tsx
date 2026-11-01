@@ -124,18 +124,15 @@ describe('ExternalIpListPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('203.0.113.10')).toBeInTheDocument();
+      expect(screen.getByText('edge-ip')).toBeInTheDocument();
     });
     expect(screen.getByText('edge-ip')).toBeInTheDocument();
     expect(screen.getByText('nat-ip')).toBeInTheDocument();
-    expect(screen.getByText('203.0.113.11')).toBeInTheDocument();
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
       'Name',
       'Status',
-      'Tenant',
-      'Address',
-      'IP pool',
-      'Created',
+      'CIDR',
+      'Capacity',
       '',
     ]);
     expect(screen.queryByRole('link', { name: 'edge-ip' })).not.toBeInTheDocument();
@@ -149,7 +146,7 @@ describe('ExternalIpListPage', () => {
     );
     expect(screen.queryByRole('columnheader', { name: 'Attached' })).not.toBeInTheDocument();
     expect(screen.queryByText('No')).not.toBeInTheDocument();
-    expect(screen.getAllByText('public-edge').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('198.51.100.64/26').length).toBe(2);
     expect(screen.getAllByText('12 of 14 available').length).toBe(2);
   });
 
@@ -188,7 +185,7 @@ describe('ExternalIpListPage', () => {
     const { user } = renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('203.0.113.10')).toBeInTheDocument();
+      expect(screen.getByText('edge-ip')).toBeInTheDocument();
     });
 
     await user.click(screen.getByRole('button', { name: 'Actions for edge-ip' }));
@@ -227,7 +224,7 @@ describe('ExternalIpListPage', () => {
     const { user } = renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('203.0.113.11')).toBeInTheDocument();
+      expect(screen.getByText('nat-ip')).toBeInTheDocument();
     });
 
     await user.click(screen.getByRole('button', { name: 'Actions for nat-ip' }));

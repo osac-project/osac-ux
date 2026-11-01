@@ -41,49 +41,23 @@ export const filterNavRowsByServices = (
 
 const getIdpLinks = (t: TFunction): NavRow[] => [
   { kind: 'link', id: 'idp', label: t('Identity providers'), path: '/tenant/identity-provider' },
-  { kind: 'link', id: 'role-bindings', label: t('Role Bindings'), path: '/tenant/role-binding' },
+  { kind: 'link', id: 'role-bindings', label: t('Roles'), path: '/tenant/role-binding' },
 ];
 
 const getIdpManagerNav = (t: TFunction): NavRow[] => [...getIdpLinks(t), getSecretsNav(t)];
 
+const getTenantAdminIdentityNav = (t: TFunction): NavRow => ({
+  kind: 'section',
+  id: 'nav-tenant-identity',
+  label: t('Administration'),
+  children: [
+    ...getIdpLinks(t),
+    { kind: 'link', id: 'billing', label: t('Billing'), path: '/tenant/billing' },
+  ],
+});
+
 const getAdminNav = (t: TFunction): NavRow[] => [
-  getProjectsNav(t),
   getCatalogNav(t),
-  {
-    kind: 'section',
-    id: 'nav-ai-grid',
-    label: t('AI Grid'),
-    children: [
-      {
-        kind: 'link',
-        id: 'ai-grid',
-        label: t('Grid'),
-        path: '/admin/ai-grid',
-        service: ServiceTier.MAAS,
-      },
-      {
-        kind: 'link',
-        id: 'observability',
-        label: t('Observability'),
-        path: '/admin/observability',
-        service: ServiceTier.MAAS,
-      },
-      {
-        kind: 'link',
-        id: 'maas-governance',
-        label: t('MaaS Governance'),
-        path: '/admin/ai-grid/governance',
-        service: ServiceTier.MAAS,
-      },
-      {
-        kind: 'link',
-        id: 'maas-models',
-        label: t('Models'),
-        path: '/admin/ai-grid/models',
-        service: ServiceTier.MAAS,
-      },
-    ],
-  },
   {
     kind: 'section',
     id: 'nav-administration',
@@ -103,6 +77,12 @@ const getAdminNav = (t: TFunction): NavRow[] => [
         id: 'storage',
         label: t('Storage'),
         path: '/admin/infrastructure/storage',
+      },
+      {
+        kind: 'link',
+        id: 'admin-volumes',
+        label: t('Volumes'),
+        path: '/admin/infrastructure/storage/volumes',
       },
       {
         kind: 'link',
@@ -132,17 +112,16 @@ const getAdminNav = (t: TFunction): NavRow[] => [
       },
     ],
   },
-  getNetworkNav(t),
   getSecretsNav(t),
 ];
 
 const getTenantAdminNav = (t: TFunction): NavRow[] => [
-  getProjectsNav(t),
   getCatalogNav(t),
   getServicesNav(t),
-  getStorageNav(t),
+  getProjectsNav(t),
   getNetworkNav(t),
-  getIdentityNav(t),
+  getStorageNav(t),
+  getTenantAdminIdentityNav(t),
   getSecretsNav(t),
 ];
 
@@ -196,14 +175,19 @@ const getProjectsNav = (t: TFunction): NavRow => ({
   path: '/projects',
 });
 
-const getStorageNav = (t: TFunction): NavRow => ({
+const getStorageNav = (t: TFunction, includeVolumes = true): NavRow => ({
   kind: 'section',
   id: 'nav-tenant-storage',
   label: t('Storage'),
-  children: [{ kind: 'link', id: 'volumes', label: t('Volumes'), path: '/storage/volumes' }],
+  children: includeVolumes
+    ? [
+        { kind: 'link', id: 'volumes', label: t('Volumes'), path: '/storage/volumes' },
+        { kind: 'link', id: 'storage-tiers', label: t('Storage tiers'), path: '/storage/tiers' },
+      ]
+    : [],
 });
 
-const getNetworkNav = (t: TFunction): NavRow => ({
+const getNetworkNav = (t: TFunction, includeSecurityGroups = true): NavRow => ({
   kind: 'section',
   id: 'nav-tenant-networking',
   label: t('Networking'),
@@ -214,12 +198,16 @@ const getNetworkNav = (t: TFunction): NavRow => ({
       label: t('Virtual networks'),
       path: '/networking/virtual-networks',
     },
-    {
-      kind: 'link',
-      id: 'security-groups',
-      label: t('Security groups'),
-      path: '/networking/security-groups',
-    },
+    ...(includeSecurityGroups
+      ? [
+          {
+            kind: 'link' as const,
+            id: 'security-groups',
+            label: t('Security groups'),
+            path: '/networking/security-groups',
+          },
+        ]
+      : []),
     {
       kind: 'link',
       id: 'external-ips',
@@ -229,18 +217,13 @@ const getNetworkNav = (t: TFunction): NavRow => ({
   ],
 });
 
-const getIdentityNav = (t: TFunction): NavRow => ({
-  kind: 'section',
-  id: 'nav-tenant-identity',
-  label: t('Identity'),
-  children: getIdpLinks(t),
-});
-
 const getTenantUserNav = (t: TFunction): NavRow[] => [
-  getProjectsNav(t),
   getCatalogNav(t),
   getServicesNav(t),
-  getStorageNav(t),
+  getProjectsNav(t),
+  getNetworkNav(t, false),
+  getStorageNav(t, false),
+  getSecretsNav(t),
 ];
 
 export const navRowsForRole = (
@@ -258,7 +241,7 @@ export const navRowsForRole = (
     rows = getTenantAdminNav(t);
   } else {
     // 'tenant-user'
-    rows = [...getTenantUserNav(t), getNetworkNav(t), getSecretsNav(t)];
+    rows = getTenantUserNav(t);
   }
 
   return filterNavRowsByServices(rows, enabledServices);

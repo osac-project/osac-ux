@@ -41,6 +41,11 @@ interface HierarchicalSelectProps {
   isLoading?: boolean;
   /** Human-readable error string — renders an inline danger alert */
   error?: string;
+  /**
+   * When true, selecting an item closes the dropdown immediately and replaces
+   * the current selection (no multi-select toggle behaviour).
+   */
+  singleSelect?: boolean;
 }
 
 const CLEAR_SENTINEL = '__hierarchical-select-clear__';
@@ -56,6 +61,7 @@ export const HierarchicalSelect = ({
   clearIcon,
   isLoading = false,
   error,
+  singleSelect = false,
 }: HierarchicalSelectProps) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -74,6 +80,11 @@ export const HierarchicalSelect = ({
       return;
     }
     if (typeof value !== 'string') return;
+    if (singleSelect) {
+      onSelectionChange([value]);
+      setIsOpen(false);
+      return;
+    }
     onSelectionChange(
       selectedIds.includes(value)
         ? selectedIds.filter((s) => s !== value)
@@ -128,7 +139,7 @@ export const HierarchicalSelect = ({
             <SelectOption
               key={item.id}
               value={item.id}
-              hasCheckbox
+              hasCheckbox={!singleSelect}
               isSelected={selectedIds.includes(item.id)}
             >
               <span

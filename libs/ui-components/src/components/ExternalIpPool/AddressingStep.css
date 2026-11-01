@@ -1,0 +1,51 @@
+.external-ip-pool-addressing__family-options {
+  display: grid;
+  gap: var(--pf-t--global--spacer--md);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.external-ip-pool-addressing__family-card {
+  cursor: pointer;
+  min-block-size: 9rem;
+  transition:
+    box-shadow var(--pf-t--global--motion--duration--fade--default)
+      var(--pf-t--global--motion--timing-function--default),
+    border-color var(--pf-t--global--motion--duration--fade--default)
+      var(--pf-t--global--motion--timing-function--default);
+}
+
+.external-ip-pool-addressing__family-card-content.pf-v6-l-stack {
+  --pf-v6-l-stack--m-gutter--Gap: var(--pf-t--global--spacer--sm);
+}
+
+.external-ip-pool-addressing__family-card:hover,
+.external-ip-pool-addressing__family-card:focus-visible {
+  box-shadow: var(--pf-t--global--box-shadow--md);
+}
+
+.external-ip-pool-addressing__family-card--selected {
+  --pf-v6-c-card--BorderColor: var(--pf-t--global--border--color--clicked);
+  --pf-v6-c-card--m-selectable--m-selected--BorderColor: var(
+    --pf-t--global--border--color--clicked
+  );
+}
+
+.external-ip-pool-addressing__family-card-title {
+  font-size: var(--pf-t--global--font--size--heading--h3);
+  font-weight: var(--pf-t--global--font--weight--heading--h3);
+}
+
+.external-ip-pool-addressing__family-card-description {
+  color: var(--pf-t--global--text--color--subtle);
+}
+
+.external-ip-pool-addressing__family-card-example {
+  color: var(--pf-t--global--text--color--subtle);
+  font-family: var(--pf-t--global--font--family--mono);
+}
+
+@media (max-width: 768px) {
+  .external-ip-pool-addressing__family-options {
+    grid-template-columns: 1fr;
+  }
+}

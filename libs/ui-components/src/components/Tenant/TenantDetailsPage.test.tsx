@@ -2,11 +2,8 @@ import { Route, Routes } from 'react-router-dom';
 import { screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import {
-  ConditionStatus,
-  TenantConditionType,
-  TenantState,
-} from '@osac/types/private';
+import { type Role, type RoleBinding, RoleBindingState, RoleState, type User } from '@osac/types';
+import { ConditionStatus, TenantConditionType, TenantState } from '@osac/types/private';
 import type { Tenant } from '@osac/types/private';
 
 import TenantDetailsPage from './TenantDetailsPage';
@@ -57,13 +54,46 @@ const makeTenant = (): Tenant =>
     },
   }) as unknown as Tenant;
 
+const acmeRoles: Role[] = [
+  {
+    id: 'role-admin',
+    metadata: { name: 'tenant-admin' },
+    spec: { title: 'Tenant Administrator', description: '' },
+    status: { state: RoleState.READY },
+  } as unknown as Role,
+];
+
+const acmeRoleBindings: RoleBinding[] = [
+  {
+    id: 'rb-acme-admin',
+    spec: {
+      role: { id: 'role-admin', name: 'tenant-admin', shared: true },
+      users: [{ id: 'user-1', name: 'alice' }],
+    },
+    status: { state: RoleBindingState.READY },
+  } as unknown as RoleBinding,
+];
+
+const acmeUsers: User[] = [
+  {
+    id: 'user-1',
+    metadata: { name: 'Alice Johnson' },
+    spec: { username: 'alice', email: 'alice@acme.com', enabled: true },
+  } as unknown as User,
+];
+
 const renderPage = (tenant?: Tenant) =>
   renderWithProviders(
     <Routes>
       <Route path="/admin/tenants/:id" element={<TenantDetailsPage />} />
     </Routes>,
     {
-      apiFixtures: { tenants: tenant ? [tenant] : [] },
+      apiFixtures: {
+        tenants: tenant ? [tenant] : [],
+        roles: acmeRoles,
+        roleBindings: acmeRoleBindings,
+        users: acmeUsers,
+      },
       routerEntries: [`/admin/tenants/${tenant?.id ?? 'missing'}`],
     },
   );
@@ -82,6 +112,11 @@ describe('TenantDetailsPage', () => {
     expect(screen.getByText('Instances by service')).toBeInTheDocument();
     expect(screen.getByText('Instances by project')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Roles' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Tenant Administrator')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Alice Johnson')).toBeInTheDocument();
+    expect(screen.getByText('alice@acme.com')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Assign roles' })).toHaveAttribute(
       'href',
       '/tenant/role-binding/create',

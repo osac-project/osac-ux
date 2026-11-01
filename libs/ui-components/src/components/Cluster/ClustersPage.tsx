@@ -21,11 +21,16 @@ import {
   isViewType,
 } from '@osac/ui-components/components/Primitives/ViewSwitcher';
 import ViewSwitcher from '@osac/ui-components/components/Primitives/ViewSwitcher';
-import { SEARCH_PARAM, usePageFilter } from '@osac/ui-components/hooks/use-page-filter.ts';
+import {
+  SEARCH_PARAM,
+  useArrayPageFilter,
+  usePageFilter,
+} from '@osac/ui-components/hooks/use-page-filter.ts';
 import { useUserPreferences } from '@osac/ui-components/hooks/use-user-preferences';
 
 import ClustersCards from './ClustersCards';
 import { ClustersTable } from './ClustersTable';
+import ClusterVersionFilter from './ClusterVersionFilter';
 import { useTranslation } from '../../hooks/useTranslation';
 import ListPage from '../Page/ListPage';
 import ListPageBody from '../Page/ListPageBody';
@@ -36,6 +41,7 @@ import './ClustersPage.css';
 
 export const CLUSTERS_VIEW_KEY = 'clusters';
 const STATUS_PARAM = 'cluster-status';
+const VERSION_PARAM = 'cluster-version';
 
 const STATUS_FILTER_OPTIONS = [
   { value: 'progressing', state: ClusterState.PROGRESSING },
@@ -49,11 +55,17 @@ type StatusFilterValue = (typeof STATUS_FILTER_OPTIONS)[number]['value'];
 const isStatusFilterValue = (value: string): value is StatusFilterValue =>
   STATUS_FILTER_OPTIONS.some((option) => option.value === value);
 
+const isClusterVersionFilterValue = (value: string): value is string => value.length > 0;
+
 export const ClustersPage = () => {
   const { t } = useTranslation();
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
   const [search, setSearch] = usePageFilter(SEARCH_PARAM);
   const [statusFilter, setStatusFilter] = usePageFilter(STATUS_PARAM);
+  const [versionFilter, toggleVersionFilter] = useArrayPageFilter(
+    VERSION_PARAM,
+    isClusterVersionFilterValue,
+  );
   const [viewTypePref] = useUserPreferences(getViewTypePrefKey(CLUSTERS_VIEW_KEY));
   const viewType: ViewType = isViewType(viewTypePref) ? viewTypePref : DEFAULT_VIEW_TYPE;
   const { data: clusters = [], isLoading, error } = useClusters();
@@ -63,12 +75,21 @@ export const ClustersPage = () => {
   const selectedStatusOption = STATUS_FILTER_OPTIONS.find(
     (option) => option.value === selectedStatus,
   );
+  const versions = [
+    ...new Set(
+      clusters
+        .map((cluster) => cluster.spec?.version?.name)
+        .filter((version): version is string => Boolean(version)),
+    ),
+  ];
   const filteredClusters = clusters.filter((cluster) => {
     const name = cluster.metadata?.name ?? '';
     const matchesStatus =
       !selectedStatusOption || cluster.status?.state === selectedStatusOption.state;
+    const matchesVersion =
+      versionFilter.length === 0 || versionFilter.includes(cluster.spec?.version?.name ?? '');
     const matchesSearch = !search || name.toLowerCase().includes(search.toLowerCase());
-    return matchesStatus && matchesSearch;
+    return matchesStatus && matchesVersion && matchesSearch;
   });
 
   return (
@@ -131,6 +152,13 @@ export const ClustersPage = () => {
                     ))}
                   </SelectList>
                 </Select>
+              </ToolbarItem>
+              <ToolbarItem>
+                <ClusterVersionFilter
+                  selectedVersions={versionFilter}
+                  versions={versions}
+                  onToggle={toggleVersionFilter}
+                />
               </ToolbarItem>
               <ToolbarItem>
                 <SearchInput

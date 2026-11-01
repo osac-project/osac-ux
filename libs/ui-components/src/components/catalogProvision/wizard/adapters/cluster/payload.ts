@@ -3,14 +3,13 @@ import { type MessageInitShape } from '@bufbuild/protobuf';
 import { type ClusterCatalogItem, ClusterSchema } from '@osac/types';
 
 import type { ClusterWizardValues } from './fields';
-import { createEmptyNodeSetRow } from './fields';
-import { emptyResourceSelectValue } from '../../../../Form/resourceSelectValue';
+import { createEmptyNodeSetRow, emptyResourceSelectValue } from './fields';
 
 export const createEmptyClusterValues = (): ClusterWizardValues => ({
   catalogItemId: '',
-  metadata: { name: '', project: '' },
+  metadata: { name: '', project: '', description: '' },
   spec: {
-    sshPublicKey: '',
+    sshPublicKeySecret: emptyResourceSelectValue(),
     pullSecretSecret: {
       name: '',
     },
@@ -43,7 +42,7 @@ export const buildClusterCreatePayload = (
     },
   };
 
-  const sshPublicKey = values.spec.sshPublicKey.trim();
+  const sshPublicKey = values.spec.sshPublicKeySecret.name.trim();
   if (sshPublicKey) {
     spec.sshPublicKey = sshPublicKey;
   }
@@ -95,7 +94,13 @@ export const buildClusterCreatePayload = (
   }
 
   return {
-    metadata: { name: values.metadata.name.trim(), project: values.metadata.project },
+    metadata: {
+      name: values.metadata.name.trim(),
+      project: values.metadata.project,
+      ...(values.metadata.description?.trim()
+        ? { description: values.metadata.description.trim() }
+        : {}),
+    },
     spec,
   };
 };

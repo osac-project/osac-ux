@@ -140,6 +140,24 @@ describe('VirtualNetworksListPage', () => {
     expect(within(devNatCell).getByText('—')).toBeInTheDocument();
   });
 
+  it('provides view details, edit, and delete actions for each virtual network', async () => {
+    const { user } = renderPage();
+
+    await screen.findByRole('link', { name: 'vn-prod' });
+    const prodRow = within(screen.getByRole('grid'))
+      .getAllByRole('row')
+      .find((row) => within(row).queryByRole('link', { name: 'vn-prod' }));
+
+    expect(prodRow).toBeDefined();
+    await user.click(
+      within(prodRow as HTMLElement).getByRole('button', { name: 'Actions for vn-prod' }),
+    );
+
+    expect(screen.getByRole('menuitem', { name: 'View details' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Edit' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument();
+  });
+
   it('fetches NAT gateways once for the table', async () => {
     let listCalls = 0;
     renderPage({

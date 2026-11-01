@@ -10,6 +10,7 @@ import ClusterConfigurationStep from './cluster/ClusterConfigurationStep';
 import ClusterGeneralStep from './cluster/ClusterGeneralStep';
 import { ClusterNetworkingStep } from './cluster/ClusterNetworkingStep';
 import { ClusterReviewStep } from './cluster/ClusterReviewStep';
+import ClusterVersionStep from './cluster/ClusterVersionStep';
 import type { ClusterWizardValues } from './cluster/fields';
 import { buildClusterCreatePayload, createEmptyClusterValues } from './cluster/payload';
 import { buildClusterStepSchema } from './cluster/schemas';
@@ -45,6 +46,7 @@ export const useClusterAdapter = (): CatalogProvisionAdapter<
       ConfigurationStep: ClusterConfigurationStep,
       NetworkingStep: ClusterNetworkingStep,
       GeneralStep: ClusterGeneralStep,
+      ClusterVersionStep,
       getStepValidationSchema: (catalogItem, stepId) =>
         buildClusterStepSchema(catalogItem, stepId, t),
       ReviewStep: ClusterReviewStep,

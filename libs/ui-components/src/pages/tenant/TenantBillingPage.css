@@ -1,0 +1,54 @@
+.tenant-billing-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-t--global--spacer--md);
+}
+
+.tenant-billing-page__alert {
+  margin-block-start: var(--pf-t--global--spacer--md);
+}
+
+.tenant-billing-page__linked-account {
+  margin-block-start: var(--pf-t--global--spacer--sm);
+}
+
+.tenant-billing-page__labels {
+  display: flex;
+  gap: var(--pf-t--global--spacer--sm);
+  margin-block-start: var(--pf-t--global--spacer--md);
+}
+
+.tenant-billing-page__summary-grid,
+.tenant-billing-page__details-grid {
+  display: grid;
+  gap: var(--pf-t--global--spacer--lg);
+}
+
+.tenant-billing-page__summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tenant-billing-page__details-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tenant-billing-page__rates-list {
+  margin-block: var(--pf-t--global--spacer--lg) 0;
+  padding-inline-start: var(--pf-t--global--spacer--lg);
+}
+
+.tenant-billing-page__rates-list li {
+  border-block-end: 1px solid var(--pf-t--global--border--color--default);
+  padding-block: var(--pf-t--global--spacer--sm);
+}
+
+.tenant-billing-page__rates-list li:last-child {
+  border-block-end: 0;
+}
+
+@media (max-width: 768px) {
+  .tenant-billing-page__summary-grid,
+  .tenant-billing-page__details-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -70,15 +70,16 @@ describe('ProjectListPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders project rows with names and statuses', async () => {
+  it('renders project rows without a status column', async () => {
     renderPage();
 
     await waitFor(() => {
       expect(screen.getByText('frontend')).toBeInTheDocument();
     });
     expect(screen.getByText('backend')).toBeInTheDocument();
-    expect(screen.getByText('Active')).toBeInTheDocument();
-    expect(screen.getByText('Pending')).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Status' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Active')).not.toBeInTheDocument();
+    expect(screen.queryByText('Pending')).not.toBeInTheDocument();
   });
 
   it('shows service counts instead of service names', async () => {

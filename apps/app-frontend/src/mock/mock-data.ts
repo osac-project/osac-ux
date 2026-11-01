@@ -62,6 +62,8 @@ import {
   ProjectState,
   Protocol,
   StorageTierState as PublicStorageTierState,
+  RoleBindingState,
+  RoleState,
   SecretType,
   SecurityGroupState,
   ServiceTier,
@@ -77,12 +79,14 @@ import type {
   StorageTier as PrivateStorageTier,
   Tenant as PrivateTenant,
   StorageBackend,
+  Volume as PrivateVolume,
 } from '@osac/types/private';
 import {
   ExternalIPPoolState,
   IPFamily,
   StorageTierState as PrivateStorageTierState,
   StorageBackendState,
+  StorageProtocol as PrivateStorageProtocol,
   TenantConditionType,
   TenantState,
 } from '@osac/types/private';
@@ -763,6 +767,7 @@ const bareMetalInstances: BareMetalInstance[] = [
     id: 'bm-1',
     metadata: {
       name: 'bm-worker-01',
+      project: 'project-alpha',
       creator: 'alice@example.com',
       creationTimestamp: { seconds: BigInt(1717000000), nanos: 0 },
     },
@@ -841,6 +846,109 @@ const bareMetalInstances: BareMetalInstance[] = [
       },
       hub: 'hub-east-1',
       stateTransitionTime: { seconds: BigInt(1717000600), nanos: 0 },
+    },
+  } as unknown as BareMetalInstance,
+  {
+    id: 'bm-2',
+    metadata: {
+      name: 'bm-worker-02',
+      project: 'platform-staging',
+      creator: 'bob@example.com',
+      creationTimestamp: { seconds: BigInt(1718000000), nanos: 0 },
+    },
+    spec: {
+      catalogItem: {
+        id: 'bmci-hpc-node',
+        name: 'HPC Compute Node',
+        project: 'platform-staging',
+        shared: false,
+      },
+      sshPublicKey: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBareMetalMockKey02 worker-02@example.com',
+      runStrategy: BareMetalInstanceRunStrategy.ALWAYS,
+      restartTrigger: BigInt(0),
+      instanceType: {
+        id: 'bm-type-general',
+        name: 'General purpose bare metal',
+        project: 'platform-staging',
+        shared: false,
+      },
+      diskImage: { id: 'image-rhel9', name: 'RHEL 9.4', shared: true },
+    },
+    status: {
+      state: BareMetalInstanceState.PROVISIONING,
+      conditions: [],
+      restartTrigger: BigInt(0),
+      networkAttachmentStatuses: [],
+      stateTransitionTime: { seconds: BigInt(1718000300), nanos: 0 },
+    },
+  } as unknown as BareMetalInstance,
+  {
+    id: 'bm-3',
+    metadata: {
+      name: 'bm-gpu-failed',
+      project: 'research',
+      creator: 'carol@example.com',
+      creationTimestamp: { seconds: BigInt(1719000000), nanos: 0 },
+    },
+    spec: {
+      catalogItem: {
+        id: 'bmci-gpu-server',
+        name: 'GPU Server',
+        project: 'research',
+        shared: false,
+      },
+      sshPublicKey:
+        'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBareMetalMockKey03 gpu-failed@example.com',
+      runStrategy: BareMetalInstanceRunStrategy.ALWAYS,
+      restartTrigger: BigInt(1),
+      instanceType: {
+        id: 'bm-type-gpu',
+        name: 'GPU bare metal',
+        project: 'research',
+        shared: false,
+      },
+      diskImage: { id: 'image-rhel9', name: 'RHEL 9.4', shared: true },
+    },
+    status: {
+      state: BareMetalInstanceState.FAILED,
+      conditions: [],
+      restartTrigger: BigInt(1),
+      networkAttachmentStatuses: [],
+      stateTransitionTime: { seconds: BigInt(1719000400), nanos: 0 },
+    },
+  } as unknown as BareMetalInstance,
+  {
+    id: 'bm-4',
+    metadata: {
+      name: 'bm-worker-stopped',
+      project: 'project-alpha',
+      creator: 'dana@example.com',
+      creationTimestamp: { seconds: BigInt(1720000000), nanos: 0 },
+    },
+    spec: {
+      catalogItem: {
+        id: 'bmci-hpc-node',
+        name: 'HPC Compute Node',
+        project: 'project-alpha',
+        shared: false,
+      },
+      sshPublicKey: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBareMetalMockKey04 stopped@example.com',
+      runStrategy: BareMetalInstanceRunStrategy.HALTED,
+      restartTrigger: BigInt(3),
+      instanceType: {
+        id: 'bm-type-general',
+        name: 'General purpose bare metal',
+        project: 'project-alpha',
+        shared: false,
+      },
+      diskImage: { id: 'image-rhel9', name: 'RHEL 9.4', shared: true },
+    },
+    status: {
+      state: BareMetalInstanceState.STOPPED,
+      conditions: [],
+      restartTrigger: BigInt(3),
+      networkAttachmentStatuses: [],
+      stateTransitionTime: { seconds: BigInt(1720000300), nanos: 0 },
     },
   } as unknown as BareMetalInstance,
 ];
@@ -1036,7 +1144,13 @@ const externalIpPools: PublicExternalIPPool[] = [
     id: 'eip-pool-1',
     metadata: { name: 'primary-pool' },
     spec: { cidr: '203.0.113.0/24' },
-    status: { available: 1n },
+    status: { available: 1n, allocated: 3n, total: 4n },
+  } as unknown as PublicExternalIPPool,
+  {
+    id: 'eipool-northsummit-edge',
+    metadata: { name: 'northsummit-public-edge' },
+    spec: { cidr: '198.51.100.0/26' },
+    status: { available: 52n, allocated: 6n, total: 58n },
   } as unknown as PublicExternalIPPool,
 ];
 
@@ -1069,6 +1183,77 @@ const externalIps: ExternalIP[] = [
       state: ExternalIPState.EXTERNAL_IP_STATE_ALLOCATED,
       address: '203.0.113.12',
       attached: true,
+    },
+  } as unknown as ExternalIP,
+  // eipool-northsummit-edge — 7 IPs: 6 in use (attached), 1 available
+  {
+    id: 'eip-ns-bm-01',
+    metadata: { name: 'ns-edge-bm-01', tenant: 'north-summit-bank' },
+    spec: { pool: { id: 'eipool-northsummit-edge', name: 'northsummit-public-edge' } },
+    status: {
+      state: ExternalIPState.EXTERNAL_IP_STATE_ALLOCATED,
+      address: '198.51.100.30',
+      attached: true,
+    },
+  } as unknown as ExternalIP,
+  {
+    id: 'eip-ns-cluster-01',
+    metadata: { name: 'ns-edge-cluster-01', tenant: 'north-summit-bank' },
+    spec: { pool: { id: 'eipool-northsummit-edge', name: 'northsummit-public-edge' } },
+    status: {
+      state: ExternalIPState.EXTERNAL_IP_STATE_ALLOCATED,
+      address: '198.51.100.31',
+      attached: true,
+    },
+  } as unknown as ExternalIP,
+  {
+    id: 'eip-ns-bm-02',
+    metadata: { name: 'ns-edge-bm-02', tenant: 'north-summit-bank' },
+    spec: { pool: { id: 'eipool-northsummit-edge', name: 'northsummit-public-edge' } },
+    status: {
+      state: ExternalIPState.EXTERNAL_IP_STATE_ALLOCATED,
+      address: '198.51.100.32',
+      attached: true,
+    },
+  } as unknown as ExternalIP,
+  {
+    id: 'eip-ns-bm-03',
+    metadata: { name: 'ns-edge-bm-03', tenant: 'north-summit-bank' },
+    spec: { pool: { id: 'eipool-northsummit-edge', name: 'northsummit-public-edge' } },
+    status: {
+      state: ExternalIPState.EXTERNAL_IP_STATE_ALLOCATED,
+      address: '198.51.100.33',
+      attached: true,
+    },
+  } as unknown as ExternalIP,
+  {
+    id: 'eip-ns-cluster-02',
+    metadata: { name: 'ns-edge-cluster-02', tenant: 'north-summit-bank' },
+    spec: { pool: { id: 'eipool-northsummit-edge', name: 'northsummit-public-edge' } },
+    status: {
+      state: ExternalIPState.EXTERNAL_IP_STATE_ALLOCATED,
+      address: '198.51.100.34',
+      attached: true,
+    },
+  } as unknown as ExternalIP,
+  {
+    id: 'eip-ns-bm-04',
+    metadata: { name: 'ns-edge-bm-04', tenant: 'north-summit-bank' },
+    spec: { pool: { id: 'eipool-northsummit-edge', name: 'northsummit-public-edge' } },
+    status: {
+      state: ExternalIPState.EXTERNAL_IP_STATE_ALLOCATED,
+      address: '198.51.100.35',
+      attached: true,
+    },
+  } as unknown as ExternalIP,
+  {
+    id: 'eip-ns-spare',
+    metadata: { name: 'ns-edge-spare', tenant: 'north-summit-bank' },
+    spec: { pool: { id: 'eipool-northsummit-edge', name: 'northsummit-public-edge' } },
+    status: {
+      state: ExternalIPState.EXTERNAL_IP_STATE_ALLOCATED,
+      address: '198.51.100.36',
+      attached: false,
     },
   } as unknown as ExternalIP,
 ];
@@ -1126,13 +1311,99 @@ const externalIpAttachments: ExternalIPAttachment[] = [
       externalIpAddress: '203.0.113.12',
     },
   } as unknown as ExternalIPAttachment,
+  {
+    id: 'attachment-ns-bm-01',
+    metadata: { name: 'ns-bm-worker-01-external-ip' },
+    spec: {
+      externalIp: { id: 'eip-ns-bm-01' },
+      target: { case: 'baremetalInstance', value: { id: 'bm-1', name: 'bm-worker-01' } },
+    },
+    status: {
+      state: ExternalIPAttachmentState.EXTERNAL_IP_ATTACHMENT_STATE_READY,
+      externalIpAddress: '198.51.100.30',
+    },
+  } as unknown as ExternalIPAttachment,
+  {
+    id: 'attachment-ns-cluster-01',
+    metadata: { name: 'ns-cluster-01-external-ip' },
+    spec: {
+      externalIp: { id: 'eip-ns-cluster-01' },
+      target: { case: 'cluster', value: { id: 'cluster-1', name: 'acme-prod-cluster' } },
+      targetEndpoint: ExternalIPAttachmentEndpoint.EXTERNAL_IP_ATTACHMENT_ENDPOINT_API,
+    },
+    status: {
+      state: ExternalIPAttachmentState.EXTERNAL_IP_ATTACHMENT_STATE_READY,
+      externalIpAddress: '198.51.100.31',
+    },
+  } as unknown as ExternalIPAttachment,
+  {
+    id: 'attachment-ns-bm-02',
+    metadata: { name: 'ns-bm-worker-04-external-ip' },
+    spec: {
+      externalIp: { id: 'eip-ns-bm-02' },
+      target: { case: 'baremetalInstance', value: { id: 'bm-4', name: 'bm-worker-04' } },
+    },
+    status: {
+      state: ExternalIPAttachmentState.EXTERNAL_IP_ATTACHMENT_STATE_READY,
+      externalIpAddress: '198.51.100.32',
+    },
+  } as unknown as ExternalIPAttachment,
+  {
+    id: 'attachment-ns-bm-03',
+    metadata: { name: 'ns-bm-worker-05-external-ip' },
+    spec: {
+      externalIp: { id: 'eip-ns-bm-03' },
+      target: { case: 'baremetalInstance', value: { id: 'bm-5', name: 'bm-worker-05' } },
+    },
+    status: {
+      state: ExternalIPAttachmentState.EXTERNAL_IP_ATTACHMENT_STATE_READY,
+      externalIpAddress: '198.51.100.33',
+    },
+  } as unknown as ExternalIPAttachment,
+  {
+    id: 'attachment-ns-cluster-02',
+    metadata: { name: 'ns-cluster-02-external-ip' },
+    spec: {
+      externalIp: { id: 'eip-ns-cluster-02' },
+      target: { case: 'cluster', value: { id: 'cluster-2', name: 'northsummit-cluster-02' } },
+      targetEndpoint: ExternalIPAttachmentEndpoint.EXTERNAL_IP_ATTACHMENT_ENDPOINT_INGRESS,
+    },
+    status: {
+      state: ExternalIPAttachmentState.EXTERNAL_IP_ATTACHMENT_STATE_READY,
+      externalIpAddress: '198.51.100.34',
+    },
+  } as unknown as ExternalIPAttachment,
+  {
+    id: 'attachment-ns-bm-04',
+    metadata: { name: 'ns-bm-worker-06-external-ip' },
+    spec: {
+      externalIp: { id: 'eip-ns-bm-04' },
+      target: { case: 'baremetalInstance', value: { id: 'bm-6', name: 'bm-worker-06' } },
+    },
+    status: {
+      state: ExternalIPAttachmentState.EXTERNAL_IP_ATTACHMENT_STATE_READY,
+      externalIpAddress: '198.51.100.35',
+    },
+  } as unknown as ExternalIPAttachment,
 ];
 
 const natGateways: NATGateway[] = [
   {
     id: 'nat-1',
-    metadata: { name: 'main-nat' },
+    metadata: {
+      name: 'main-nat',
+      creationTimestamp: { seconds: BigInt(1717003600), nanos: 0 },
+    },
     spec: { virtualNetwork: { id: 'vnet-1' }, externalIp: { id: 'eip-1' } },
+    status: { state: NATGatewayState.NAT_GATEWAY_STATE_READY },
+  } as unknown as NATGateway,
+  {
+    id: 'nat-2',
+    metadata: {
+      name: 'tenant-network-02-nat',
+      creationTimestamp: { seconds: BigInt(1717090000), nanos: 0 },
+    },
+    spec: { virtualNetwork: { id: 'vnet-2' }, externalIp: { id: 'eip-2' } },
     status: { state: NATGatewayState.NAT_GATEWAY_STATE_READY },
   } as unknown as NATGateway,
 ];
@@ -1298,33 +1569,80 @@ const projectMemberships: ProjectMembership[] = [
 const users: User[] = [
   {
     id: 'user-1',
-    metadata: { name: 'alice' },
-    spec: { username: 'alice', email: 'alice@acme.com' },
+    metadata: { name: 'Alice Johnson' },
+    spec: { username: 'alice', email: 'alice@acme.com', enabled: true },
   } as unknown as User,
   {
     id: 'user-2',
-    metadata: { name: 'bob' },
-    spec: { username: 'bob', email: 'bob@acme.com' },
+    metadata: { name: 'Bob Smith' },
+    spec: { username: 'bob', email: 'bob@acme.com', enabled: true },
+  } as unknown as User,
+  {
+    id: 'user-3',
+    metadata: { name: 'Charlie Davis' },
+    spec: { username: 'charlie', email: 'charlie@acme.com', enabled: true },
   } as unknown as User,
 ];
 
 const roles: Role[] = [
-  { id: 'role-admin', metadata: { name: 'Tenant Admin' }, spec: {} } as unknown as Role,
-  { id: 'role-user', metadata: { name: 'Tenant User' }, spec: {} } as unknown as Role,
+  {
+    id: 'role-admin',
+    metadata: { name: 'tenant-admin' },
+    spec: {
+      title: 'Tenant Administrator',
+      description: 'Full access to tenant resources and settings.',
+    },
+    status: { state: RoleState.READY },
+  } as unknown as Role,
+  {
+    id: 'role-user',
+    metadata: { name: 'tenant-user' },
+    spec: {
+      title: 'Tenant User',
+      description: 'Access to tenant resources according to assigned permissions.',
+    },
+    status: { state: RoleState.READY },
+  } as unknown as Role,
 ];
 
 const roleBindings: RoleBinding[] = [
   {
-    id: 'rb-1',
-    spec: { user: { id: 'user-1' }, role: { id: 'role-admin' } },
+    id: 'rb-acme-admin',
+    metadata: { name: 'acme-tenant-administrators' },
+    spec: {
+      role: { id: 'role-admin', name: 'tenant-admin', shared: true },
+      users: [{ id: 'user-1', name: 'alice' }],
+    },
+    status: { state: RoleBindingState.READY },
+  } as unknown as RoleBinding,
+  {
+    id: 'rb-acme-users',
+    metadata: { name: 'acme-tenant-users' },
+    spec: {
+      role: { id: 'role-user', name: 'tenant-user', shared: true },
+      users: [
+        { id: 'user-2', name: 'bob' },
+        { id: 'user-3', name: 'charlie' },
+      ],
+    },
+    status: { state: RoleBindingState.READY },
   } as unknown as RoleBinding,
 ];
 
 const identityProviders: IdentityProvider[] = [
   {
-    id: 'idp-1',
-    metadata: { name: 'Acme SSO' },
-    spec: { issuerUrl: 'https://sso.acme.com', clientId: 'osac-ui' },
+    id: 'north-summit-bank-idp',
+    metadata: { name: 'north-summit-bank' },
+    spec: {
+      title: 'north-summit-bank-idp',
+      enabled: true,
+      config: {
+        case: 'oidc',
+        value: {
+          issuer: 'https://login.northsummitbank.com/oauth2',
+        },
+      },
+    },
   } as unknown as IdentityProvider,
 ];
 
@@ -1529,15 +1847,118 @@ const privateStorageTiers: PrivateStorageTier[] = [
   {
     id: 'pst-fast',
     metadata: { name: 'fast' },
-    spec: { storageBackend: { id: 'sb-1' } },
+    spec: {
+      description: 'High-performance storage tier',
+      protocol: PrivateStorageProtocol.BLOCK,
+      backends: [
+        {
+          backendId: 'sb-1',
+          maxReadBandwidthMbs: 1000,
+          maxWriteBandwidthMbs: 800,
+          encryptionEnabled: true,
+        },
+      ],
+    },
     status: { state: PrivateStorageTierState.ACTIVE },
   } as unknown as PrivateStorageTier,
   {
     id: 'pst-standard',
     metadata: { name: 'standard' },
-    spec: { storageBackend: { id: 'sb-1' } },
+    spec: {
+      description: 'Standard performance storage tier',
+      protocol: PrivateStorageProtocol.BLOCK,
+      backends: [
+        {
+          backendId: 'sb-1',
+          maxReadBandwidthMbs: 500,
+          maxWriteBandwidthMbs: 400,
+          encryptionEnabled: false,
+        },
+      ],
+    },
     status: { state: PrivateStorageTierState.ACTIVE },
   } as unknown as PrivateStorageTier,
+];
+
+const adminVolumes: PrivateVolume[] = [
+  {
+    id: 'vol-admin-1',
+    metadata: {
+      name: 'vol-1',
+      tenant: 'acme-corporation',
+      creationTimestamp: new Timestamp({ seconds: BigInt(Date.now() / 1000 - 3600) }),
+    },
+    spec: {
+      storageTier: 'fast',
+      sizeGib: BigInt(50),
+      accessMode: VolumeAccessMode.READ_WRITE_ONCE,
+      topology: {
+        segments: { 'osac.io/node': 'node-1' },
+      },
+    },
+    status: {
+      state: VolumeState.AVAILABLE,
+      vendorVolumeId: 'vast-vol-12345',
+      hub: 'hub-1',
+      provisionedSizeGib: BigInt(50),
+      protocol: PrivateStorageProtocol.BLOCK,
+      provider: 'vast',
+      vendorContext: { subsystem: 'nqn.2023-08.io.vast:vol-12345', vip_pool_name: 'default' },
+      stateTransitionTime: new Timestamp({ seconds: BigInt(Date.now() / 1000 - 3000) }),
+    },
+  } as unknown as PrivateVolume,
+  {
+    id: 'vol-admin-2',
+    metadata: {
+      name: 'vol-2',
+      tenant: 'acme-corporation',
+      creationTimestamp: new Timestamp({ seconds: BigInt(Date.now() / 1000 - 7200) }),
+    },
+    spec: {
+      storageTier: 'standard',
+      sizeGib: BigInt(100),
+      accessMode: VolumeAccessMode.READ_WRITE_ONCE,
+      topology: {
+        segments: { 'osac.io/node': 'node-2' },
+      },
+    },
+    status: {
+      state: VolumeState.AVAILABLE,
+      vendorVolumeId: 'vast-vol-67890',
+      hub: 'hub-1',
+      provisionedSizeGib: BigInt(100),
+      protocol: PrivateStorageProtocol.BLOCK,
+      provider: 'vast',
+      vendorContext: { subsystem: 'nqn.2023-08.io.vast:vol-67890', vip_pool_name: 'default' },
+      stateTransitionTime: new Timestamp({ seconds: BigInt(Date.now() / 1000 - 6800) }),
+    },
+  } as unknown as PrivateVolume,
+  {
+    id: 'vol-admin-3',
+    metadata: {
+      name: 'database-vol',
+      tenant: 'globex-corp',
+      creationTimestamp: new Timestamp({ seconds: BigInt(Date.now() / 1000 - 10800) }),
+    },
+    spec: {
+      storageTier: 'fast',
+      sizeGib: BigInt(200),
+      accessMode: VolumeAccessMode.READ_WRITE_ONCE,
+      topology: {
+        segments: { 'osac.io/node': 'node-3' },
+      },
+    },
+    status: {
+      state: VolumeState.AVAILABLE,
+      vendorVolumeId: 'vast-vol-abcde',
+      hub: 'hub-1',
+      provisionedSizeGib: BigInt(200),
+      protocol: PrivateStorageProtocol.BLOCK,
+      provider: 'vast',
+      vendorContext: { subsystem: 'nqn.2023-08.io.vast:vol-abcde', vip_pool_name: 'default' },
+      stateTransitionTime: new Timestamp({ seconds: BigInt(Date.now() / 1000 - 10400) }),
+    },
+  } as unknown as PrivateVolume,
 ];
 
 const privateExternalIpPools: ExternalIPPool[] = [
@@ -1558,6 +1979,26 @@ const privateExternalIpPools: ExternalIPPool[] = [
       total: 62n,
       allocated: 2n,
       available: 60n,
+      hub: 'hub-east-1',
+    },
+  } as unknown as ExternalIPPool,
+  {
+    id: 'eipool-northsummit-edge',
+    metadata: {
+      name: 'northsummit-public-edge',
+      tenant: 'north-summit-bank',
+      description: 'Routable address pool for North Summit Bank edge exposure.',
+      creationTimestamp: { seconds: BigInt(1786798800), nanos: 0 },
+    },
+    spec: {
+      cidrs: ['198.51.100.0/26'],
+      ipFamily: IPFamily.IP_FAMILY_IPV4,
+    },
+    status: {
+      state: ExternalIPPoolState.EXTERNAL_IP_POOL_STATE_READY,
+      total: 58n,
+      allocated: 6n,
+      available: 52n,
       hub: 'hub-east-1',
     },
   } as unknown as ExternalIPPool,
@@ -1610,6 +2051,7 @@ export const mockFixtures: MockApiFixtures = {
   externalIpPools,
   publicStorageTiers,
   storageTiers: privateStorageTiers,
+  adminVolumes,
   roles,
   roleBindings,
   secrets,

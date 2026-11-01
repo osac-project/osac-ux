@@ -26,7 +26,7 @@ export const buildIdpCreatePayload = (
 ): MessageInitShape<typeof IdentityProviderSchema> => {
   return {
     metadata: {
-      name: values.metadata.name,
+      name: values.metadata.name || values.spec.title,
     },
     spec: {
       description: values.spec.description,

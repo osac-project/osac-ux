@@ -10,10 +10,10 @@ import LeaveFormConfirmation from '@osac/ui-components/components/Form/LeaveForm
 import { OSACWizardFooter } from '@osac/ui-components/components/Wizard/OSACWizardFooter';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
+import AddressingStep from './AddressingStep';
 import { toCreateRequest } from './payload';
 import PoolStep from './PoolStep';
 import ReviewStep from './ReviewStep';
-import TenantStep from './TenantStep';
 import { externalIpPoolStepHasErrors, getExternalIpPoolSchema } from './validation';
 import {
   EXTERNAL_IP_POOLS_LIST_PATH,
@@ -26,7 +26,7 @@ const ExternalIpPoolWizard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { mutateAsync: createPool, error } = useCreateResource(ExternalIPPools);
-  const [currentStep, setCurrentStep] = useState('pool');
+  const [currentStep, setCurrentStep] = useState('general');
 
   const onSubmit = async (values: ExternalIpPoolFormValues) => {
     try {
@@ -64,11 +64,11 @@ const ExternalIpPoolWizard = () => {
             }
             onStepChange={(_, step) => setCurrentStep(step.id as string)}
           >
-            <WizardStep id="pool" name={t('External IP pool')}>
-              {currentStep === 'pool' && <PoolStep />}
+            <WizardStep id="general" name={t('General')}>
+              {currentStep === 'general' && <PoolStep />}
             </WizardStep>
-            <WizardStep id="tenant" name={t('Tenant')}>
-              {currentStep === 'tenant' && <TenantStep />}
+            <WizardStep id="addressing" name={t('Addressing')}>
+              {currentStep === 'addressing' && <AddressingStep />}
             </WizardStep>
             <WizardStep id="review" name={t('Review')}>
               {currentStep === 'review' && <ReviewStep />}

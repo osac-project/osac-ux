@@ -148,7 +148,7 @@ const TenantDetailsContent = ({ tenant }: TenantDetailsContentProps) => {
                         className="details-page__overview"
                         aria-label={t('Tenant overview')}
                       >
-                        <DescriptionListGroup>
+                        <DescriptionListGroup id="tenant-idp-information">
                           <DescriptionListTerm>{t('Status')}</DescriptionListTerm>
                           <DescriptionListDescription>
                             <TenantStatusLabel state={tenant.status?.state} />
@@ -161,7 +161,11 @@ const TenantDetailsContent = ({ tenant }: TenantDetailsContentProps) => {
                               <div className="tenant-details__logo-preview">
                                 <img
                                   src={companyLogoSrc}
-                                  alt={companyLogoFileName || tenant.metadata?.name || t('Company logo')}
+                                  alt={
+                                    companyLogoFileName ||
+                                    tenant.metadata?.name ||
+                                    t('Company logo')
+                                  }
                                 />
                               </div>
                             ) : (

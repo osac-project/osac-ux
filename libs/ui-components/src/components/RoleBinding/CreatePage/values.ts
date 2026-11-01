@@ -5,7 +5,7 @@ export interface RoleBindingCreateFormValues {
     name: string;
     tenant: string;
   };
-  users: string[];
+  email: string;
   role: string;
 }
 
@@ -19,7 +19,7 @@ export const getInitialValues = (
         name: roleBinding.metadata?.name || '',
         tenant: roleBinding.metadata?.tenant || '',
       },
-      users: roleBinding.spec?.users.map((u) => u.name) || [],
+      email: roleBinding.spec?.users[0]?.name || '',
       role: roleBinding.spec?.role?.name || '',
     };
   }
@@ -29,7 +29,7 @@ export const getInitialValues = (
       name: '',
       tenant,
     },
-    users: [],
+    email: '',
     role: '',
   };
 };

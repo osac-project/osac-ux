@@ -1,0 +1,9 @@
+/* PF6's dark theme sets border-radius--control--default to pill (999px).
+ * Match the square style used in the CatalogProvisionWizard step forms.
+ * Scoped descendant + double-class selector (0,2,0) beats PF's single-class
+ * rule regardless of stylesheet load order in the Vite bundle.
+ * Excludes plain/icon-only toggles which are intentionally pill-shaped. */
+.external-ip-pool__pool-form .pf-v6-c-menu-toggle:not(.pf-m-plain):not(.pf-m-icon-only),
+.external-ip-pool__pool-form .pf-v6-c-menu-toggle:not(.pf-m-plain):not(.pf-m-icon-only)::before {
+  border-radius: var(--pf-t--global--border--radius--200);
+}

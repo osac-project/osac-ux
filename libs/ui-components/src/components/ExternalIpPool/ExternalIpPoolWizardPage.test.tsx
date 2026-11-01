@@ -51,13 +51,19 @@ const clickNext = async (user: UserEvent) => {
   await user.click(next);
 };
 
-const fillPoolStep = async (user: UserEvent, name: string, cidr: string) => {
+const fillPoolStep = async (user: UserEvent, name: string, description = '') => {
   await user.type(screen.getByRole('textbox', { name: 'Name' }), name);
+  if (description) {
+    await user.type(screen.getByRole('textbox', { name: 'Description' }), description);
+  }
+};
+
+const fillAddressingStep = async (user: UserEvent, cidr: string) => {
+  await screen.findByRole('heading', { name: 'Addressing' });
   await user.type(screen.getByRole('textbox', { name: 'CIDR 1' }), cidr);
 };
 
 const fillTenantStep = async (user: UserEvent, tenantName: string) => {
-  await screen.findByRole('heading', { name: 'Tenant' });
   const tenantToggle = await waitFor(() => {
     const toggle = screen.getByRole('button', {
       name: (_accessibleName, element) => element.id === 'external-ip-pool-tenant',
@@ -70,9 +76,10 @@ const fillTenantStep = async (user: UserEvent, tenantName: string) => {
 };
 
 const fillValidWizard = async (user: UserEvent) => {
-  await fillPoolStep(user, 'prod-v4', '192.168.1.0/24');
-  await clickNext(user);
+  await fillPoolStep(user, 'prod-v4', 'Production address pool');
   await fillTenantStep(user, 'acme');
+  await clickNext(user);
+  await fillAddressingStep(user, '192.168.1.0/24');
   await clickNext(user);
   await screen.findByRole('heading', { name: 'Review' });
 };
@@ -88,9 +95,10 @@ describe('ExternalIpPoolWizardPage', () => {
 
       expect(screen.getByRole('heading', { name: 'Create external IP pool' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'External IP pools' })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: 'External IP pool' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'General' })).toBeInTheDocument();
       expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
-      expect(screen.getByRole('textbox', { name: 'CIDR 1' })).toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: 'Description' })).toBeInTheDocument();
+      expect(screen.queryByRole('textbox', { name: 'CIDR 1' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Next' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
     });
@@ -119,6 +127,7 @@ describe('ExternalIpPoolWizardPage', () => {
       });
 
       expect(capturedRequest?.object?.metadata?.name).toBe('prod-v4');
+      expect(capturedRequest?.object?.metadata?.description).toBe('Production address pool');
       expect(capturedRequest?.object?.metadata?.tenant).toBe('t-1');
       expect(capturedRequest?.object?.spec?.cidrs).toEqual(['192.168.1.0/24']);
     }, 15000);
@@ -126,9 +135,8 @@ describe('ExternalIpPoolWizardPage', () => {
     it('shows the auto-selected tenant name on Review when only one tenant exists', async () => {
       const { user } = renderCreatePage(undefined, [makeTenant('t-1', 'acme')]);
 
-      await fillPoolStep(user, 'prod-v4', '192.168.1.0/24');
-      await clickNext(user);
-      await screen.findByRole('heading', { name: 'Tenant' });
+      await fillPoolStep(user, 'prod-v4');
+      await fillTenantStep(user, 'acme');
       await waitFor(() => {
         expect(
           screen.getByRole('button', {
@@ -136,6 +144,8 @@ describe('ExternalIpPoolWizardPage', () => {
           }),
         ).toHaveTextContent('acme');
       });
+      await clickNext(user);
+      await fillAddressingStep(user, '192.168.1.0/24');
       await clickNext(user);
 
       expect(await screen.findByRole('heading', { name: 'Review' })).toBeInTheDocument();
@@ -153,9 +163,10 @@ describe('ExternalIpPoolWizardPage', () => {
         },
       });
 
-      await fillPoolStep(user, 'prod-v4', '  192.168.1.0/24  ');
-      await clickNext(user);
+      await fillPoolStep(user, 'prod-v4');
       await fillTenantStep(user, 'acme');
+      await clickNext(user);
+      await fillAddressingStep(user, '  192.168.1.0/24  ');
       await clickNext(user);
       await screen.findByRole('heading', { name: 'Review' });
       await user.click(screen.getByRole('button', { name: 'Create' }));
@@ -166,11 +177,11 @@ describe('ExternalIpPoolWizardPage', () => {
       expect(capturedRequest?.object?.spec?.cidrs).toEqual(['192.168.1.0/24']);
     }, 15000);
 
-    it('blocks advancing past External IP pool for an invalid name', async () => {
+    it('blocks advancing past General for an invalid name', async () => {
       const onExternalIPPoolCreate = vi.fn();
       const { user } = renderCreatePage({ onExternalIPPoolCreate });
 
-      await fillPoolStep(user, 'Invalid_Name', '192.168.1.0/24');
+      await fillPoolStep(user, 'Invalid_Name');
       await clickNext(user);
 
       expect(
@@ -185,6 +196,9 @@ describe('ExternalIpPoolWizardPage', () => {
     it('adds and removes CIDR rows, keeping at least one', async () => {
       const { user } = renderCreatePage();
 
+      await fillPoolStep(user, 'prod-v4');
+      await fillTenantStep(user, 'acme');
+      await clickNext(user);
       expect(screen.getByRole('textbox', { name: 'CIDR 1' })).toBeInTheDocument();
       expect(screen.queryByRole('textbox', { name: 'CIDR 2' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Remove CIDR 1' })).not.toBeInTheDocument();
@@ -198,24 +212,25 @@ describe('ExternalIpPoolWizardPage', () => {
       expect(screen.queryByRole('textbox', { name: 'CIDR 2' })).not.toBeInTheDocument();
     });
 
-    it('blocks advancing past External IP pool for a malformed CIDR', async () => {
+    it('blocks advancing past General for a malformed CIDR', async () => {
       const onExternalIPPoolCreate = vi.fn();
       const { user } = renderCreatePage({ onExternalIPPoolCreate });
 
-      await fillPoolStep(user, 'prod-v4', 'not-a-cidr');
+      await fillPoolStep(user, 'prod-v4');
+      await fillTenantStep(user, 'acme');
+      await clickNext(user);
+      await fillAddressingStep(user, 'not-a-cidr');
       await clickNext(user);
 
       expect(await screen.findByText('Invalid IPv4 CIDR notation')).toBeInTheDocument();
       expect(onExternalIPPoolCreate).not.toHaveBeenCalled();
     });
 
-    it('blocks advancing past Tenant when no tenant is selected', async () => {
+    it('blocks advancing past General when no tenant is selected', async () => {
       const onExternalIPPoolCreate = vi.fn();
       const { user } = renderCreatePage({ onExternalIPPoolCreate });
 
-      await fillPoolStep(user, 'prod-v4', '192.168.1.0/24');
-      await clickNext(user);
-      await screen.findByRole('heading', { name: 'Tenant' });
+      await fillPoolStep(user, 'prod-v4');
       await clickNext(user);
 
       expect(await screen.findByText('Tenant is required')).toBeInTheDocument();
@@ -225,8 +240,7 @@ describe('ExternalIpPoolWizardPage', () => {
     it('warns when there are no registered tenants', async () => {
       const { user } = renderCreatePage(undefined, []);
 
-      await fillPoolStep(user, 'prod-v4', '192.168.1.0/24');
-      await clickNext(user);
+      await fillPoolStep(user, 'prod-v4');
 
       expect(await screen.findByText('No registered tenants')).toBeInTheDocument();
       expect(
@@ -246,8 +260,7 @@ describe('ExternalIpPoolWizardPage', () => {
         },
       });
 
-      await fillPoolStep(user, 'prod-v4', '192.168.1.0/24');
-      await clickNext(user);
+      await fillPoolStep(user, 'prod-v4');
 
       expect(await screen.findByText('Failed to fetch tenants')).toBeInTheDocument();
       expect(screen.getByText('tenants unavailable')).toBeInTheDocument();

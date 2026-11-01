@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Dropdown, DropdownItem, DropdownList, MenuToggle } from '@patternfly/react-core';
 import { EllipsisVIcon } from '@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon';
 
@@ -12,13 +11,18 @@ import { useTranslation } from '../../hooks/useTranslation';
 
 interface RoleBindingActionsMenuProps {
   roleBinding: RoleBinding;
+  onRemove?: () => void;
+  actionName?: string;
 }
 
-const RoleBindingActionsMenu = ({ roleBinding }: RoleBindingActionsMenuProps) => {
+const RoleBindingActionsMenu = ({
+  roleBinding,
+  onRemove,
+  actionName,
+}: RoleBindingActionsMenuProps) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const navigate = useNavigate();
   const deleteRoleBinding = useDeleteResource(RoleBindings);
 
   return (
@@ -44,7 +48,9 @@ const RoleBindingActionsMenu = ({ roleBinding }: RoleBindingActionsMenuProps) =>
             ref={ref}
             variant="plain"
             onClick={() => setOpen((o) => !o)}
-            aria-label={t('Actions')}
+            aria-label={t('Actions for {{name}}', {
+              name: actionName || roleBinding.metadata?.name || roleBinding.id,
+            })}
           >
             <EllipsisVIcon />
           </MenuToggle>
@@ -52,16 +58,24 @@ const RoleBindingActionsMenu = ({ roleBinding }: RoleBindingActionsMenuProps) =>
         popperProps={{ position: 'right' }}
       >
         <DropdownList>
-          <DropdownItem onClick={() => navigate(`${roleBinding.id}/edit`)}>
-            {t('Edit')}
-          </DropdownItem>
-          <DeleteResourceButton
-            isDropdown
-            onClick={() => {
-              setDeleteOpen(true);
-              setOpen(false);
-            }}
-          />
+          {onRemove ? (
+            <DropdownItem
+              onClick={() => {
+                onRemove();
+                setOpen(false);
+              }}
+            >
+              {t('Remove')}
+            </DropdownItem>
+          ) : (
+            <DeleteResourceButton
+              isDropdown
+              onClick={() => {
+                setDeleteOpen(true);
+                setOpen(false);
+              }}
+            />
+          )}
         </DropdownList>
       </Dropdown>
     </>

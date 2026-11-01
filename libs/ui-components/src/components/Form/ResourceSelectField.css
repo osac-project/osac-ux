@@ -1,7 +1,10 @@
 .resource-select__toggle {
-  min-block-size: calc(var(--pf-t--global--spacer--xl) * 2);
   padding-block: var(--pf-t--global--spacer--sm);
   text-align: start;
+}
+
+.resource-select__toggle--selected {
+  min-block-size: calc(var(--pf-t--global--spacer--xl) * 2);
 }
 
 .resource-select__toggle-content {

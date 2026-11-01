@@ -1,6 +1,8 @@
 import { IdentityProvider } from '@osac/types';
 
 export interface IdentityProviderValues {
+  primaryEmailDomain: string;
+  protocol: string;
   metadata: {
     name: string;
   };
@@ -26,6 +28,8 @@ export interface IdentityProviderValues {
 
 export const getIdentityProviderValues = (idp?: IdentityProvider): IdentityProviderValues => {
   const initValues: IdentityProviderValues = {
+    primaryEmailDomain: 'northsummitbank.com',
+    protocol: idp?.spec?.config.case || 'oidc',
     metadata: {
       name: idp?.metadata?.name || '',
     },

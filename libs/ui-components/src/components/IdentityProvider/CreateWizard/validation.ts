@@ -13,24 +13,13 @@ export const getIdentityProviderSchema = (t: TFunction, isEdit: boolean) =>
       name: isEdit ? Yup.mixed() : Yup.string(),
     }),
     spec: Yup.object({
-      title: Yup.string(),
-      description: Yup.string(),
+      title: Yup.string().required(t('Display name is required')),
       config: Yup.object({
         clientId: Yup.string().required(t('Client ID is required')),
-        clientSecretSecret: Yup.object({
-          name: Yup.string().required(t('Client secret is required')),
-        }),
         issuer: urlSchema(t).required(t('Issuer is required')),
-        authorizationUrl: urlSchema(t).required(t('Authorization URL is required')),
-        tokenUrl: Yup.string()
-          .required(t('Token URL is required'))
-          .url(t('Must be a valid URL (e.g. https://example.com)')),
-        defaultScopes: Yup.string(),
-        userInfoUrl: urlSchema(t),
-        jwksUrl: urlSchema(t),
-        logoutUrl: urlSchema(t),
       }),
     }),
+    protocol: Yup.string().required(t('Protocol is required')),
   });
 
 export const idpStepHasErrors = (
@@ -38,21 +27,13 @@ export const idpStepHasErrors = (
   errors: FormikErrors<IdentityProviderValues>,
 ): boolean => {
   switch (stepId) {
-    case 'general':
-      return Boolean(errors.metadata?.name || errors.spec?.description || errors.spec?.title);
-    case 'configuration':
+    case 'identity-provider':
       return Boolean(
-        errors.spec?.config?.authorizationUrl ||
+        errors.metadata?.name ||
+        errors.spec?.title ||
         errors.spec?.config?.clientId ||
-        errors.spec?.config?.clientSecretSecret?.name ||
-        errors.spec?.config?.defaultScopes ||
         errors.spec?.config?.issuer ||
-        errors.spec?.config?.issuer ||
-        errors.spec?.config?.jwksUrl ||
-        errors.spec?.config?.logoutUrl ||
-        errors.spec?.config?.tokenUrl ||
-        errors.spec?.config?.userInfoUrl ||
-        errors.spec?.config?.validateSignature,
+        errors.protocol,
       );
     default:
       return false;

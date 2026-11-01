@@ -11,5 +11,5 @@ export const getRoleBindingSpec = (
     name: values.role,
     shared: true,
   },
-  users: values.users.map((u) => ({ name: u })),
+  users: [{ name: values.email }],
 });

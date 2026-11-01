@@ -1,9 +1,10 @@
+import { Link } from 'react-router-dom';
 import { Content, Flex, FlexItem } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
-import { Link } from 'react-router-dom';
 
 import type { VirtualNetwork } from '@osac/types';
 
+import VirtualNetworkDetailsActionsMenu from './VirtualNetworkDetailsActionsMenu';
 import { VirtualNetworkStatusLabel } from './VirtualNetworkStatusLabel';
 import type { NatGatewayWithAddress } from '../../api/v1/networking';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -36,6 +37,7 @@ export const VirtualNetworksTable = ({
           <Th>{t('Subnets')}</Th>
           <Th>{t('Security groups')}</Th>
           <Th>{t('NAT gateway')}</Th>
+          <Th>{t('Actions')}</Th>
         </Tr>
       </Thead>
       <Tbody>
@@ -80,6 +82,9 @@ export const VirtualNetworksTable = ({
                 ) : (
                   '—'
                 )}
+              </Td>
+              <Td dataLabel={t('Actions')}>
+                <VirtualNetworkDetailsActionsMenu virtualNetwork={vn} />
               </Td>
             </Tr>
           );

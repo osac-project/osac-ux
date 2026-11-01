@@ -27,8 +27,10 @@ import { VirtualNetworksListPage } from '@osac/ui-components/pages/networking/Vi
 import { BareMetalRoutes } from '@osac/ui-components/pages/tenant/BareMetalRoutes';
 import CatalogPage from '@osac/ui-components/pages/tenant/CatalogPage';
 import { ClusterRoutes } from '@osac/ui-components/pages/tenant/ClusterRoutes';
+import TenantBillingPage from '@osac/ui-components/pages/tenant/TenantBillingPage';
 import { VmRoutes } from '@osac/ui-components/pages/tenant/VmRoutes';
 import { VolumeRoutes } from '@osac/ui-components/pages/tenant/VolumeRoutes';
+import StorageTiersPage from '@osac/ui-components/pages/tenant/StorageTiersPage';
 import type { UserRole } from '@osac/ui-components/shellTypes';
 
 import { BareMetalInstanceTypeRoutes } from './BareMetalInstanceTypeRoutes';
@@ -216,6 +218,14 @@ export const AppShell = ({
             </ShellRoute>
           }
         />
+        <Route
+          path="/tenant/billing"
+          element={
+            <ShellRoute>
+              <TenantBillingPage />
+            </ShellRoute>
+          }
+        />
         {role !== 'admin' && (
           <>
             <Route
@@ -253,6 +263,14 @@ export const AppShell = ({
               element={
                 <ShellRoute>
                   <VolumeRoutes />
+                </ShellRoute>
+              }
+            />
+            <Route
+              path="/storage/tiers"
+              element={
+                <ShellRoute>
+                  <StorageTiersPage />
                 </ShellRoute>
               }
             />

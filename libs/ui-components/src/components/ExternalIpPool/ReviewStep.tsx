@@ -9,6 +9,7 @@ import {
 } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 
+import { IPFamily } from '@osac/types/private';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 import { displayValue } from '@osac/ui-components/utils/detailFormatters';
 
@@ -31,6 +32,18 @@ const ReviewStep = () => {
             <DescriptionListTerm>{t('Name')}</DescriptionListTerm>
             <DescriptionListDescription>
               {displayValue(values.metadata.name)}
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+          <DescriptionListGroup>
+            <DescriptionListTerm>{t('IP family')}</DescriptionListTerm>
+            <DescriptionListDescription>
+              {values.ipFamily === IPFamily.IP_FAMILY_IPV6 ? t('IPv6') : t('IPv4')}
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+          <DescriptionListGroup>
+            <DescriptionListTerm>{t('Description')}</DescriptionListTerm>
+            <DescriptionListDescription>
+              {displayValue(values.metadata.description)}
             </DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>

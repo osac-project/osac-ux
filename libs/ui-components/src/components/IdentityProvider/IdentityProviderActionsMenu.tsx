@@ -8,7 +8,6 @@ import { useDeleteResource } from '@osac/ui-components/api/use-resource';
 import DeleteResourceButton from '@osac/ui-components/components/Resource/DeleteResourceButton';
 import DeleteResourceModal from '@osac/ui-components/components/Resource/DeleteResourceModal';
 
-import IdentityProviderEnableModal from './IdentityProviderEnableModal';
 import { getIdpName } from './utils';
 import { useTranslation } from '../../hooks/useTranslation';
 
@@ -21,7 +20,6 @@ const IdentityProviderActionsMenu = ({ idp }: IdentityProviderActionsMenuProps) 
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [enableOpen, setEnableOpen] = useState(false);
   const deleteIdp = useDeleteResource(IdentityProviders);
 
   return (
@@ -37,13 +35,6 @@ const IdentityProviderActionsMenu = ({ idp }: IdentityProviderActionsMenuProps) 
           onSuccess={() => setDeleteOpen(false)}
           mutation={deleteIdp}
           variables={{ id: idp.id }}
-        />
-      )}
-      {enableOpen && (
-        <IdentityProviderEnableModal
-          idp={idp}
-          onClose={() => setEnableOpen(false)}
-          onSuccess={() => setEnableOpen(false)}
         />
       )}
       <Dropdown
@@ -64,14 +55,6 @@ const IdentityProviderActionsMenu = ({ idp }: IdentityProviderActionsMenuProps) 
         <DropdownList>
           <DropdownItem onClick={() => navigate(`/tenant/identity-provider/${idp.id}/edit`)}>
             {t('Edit')}
-          </DropdownItem>
-          <DropdownItem
-            onClick={() => {
-              setEnableOpen(true);
-              setOpen(false);
-            }}
-          >
-            {idp.spec?.enabled ? t('Disable') : t('Enable')}
           </DropdownItem>
           <DeleteResourceButton
             isDropdown

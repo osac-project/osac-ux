@@ -7,16 +7,23 @@ import { TenantState } from '@osac/types/private';
 import TenantListPage from './TenantListPage';
 import { renderWithProviders } from '../../test-utils/TestProviders';
 
-const makeTenant = (id: string, name: string, state?: TenantState) =>
+const makeTenant = (
+  id: string,
+  name: string,
+  state?: TenantState,
+  billingAccount: string | null = `${id}-enterprise-billing`,
+) =>
   ({
     id,
     metadata: {
       name,
       creationTimestamp: { seconds: BigInt(1717000000), nanos: 0 },
-      annotations: {
-        'osac.io/billing-account': `${id}-enterprise-billing`,
-        'osac.io/billing-account-id': id,
-      },
+      annotations: billingAccount
+        ? {
+            'osac.io/billing-account': billingAccount,
+            'osac.io/billing-account-id': id,
+          }
+        : {},
     },
     spec: { domains: [`${name}.example.com`] },
     status: state !== undefined ? { state } : undefined,
@@ -70,6 +77,24 @@ describe('TenantListPage', () => {
     expect(screen.getByText('globex.example.com')).toBeInTheDocument();
   });
 
+  it('shows when billing is not linked in card footers', async () => {
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Billing not linked')).toHaveLength(2);
+    });
+    expect(screen.queryByText('Placement')).not.toBeInTheDocument();
+  });
+
+  it('shows the billing account or inactive state in card details', async () => {
+    renderPage([makeTenant('t-unlinked', 'unlinked', TenantState.PENDING, null)]);
+
+    await waitFor(() => {
+      expect(screen.getByText('Billing')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Billing account inactive')).toBeInTheDocument();
+  });
+
   it('renders billing accounts for each tenant', async () => {
     const { user } = renderPage();
 
@@ -83,6 +108,21 @@ describe('TenantListPage', () => {
     });
     expect(screen.getByText('t-2-enterprise-billing')).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Billing account' })).toBeInTheDocument();
+  });
+
+  it('shows tenant actions in the list view', async () => {
+    const { user } = renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('acme')).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('button', { name: 'List view' }));
+    await user.click(screen.getByRole('button', { name: 'Actions for acme' }));
+
+    expect(screen.getByRole('menuitem', { name: 'View details' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'View IdP information' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Edit' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Remove' })).toBeInTheDocument();
   });
 
   it('shows empty state when there are no tenants', async () => {

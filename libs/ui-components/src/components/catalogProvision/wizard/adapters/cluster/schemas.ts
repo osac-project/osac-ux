@@ -23,7 +23,6 @@ import {
   mergeCatalogValidation,
   readCatalogFieldDefinitions,
 } from '../../catalogOverlay';
-import { isValidSshPublicKey } from '../../fields/credentialValidation';
 import type { WizardStepId } from '../../stepIds';
 
 const nodeSetRowSchema = (t: TFunction) =>
@@ -43,11 +42,6 @@ const nodeSetRowSchema = (t: TFunction) =>
 const buildClusterFieldDefinitions = (catalogItem: unknown, t: TFunction) => {
   const definitions = readCatalogFieldDefinitions(catalogItem);
 
-  const sshKeyOverlay = getCatalogFieldOverlay(
-    CLUSTER_SSH_KEY_WIRE_PATH,
-    definitions,
-    t('SSH public key'),
-  );
   const versionOverlay = getCatalogFieldOverlay(
     CLUSTER_VERSION_WIRE_PATH,
     definitions,
@@ -70,20 +64,15 @@ const buildClusterFieldDefinitions = (catalogItem: unknown, t: TFunction) => {
   return {
     catalogItemId: yup.string().required(t('Select a catalog item')),
     metadataName: resourceNameSchema(t),
-    specSshPublicKey: mergeCatalogValidation(
-      yup
-        .string()
-        .test(
-          'ssh-public-key',
-          t(
-            'SSH public key must be in the form "[TYPE] key [[EMAIL]]". Supported types are ssh-rsa, ssh-ed25519, and ecdsa-sha2-nistp256/384/521.',
-          ),
-          (value) => isValidSshPublicKey(value),
-        ),
-      sshKeyOverlay,
-      sshKeyRequired,
-      t('This field is required'),
-    ),
+    specSshPublicKeySecret: sshKeyRequired
+      ? yup.object({
+          id: yup.string().required(t('SSH public key is required')),
+          name: yup.string().required(t('SSH public key is required')),
+        })
+      : yup.object({
+          id: yup.string(),
+          name: yup.string(),
+        }),
     specVersionName: mergeCatalogValidation(
       yup.string().trim(),
       versionOverlay,
@@ -166,16 +155,21 @@ export const buildClusterStepSchema = (
           name: fields.metadataName,
         }),
         spec: yup.object({
-          sshPublicKey: fields.specSshPublicKey,
+          sshPublicKeySecret: fields.specSshPublicKeySecret,
           pullSecretSecret: yup.object({
             name: yup.string().required(t('Pull secret is required')),
           }),
         }),
       });
-    case 'configuration':
+    case 'cluster-version':
       return yup.object({
         spec: yup.object({
           versionName: fields.specVersionName,
+        }),
+      });
+    case 'configuration':
+      return yup.object({
+        spec: yup.object({
           nodeSetRows: fields.specNodeSetRows,
         }),
       });

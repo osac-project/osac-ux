@@ -16,7 +16,6 @@ import {
   StackItem,
   Title,
 } from '@patternfly/react-core';
-import ContainerNodeIcon from '@patternfly/react-icons/dist/esm/icons/container-node-icon';
 import PlusCircleIcon from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 
 import { Project } from '@osac/types';
@@ -24,8 +23,9 @@ import { useProject, useProjects } from '@osac/ui-components/api/v1/project';
 import { useTranslation } from '@osac/ui-components/hooks/useTranslation';
 
 import ProjectDetailsActionButtons from './ProjectDetailsActionButtons';
+import ProjectInstancesSection from './ProjectInstancesSection';
+import ProjectUsersRail from './ProjectUsersRail';
 import { Timestamp } from '../../Primitives/Timestamp';
-import ProjectMembership from '../../ProjectMembership/ProjectMembershipTable';
 import { ResourceDetailHeader } from '../../Resource/ResourceDetailHeader';
 import ResourceDetailsPage from '../../Resource/ResourceDetailsPage';
 import ProjectStatusLabel from '../ProjectStatusLabel';
@@ -51,10 +51,6 @@ const ProjectDetailsPageContent = ({ project }: ProjectDetailsPageContentProps) 
   const nestedProjects = projects.filter(
     (candidate) => getProjectParentPath(candidate) === projectPath,
   );
-  const services = (project.metadata?.annotations?.['osac.io/services'] ?? '')
-    .split(',')
-    .map((service) => service.trim())
-    .filter(Boolean);
   const instanceQuota = project.metadata?.annotations?.['osac.io/instance-quota'] || '—';
   const ipPool = project.metadata?.annotations?.['osac.io/ip-pool'] || '—';
 
@@ -145,28 +141,7 @@ const ProjectDetailsPageContent = ({ project }: ProjectDetailsPageContentProps) 
                     </div>
                   </GridItem>
                   <GridItem md={6}>
-                    <div className="project-details-page__column">
-                      <Title headingLevel="h2" size="lg">
-                        {t('Services')} ({services.length})
-                      </Title>
-                      {services.length > 0 ? (
-                        <div className="project-details-page__services" aria-label={t('Services')}>
-                          {services.map((service) => (
-                            <div className="project-details-page__service" key={service}>
-                              <ContainerNodeIcon
-                                className="project-details-page__service-icon"
-                                aria-hidden
-                              />
-                              <span>{service}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <Content component="p" className="project-details-page__empty">
-                          {t('No services')}
-                        </Content>
-                      )}
-                    </div>
+                    <ProjectInstancesSection />
                   </GridItem>
                 </Grid>
               </StackItem>
@@ -212,9 +187,7 @@ const ProjectDetailsPageContent = ({ project }: ProjectDetailsPageContentProps) 
             </Stack>
           </GridItem>
           <GridItem md={4}>
-            <div className="details-page__sidebar">
-              <ProjectMembership project={project} variant="rail" />
-            </div>
+            <ProjectUsersRail projectId={project.id} />
           </GridItem>
         </Grid>
       </PageSection>

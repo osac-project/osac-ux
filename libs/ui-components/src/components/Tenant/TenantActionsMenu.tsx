@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Dropdown, DropdownList, MenuToggle } from '@patternfly/react-core';
+import { useNavigate } from 'react-router-dom';
+import { Divider, Dropdown, DropdownItem, DropdownList, MenuToggle } from '@patternfly/react-core';
 import { EllipsisVIcon } from '@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon';
 
 import { type Tenant, Tenants } from '@osac/types/private';
@@ -16,6 +17,7 @@ interface TenantActionsMenuProps {
 
 const TenantActionsMenu = ({ tenant, showLabel = false }: TenantActionsMenuProps) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const deleteTenant = useDeleteResource(Tenants);
@@ -52,13 +54,27 @@ const TenantActionsMenu = ({ tenant, showLabel = false }: TenantActionsMenuProps
         popperProps={{ position: 'right' }}
       >
         <DropdownList>
+          <DropdownItem onClick={() => navigate(`/admin/tenants/${tenant.id}`)}>
+            {t('View details')}
+          </DropdownItem>
+          <DropdownItem
+            onClick={() => navigate(`/admin/tenants/${tenant.id}#tenant-idp-information`)}
+          >
+            {t('View IdP information')}
+          </DropdownItem>
+          <DropdownItem onClick={() => navigate(`/admin/tenants/${tenant.id}/edit`)}>
+            {t('Edit')}
+          </DropdownItem>
+          <Divider component="li" />
           <DeleteResourceButton
             isDropdown
             onClick={() => {
               setDeleteOpen(true);
               setOpen(false);
             }}
-          />
+          >
+            {t('Remove')}
+          </DeleteResourceButton>
         </DropdownList>
       </Dropdown>
     </>

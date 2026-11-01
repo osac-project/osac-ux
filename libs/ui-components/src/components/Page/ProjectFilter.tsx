@@ -17,6 +17,19 @@ interface ProjectFilterProps {
   showAllProjectsIcon?: boolean;
 }
 
+/**
+ * Controlled single-select variant props — used inside wizard form steps.
+ * When provided, session state and URL-param sync are bypassed.
+ */
+interface ProjectSelectProps {
+  /** Currently selected project path (empty string = none). */
+  value: string;
+  /** Called with the newly selected project path, or '' when cleared. */
+  onChange: (value: string) => void;
+  /** aria-label for the toggle button. */
+  'aria-label'?: string;
+}
+
 const ProjectFilter = ({ showAllProjectsIcon = false }: ProjectFilterProps) => {
   const { t } = useTranslation();
   const { projects, setProjects } = useSession();
@@ -84,6 +97,49 @@ const ProjectFilter = ({ showAllProjectsIcon = false }: ProjectFilterProps) => {
         isLoading={isLoading}
         error={error ? getErrorMessage(error) : undefined}
         aria-label={t('Filter by project')}
+      />
+    </div>
+  );
+};
+
+/**
+ * Controlled single-project selector built on the same `HierarchicalSelect`
+ * dropdown as `ProjectFilter`, but bound to an external value/onChange pair
+ * (e.g. a Formik field) without touching session state or URL params.
+ */
+export const ProjectSelect = ({
+  value,
+  onChange,
+  'aria-label': ariaLabel,
+}: ProjectSelectProps) => {
+  const { t } = useTranslation();
+  const { data, isLoading, error } = useAllProjects();
+
+  const items = useMemo(
+    () =>
+      buildProjectTree(data ?? [], (p) => getProjectName(p, t)).map(({ project, depth }) => ({
+        id: getFullProjectPath(project),
+        label: getProjectName(project, t),
+        depth,
+      })),
+    [data, t],
+  );
+
+  const selectedIds = value ? [value] : [];
+  const handleChange = (ids: string[]) => onChange(ids[0] ?? '');
+
+  return (
+    <div className="project-filter project-filter--full-width">
+      <HierarchicalSelect
+        items={items}
+        selectedIds={selectedIds}
+        onSelectionChange={handleChange}
+        placeholder={t('Select a project')}
+        clearLabel={t('No project')}
+        isLoading={isLoading}
+        error={error ? getErrorMessage(error) : undefined}
+        aria-label={ariaLabel ?? t('Select project')}
+        singleSelect
       />
     </div>
   );

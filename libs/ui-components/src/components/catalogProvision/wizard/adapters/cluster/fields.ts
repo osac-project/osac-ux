@@ -1,4 +1,4 @@
-import type { ResourceSelectValue } from '../../../../Form/resourceSelectValue';
+import { emptyResourceSelectValue, type ResourceSelectValue } from '../../../../Form/resourceSelectValue';
 
 export interface ClusterNodeSetRow {
   rowId: string;
@@ -12,9 +12,10 @@ export interface ClusterWizardValues {
   metadata: {
     name: string;
     project: string;
+    description?: string;
   };
   spec: {
-    sshPublicKey: string;
+    sshPublicKeySecret: ResourceSelectValue;
     pullSecretSecret: {
       name: string;
     };
@@ -36,7 +37,8 @@ export interface ClusterWizardValues {
 }
 
 export const CLUSTER_SSH_KEY_WIRE_PATH = 'ssh_public_key';
-export const CLUSTER_SSH_KEY_FORM_PATH = 'spec.sshPublicKey';
+export const CLUSTER_SSH_KEY_FORM_PATH = 'spec.sshPublicKeySecret';
+export { emptyResourceSelectValue };
 export const CLUSTER_PULL_SECRET_WIRE_PATH = 'pull_secret_secret.name';
 export const CLUSTER_PULL_SECRET_FORM_PATH = 'spec.pullSecretSecret.name';
 export const CLUSTER_VERSION_WIRE_PATH = 'version';

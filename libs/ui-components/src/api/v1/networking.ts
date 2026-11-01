@@ -299,6 +299,30 @@ export const useDeleteVirtualNetwork = () => {
   });
 };
 
+// MISSING: VirtualNetworks Update RPC not yet in the public proto — predicted from standard OSAC update pattern
+export const useUpdateVirtualNetwork = () => {
+  const client = useApiFetch(VirtualNetworks);
+  const qc = useApiQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      input,
+    }: {
+      id: string;
+      input: MessageInitShape<typeof VirtualNetworkSchema>;
+    }) => {
+      const resp = await (client as unknown as { update: (req: unknown) => Promise<{ object?: VirtualNetwork }> }).update({
+        object: { ...input, id },
+        updateMask: { paths: ['metadata.name', 'metadata.description'] },
+      });
+      const vn = resp.object;
+      if (!vn?.id) throw new Error('Update response missing id');
+      return vn;
+    },
+    onSuccess: () => invalidateVirtualNetworksQueries(qc),
+  });
+};
+
 export const useCreateSubnet = () => {
   const client = useApiFetch(Subnets);
   const qc = useApiQueryClient();
