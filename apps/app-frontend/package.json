@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "mock": "VITE_MOCK_MODE=true vite --port 5174",
-    "build": "tsc -b tsconfig.build.json && vite build",
+        "mock": "VITE_MOCK_MODE=true vite --port 5174",
+        "build": "tsc -b tsconfig.build.json && vite build",
+        "build:mock": "VITE_BASE_PATH=/osac-ux/ VITE_MOCK_MODE=true tsc -b tsconfig.build.json && VITE_BASE_PATH=/osac-ux/ VITE_MOCK_MODE=true vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
