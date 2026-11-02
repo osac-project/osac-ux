@@ -93,6 +93,9 @@ import {
 import type { UserRole } from '@osac/ui-components/shellTypes';
 import type { MockApiFixtures } from '@osac/ui-components/test-utils/createMockConnectTransport';
 
+// Seconds since epoch, truncated to an integer so it is safe to pass to BigInt().
+const NOW_SECONDS = BigInt(Math.floor(Date.now() / 1000));
+
 // ---------------------------------------------------------------------------
 // Persona configuration
 // ---------------------------------------------------------------------------
@@ -1886,7 +1889,7 @@ const adminVolumes: PrivateVolume[] = [
     metadata: {
       name: 'vol-1',
       tenant: 'acme-corporation',
-      creationTimestamp: { seconds: BigInt(Math.floor(Date.now() / 1000 - 3600)), nanos: 0 },
+      creationTimestamp: { seconds: NOW_SECONDS - 3600n, nanos: 0 },
     },
     spec: {
       storageTier: 'fast',
@@ -1904,7 +1907,7 @@ const adminVolumes: PrivateVolume[] = [
       protocol: PrivateStorageProtocol.BLOCK,
       provider: 'vast',
       vendorContext: { subsystem: 'nqn.2023-08.io.vast:vol-12345', vip_pool_name: 'default' },
-      stateTransitionTime: { seconds: BigInt(Math.floor(Date.now() / 1000 - 3000)), nanos: 0 },
+      stateTransitionTime: { seconds: NOW_SECONDS - 3000n, nanos: 0 },
     },
   } as unknown as PrivateVolume,
   {
@@ -1912,7 +1915,7 @@ const adminVolumes: PrivateVolume[] = [
     metadata: {
       name: 'vol-2',
       tenant: 'acme-corporation',
-      creationTimestamp: { seconds: BigInt(Math.floor(Date.now() / 1000 - 7200)), nanos: 0 },
+      creationTimestamp: { seconds: NOW_SECONDS - 7200n, nanos: 0 },
     },
     spec: {
       storageTier: 'standard',
@@ -1930,7 +1933,7 @@ const adminVolumes: PrivateVolume[] = [
       protocol: PrivateStorageProtocol.BLOCK,
       provider: 'vast',
       vendorContext: { subsystem: 'nqn.2023-08.io.vast:vol-67890', vip_pool_name: 'default' },
-      stateTransitionTime: { seconds: BigInt(Math.floor(Date.now() / 1000 - 6800)), nanos: 0 },
+      stateTransitionTime: { seconds: NOW_SECONDS - 6800n, nanos: 0 },
     },
   } as unknown as PrivateVolume,
   {
@@ -1938,7 +1941,7 @@ const adminVolumes: PrivateVolume[] = [
     metadata: {
       name: 'database-vol',
       tenant: 'globex-corp',
-      creationTimestamp: { seconds: BigInt(Math.floor(Date.now() / 1000 - 10800)), nanos: 0 },
+      creationTimestamp: { seconds: NOW_SECONDS - 10800n, nanos: 0 },
     },
     spec: {
       storageTier: 'fast',
@@ -1956,7 +1959,7 @@ const adminVolumes: PrivateVolume[] = [
       protocol: PrivateStorageProtocol.BLOCK,
       provider: 'vast',
       vendorContext: { subsystem: 'nqn.2023-08.io.vast:vol-abcde', vip_pool_name: 'default' },
-      stateTransitionTime: { seconds: BigInt(Math.floor(Date.now() / 1000 - 10400)), nanos: 0 },
+      stateTransitionTime: { seconds: NOW_SECONDS - 10400n, nanos: 0 },
     },
   } as unknown as PrivateVolume,
 ];
