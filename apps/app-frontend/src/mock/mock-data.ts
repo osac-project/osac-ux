@@ -1886,7 +1886,7 @@ const adminVolumes: PrivateVolume[] = [
     metadata: {
       name: 'vol-1',
       tenant: 'acme-corporation',
-      creationTimestamp: { seconds: BigInt(Date.now() / 1000 - 3600), nanos: 0 },
+      creationTimestamp: { seconds: BigInt(Math.floor(Date.now() / 1000 - 3600)), nanos: 0 },
     },
     spec: {
       storageTier: 'fast',
@@ -1904,7 +1904,7 @@ const adminVolumes: PrivateVolume[] = [
       protocol: PrivateStorageProtocol.BLOCK,
       provider: 'vast',
       vendorContext: { subsystem: 'nqn.2023-08.io.vast:vol-12345', vip_pool_name: 'default' },
-      stateTransitionTime: { seconds: BigInt(Date.now() / 1000 - 3000), nanos: 0 },
+      stateTransitionTime: { seconds: BigInt(Math.floor(Date.now() / 1000 - 3000)), nanos: 0 },
     },
   } as unknown as PrivateVolume,
   {
@@ -1912,7 +1912,7 @@ const adminVolumes: PrivateVolume[] = [
     metadata: {
       name: 'vol-2',
       tenant: 'acme-corporation',
-      creationTimestamp: { seconds: BigInt(Date.now() / 1000 - 7200), nanos: 0 },
+      creationTimestamp: { seconds: BigInt(Math.floor(Date.now() / 1000 - 7200)), nanos: 0 },
     },
     spec: {
       storageTier: 'standard',
@@ -1930,7 +1930,7 @@ const adminVolumes: PrivateVolume[] = [
       protocol: PrivateStorageProtocol.BLOCK,
       provider: 'vast',
       vendorContext: { subsystem: 'nqn.2023-08.io.vast:vol-67890', vip_pool_name: 'default' },
-      stateTransitionTime: { seconds: BigInt(Date.now() / 1000 - 6800), nanos: 0 },
+      stateTransitionTime: { seconds: BigInt(Math.floor(Date.now() / 1000 - 6800)), nanos: 0 },
     },
   } as unknown as PrivateVolume,
   {
@@ -1938,7 +1938,7 @@ const adminVolumes: PrivateVolume[] = [
     metadata: {
       name: 'database-vol',
       tenant: 'globex-corp',
-      creationTimestamp: { seconds: BigInt(Date.now() / 1000 - 10800), nanos: 0 },
+      creationTimestamp: { seconds: BigInt(Math.floor(Date.now() / 1000 - 10800)), nanos: 0 },
     },
     spec: {
       storageTier: 'fast',
@@ -1956,7 +1956,7 @@ const adminVolumes: PrivateVolume[] = [
       protocol: PrivateStorageProtocol.BLOCK,
       provider: 'vast',
       vendorContext: { subsystem: 'nqn.2023-08.io.vast:vol-abcde', vip_pool_name: 'default' },
-      stateTransitionTime: { seconds: BigInt(Date.now() / 1000 - 10400), nanos: 0 },
+      stateTransitionTime: { seconds: BigInt(Math.floor(Date.now() / 1000 - 10400)), nanos: 0 },
     },
   } as unknown as PrivateVolume,
 ];
