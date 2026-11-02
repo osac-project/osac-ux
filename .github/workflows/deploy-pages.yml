@@ -2,12 +2,10 @@ name: Deploy Demo to GitHub Pages
 
 on:
   push:
-    branches:
-      - main
   workflow_dispatch:
 
 concurrency:
-  group: gh-pages-deploy
+  group: gh-pages-deploy-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
