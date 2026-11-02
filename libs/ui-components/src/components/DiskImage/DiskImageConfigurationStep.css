@@ -1,0 +1,28 @@
+.disk-image-configuration-step {
+  max-inline-size: 70rem;
+}
+
+.disk-image-guest-os-card {
+  min-block-size: 14rem;
+}
+
+.disk-image-guest-os-card--selected,
+.disk-image-guest-os-card[aria-checked='true'],
+.disk-image-guest-os-card.pf-m-selected {
+  --pf-v6-c-card--BorderColor: var(--pf-t--global--color--brand--default);
+  --pf-v6-c-card--m-selectable--m-selected--BorderColor: var(
+    --pf-t--global--color--brand--default
+  );
+}
+
+.disk-image-guest-os-card .pf-v6-c-card__header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.disk-image-architecture-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pf-t--global--spacer--lg);
+}

@@ -71,9 +71,9 @@ describe('DiskImageTable', () => {
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
       'Name',
       'Lifecycle',
-      'Guest OS family',
+      'Guest operating system',
       'Architecture',
-      'Scope',
+      'Visibility',
       'Created',
       '',
     ]);

@@ -1,6 +1,6 @@
+import { Link } from 'react-router-dom';
 import { Content, Flex, FlexItem } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
-import { Link } from 'react-router-dom';
 
 import type { InstanceType as PrivateInstanceType } from '@osac/types/private';
 

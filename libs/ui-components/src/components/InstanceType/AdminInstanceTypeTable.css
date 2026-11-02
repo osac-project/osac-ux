@@ -1,7 +1,8 @@
 .instance-types-table__name-link {
   color: var(--pf-t--global--text--color--link--default);
-  font-weight: var(--pf-t--global--font--weight--body--bold);
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: var(--pf-t--global--spacer--2xs);
 }
 
 .instance-types-table__name-link:hover,

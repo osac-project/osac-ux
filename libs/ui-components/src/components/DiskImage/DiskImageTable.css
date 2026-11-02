@@ -1,23 +1,12 @@
 .disk-images-table__name-link {
   color: var(--pf-t--global--text--color--link--default);
-  font-weight: var(--pf-t--global--font--weight--body--bold);
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: var(--pf-t--global--spacer--2xs);
 }
 
 .disk-images-table__name-link:hover,
 .disk-images-table__name-link:focus {
   color: var(--pf-t--global--text--color--link--hover);
   text-decoration: underline;
-}
-
-.disk-images-table__name-meta {
-  color: var(--pf-t--global--text--color--subtle);
-  font-size: var(--pf-t--global--font--size--body--sm);
-  line-height: var(--pf-t--global--font--line-height--body);
-}
-
-.disk-images-table__meta {
-  color: var(--pf-t--global--text--color--subtle);
-  font-size: var(--pf-t--global--font--size--body--sm);
-  line-height: var(--pf-t--global--font--line-height--body);
 }

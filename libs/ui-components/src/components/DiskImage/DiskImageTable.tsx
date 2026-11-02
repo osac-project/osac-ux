@@ -1,7 +1,7 @@
-import { Content, Flex, FlexItem } from '@patternfly/react-core';
+import { Link } from 'react-router-dom';
+import { Flex, FlexItem } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import type { TFunction } from 'i18next';
-import { Link } from 'react-router-dom';
 
 import { Architecture, type DiskImage, GuestOSFamily } from '@osac/types';
 import { type Tenant } from '@osac/types/private';
@@ -42,9 +42,9 @@ const DiskImageTable = ({ diskImages, tenants }: DiskImageTableProps) => {
         <Tr>
           <Th>{t('Name')}</Th>
           <Th>{t('Lifecycle')}</Th>
-          <Th>{t('Guest OS family')}</Th>
+          <Th>{t('Guest operating system')}</Th>
           <Th>{t('Architecture')}</Th>
-          <Th>{t('Scope')}</Th>
+          <Th>{t('Visibility')}</Th>
           <Th>{t('Created')}</Th>
           <Th aria-label={t('Actions')} />
         </Tr>
@@ -57,9 +57,7 @@ const DiskImageTable = ({ diskImages, tenants }: DiskImageTableProps) => {
           const isGlobal = tenantId === 'shared';
           const tenantName = tenants.find((tenant) => tenant.id === tenantId)?.metadata?.name;
           const architectureLabel = architecture.length
-            ? architecture
-                .map((value) => architectureText[value] ?? t('Unspecified'))
-                .join(', ')
+            ? architecture.map((value) => architectureText[value] ?? t('Unspecified')).join(', ')
             : '—';
 
           return (
@@ -79,7 +77,7 @@ const DiskImageTable = ({ diskImages, tenants }: DiskImageTableProps) => {
               <Td dataLabel={t('Lifecycle')}>
                 <DiskImageLifecycleLabel lifecycle={diskImage.spec?.lifecycle} />
               </Td>
-              <Td dataLabel={t('Guest OS family')}>
+              <Td dataLabel={t('Guest operating system')}>
                 {
                   guestOsFamilyText[
                     diskImage.spec?.guestOsFamily ?? GuestOSFamily.GUEST_OS_FAMILY_UNSPECIFIED
@@ -87,21 +85,8 @@ const DiskImageTable = ({ diskImages, tenants }: DiskImageTableProps) => {
                 }
               </Td>
               <Td dataLabel={t('Architecture')}>{architectureLabel}</Td>
-              <Td dataLabel={t('Scope')}>
-                {isGlobal ? (
-                  t('Global')
-                ) : (
-                  <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsXs' }}>
-                    <FlexItem>{tenantName ?? tenantId ?? '—'}</FlexItem>
-                    {tenantId ? (
-                      <FlexItem>
-                        <Content component="small" className="disk-images-table__meta">
-                          {t('Tenant')}
-                        </Content>
-                      </FlexItem>
-                    ) : null}
-                  </Flex>
-                )}
+              <Td dataLabel={t('Visibility')}>
+                {isGlobal ? t('Global') : (tenantName ?? tenantId ?? '—')}
               </Td>
               <Td dataLabel={t('Created')}>
                 <Timestamp value={diskImage.metadata?.creationTimestamp} />

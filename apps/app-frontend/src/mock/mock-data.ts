@@ -41,6 +41,7 @@ import type {
 } from '@osac/types';
 import {
   AddOnOperatorInstallState,
+  Architecture,
   BareMetalInstanceConditionType,
   BareMetalInstanceRunStrategy,
   BareMetalInstanceState,
@@ -78,15 +79,15 @@ import type {
   InstanceType as PrivateInstanceType,
   StorageTier as PrivateStorageTier,
   Tenant as PrivateTenant,
-  StorageBackend,
   Volume as PrivateVolume,
+  StorageBackend,
 } from '@osac/types/private';
 import {
   ExternalIPPoolState,
   IPFamily,
+  StorageProtocol as PrivateStorageProtocol,
   StorageTierState as PrivateStorageTierState,
   StorageBackendState,
-  StorageProtocol as PrivateStorageProtocol,
   TenantConditionType,
   TenantState,
 } from '@osac/types/private';
@@ -162,18 +163,86 @@ const instanceTypes: InstanceType[] = [
 const diskImages: DiskImage[] = [
   {
     id: 'di-rhel',
-    metadata: { name: 'rhel-9.4', description: 'Red Hat Enterprise Linux 9.4' },
+    metadata: {
+      name: 'rhel-9-5',
+      description: 'Red Hat Enterprise Linux 9.5',
+      tenant: 'shared',
+      creationTimestamp: { seconds: BigInt(1785664860), nanos: 0 },
+    },
     spec: {
       lifecycle: DiskImageLifecycle.AVAILABLE,
       guestOsFamily: GuestOSFamily.GUEST_OS_FAMILY_LINUX,
+      architecture: [Architecture.AMD64, Architecture.ARM64],
     },
   } as unknown as DiskImage,
   {
-    id: 'di-fedora',
-    metadata: { name: 'fedora-40', description: 'Fedora Linux 40' },
+    id: 'di-rhel-9-4',
+    metadata: {
+      name: 'rhel-9-4',
+      description: 'Red Hat Enterprise Linux 9.4',
+      tenant: 'shared',
+      creationTimestamp: { seconds: BigInt(1773307200), nanos: 0 },
+    },
+    spec: {
+      lifecycle: DiskImageLifecycle.DEPRECATED,
+      guestOsFamily: GuestOSFamily.GUEST_OS_FAMILY_LINUX,
+      architecture: [Architecture.AMD64],
+    },
+  } as unknown as DiskImage,
+  {
+    id: 'di-windows-2022',
+    metadata: {
+      name: 'windows-2022',
+      description: 'Microsoft Windows Server 2022',
+      tenant: 'tenant-acme',
+      creationTimestamp: { seconds: BigInt(1784385900), nanos: 0 },
+    },
+    spec: {
+      lifecycle: DiskImageLifecycle.AVAILABLE,
+      guestOsFamily: GuestOSFamily.GUEST_OS_FAMILY_WINDOWS,
+      architecture: [Architecture.AMD64],
+    },
+  } as unknown as DiskImage,
+  {
+    id: 'di-centos-stream-9',
+    metadata: {
+      name: 'centos-stream-9',
+      description: 'CentOS Stream 9',
+      tenant: 'shared',
+      creationTimestamp: { seconds: BigInt(1780311600), nanos: 0 },
+    },
     spec: {
       lifecycle: DiskImageLifecycle.AVAILABLE,
       guestOsFamily: GuestOSFamily.GUEST_OS_FAMILY_LINUX,
+      architecture: [Architecture.AMD64, Architecture.S390X],
+    },
+  } as unknown as DiskImage,
+  {
+    id: 'di-ubuntu-22-04',
+    metadata: {
+      name: 'ubuntu-22-04',
+      description: 'Ubuntu 22.04 LTS',
+      tenant: 'shared',
+      creationTimestamp: { seconds: BigInt(1775729520), nanos: 0 },
+    },
+    spec: {
+      lifecycle: DiskImageLifecycle.AVAILABLE,
+      guestOsFamily: GuestOSFamily.GUEST_OS_FAMILY_LINUX,
+      architecture: [Architecture.AMD64],
+    },
+  } as unknown as DiskImage,
+  {
+    id: 'di-rhel-8-10',
+    metadata: {
+      name: 'rhel-8-10',
+      description: 'Red Hat Enterprise Linux 8.10',
+      tenant: 'shared',
+      creationTimestamp: { seconds: BigInt(1770050400), nanos: 0 },
+    },
+    spec: {
+      lifecycle: DiskImageLifecycle.AVAILABLE,
+      guestOsFamily: GuestOSFamily.GUEST_OS_FAMILY_LINUX,
+      architecture: [Architecture.AMD64],
     },
   } as unknown as DiskImage,
 ];

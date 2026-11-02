@@ -1,0 +1,15 @@
+.disk-image-scope-card {
+  cursor: pointer;
+}
+
+.disk-image-scope-card--selected,
+.disk-image-scope-card[aria-checked='true'],
+.disk-image-scope-card.pf-m-selected {
+  --pf-v6-c-card--BorderColor: var(--pf-t--global--color--brand--default);
+  --pf-v6-c-card--m-selectable--m-selected--BorderColor: var(
+    --pf-t--global--color--brand--default
+  );
+  border-color: var(--pf-t--global--color--brand--default);
+  border-style: solid;
+  border-width: var(--pf-t--global--border--width--box--clicked);
+}
