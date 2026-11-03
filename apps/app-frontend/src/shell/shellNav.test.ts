@@ -128,7 +128,7 @@ describe('navRowsForRole', () => {
       navRowsForRole('admin', tIdentity, allServices)
         .slice(0, 4)
         .map((row) => row.id),
-    ).toEqual(['catalog', 'nav-administration', 'nav-infrastructure', 'secrets']);
+    ).toEqual(['catalog', 'nav-administration', 'secrets']);
   });
 
   it('includes Catalog for admin and tenant roles but not IDP manager', () => {
@@ -196,6 +196,12 @@ describe('navRowsForRole', () => {
     expect(findSection('admin', 'nav-administration')?.children).toEqual([
       { kind: 'link', id: 'tenant', label: 'Tenants', path: '/admin/tenants' },
       { kind: 'link', id: 'billing', label: 'Billing', path: '/admin/billing' },
+      {
+        kind: 'link',
+        id: 'external-ip-pools',
+        label: 'External IP pools',
+        path: '/admin/infrastructure/external-ip-pools',
+      },
     ]);
   });
 
@@ -204,49 +210,20 @@ describe('navRowsForRole', () => {
     expect(findSection('admin', 'nav-administration')?.children).toEqual([
       { kind: 'link', id: 'tenant', label: 'Tenants', path: '/admin/tenants' },
       { kind: 'link', id: 'billing', label: 'Billing', path: '/admin/billing' },
+      {
+        kind: 'link',
+        id: 'external-ip-pools',
+        label: 'External IP pools',
+        path: '/admin/infrastructure/external-ip-pools',
+      },
     ]);
   });
 
-  it('Infrastructure section shows up only for admin role and contains storage, instance types, external IP pools, bare metal instance types, and disk images', () => {
-    expect(findSection('admin', 'nav-infrastructure')).toEqual({
-      kind: 'section',
-      id: 'nav-infrastructure',
-      label: 'Infrastructure',
-      children: [
-        {
-          kind: 'link',
-          id: 'storage',
-          label: 'Storage',
-          path: '/admin/infrastructure/storage',
-        },
-        {
-          kind: 'link',
-          id: 'instance-types',
-          label: 'Instance types',
-          path: '/admin/infrastructure/instance-types',
-          service: ServiceTier.VMAAS,
-        },
-        {
-          kind: 'link',
-          id: 'external-ip-pools',
-          label: 'External IP pools',
-          path: '/admin/infrastructure/external-ip-pools',
-        },
-        {
-          kind: 'link',
-          id: 'baremetal-instance-types',
-          label: 'Bare metal instance types',
-          path: '/admin/infrastructure/baremetal-instance-types',
-          service: ServiceTier.BMAAS,
-        },
-        {
-          kind: 'link',
-          id: 'disk-images',
-          label: 'Disk images',
-          path: '/admin/infrastructure/disk-images',
-        },
-      ],
-    });
+  it('hides Infrastructure and keeps only External IP pools under Administration for admin role', () => {
+    expect(findSection('admin', 'nav-infrastructure')).toBeUndefined();
+    expect(findSection('admin', 'nav-administration')?.children).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: 'external-ip-pools' })]),
+    );
     for (const role of ['tenant-user', 'tenant-admin', 'tenant-idp-manager'] as UserRole[]) {
       expect(findSection(role, 'nav-infrastructure')).toBeUndefined();
     }

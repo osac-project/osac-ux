@@ -65,50 +65,11 @@ const getAdminNav = (t: TFunction): NavRow[] => [
     children: [
       { kind: 'link', id: 'tenant', label: t('Tenants'), path: '/admin/tenants' },
       { kind: 'link', id: 'billing', label: t('Billing'), path: '/admin/billing' },
-    ],
-  },
-  {
-    kind: 'section',
-    id: 'nav-infrastructure',
-    label: t('Infrastructure'),
-    children: [
-      {
-        kind: 'link',
-        id: 'storage',
-        label: t('Storage'),
-        path: '/admin/infrastructure/storage',
-      },
-      {
-        kind: 'link',
-        id: 'admin-volumes',
-        label: t('Volumes'),
-        path: '/admin/infrastructure/storage/volumes',
-      },
-      {
-        kind: 'link',
-        id: 'instance-types',
-        label: t('Instance types'),
-        path: '/admin/infrastructure/instance-types',
-        service: ServiceTier.VMAAS,
-      },
       {
         kind: 'link',
         id: 'external-ip-pools',
         label: t('External IP pools'),
         path: '/admin/infrastructure/external-ip-pools',
-      },
-      {
-        kind: 'link',
-        id: 'baremetal-instance-types',
-        label: t('Bare metal instance types'),
-        path: '/admin/infrastructure/baremetal-instance-types',
-        service: ServiceTier.BMAAS,
-      },
-      {
-        kind: 'link',
-        id: 'disk-images',
-        label: t('Disk images'),
-        path: '/admin/infrastructure/disk-images',
       },
     ],
   },
