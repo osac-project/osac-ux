@@ -36,6 +36,18 @@ const vmItem: ComputeInstanceCatalogItem = {
     project: 'foo',
     shared: true,
   },
+  fields: {
+    instanceType: {
+      behavior: { case: 'locked', value: { id: 'it-small', name: 'standard-2-4' } },
+    },
+    bootDisk: {
+      sizeGib: { behavior: { case: 'locked', value: 40 } },
+      storageTier: {
+        behavior: { case: 'locked', value: { id: 'tier-fast', name: 'Fast SSD' } },
+      },
+    },
+    userData: { behavior: { case: 'locked', value: '#cloud-config' } },
+  } as ComputeInstanceCatalogItem['fields'],
   templateParameters: {},
 };
 
@@ -47,5 +59,10 @@ describe('CatalogItemDetailContent', () => {
     expect(screen.getByText('RHEL 9 base image')).toBeInTheDocument();
     expect(screen.getByText('RHEL 9 template')).toBeInTheDocument();
     expect(screen.getByText('tpl-rhel-9')).toBeInTheDocument();
+    expect(screen.getByText('Hardware specifications')).toBeInTheDocument();
+    expect(screen.getByText('standard-2-4 (it-small)')).toBeInTheDocument();
+    expect(screen.getByText('40 GiB')).toBeInTheDocument();
+    expect(screen.getByText('Fast SSD (tier-fast)')).toBeInTheDocument();
+    expect(screen.getByText('Configured')).toBeInTheDocument();
   });
 });
