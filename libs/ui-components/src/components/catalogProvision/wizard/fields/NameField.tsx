@@ -27,7 +27,7 @@ const NameField = ({
       label={t('Name')}
       fieldId={fieldId}
       isRequired
-      helperText={t('Enter a name, or click the Generate icon to create one.')}
+      helperText={t('Enter a name or click the generate name one.')}
       isDisabled={isDisabled}
     >
       {generateName ? (

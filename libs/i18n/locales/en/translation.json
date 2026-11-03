@@ -511,7 +511,7 @@
   "Encryption": "Encryption",
   "Endpoint": "Endpoint",
   "Endpoint is required": "Endpoint is required",
-  "Enter a name, or click the Generate icon to create one.": "Enter a name, or click the Generate icon to create one.",
+  "Enter a name or click the generate name one.": "Enter a name or click the generate name one.",
   "Enter a valid email address": "Enter a valid email address",
   "Enter a valid OpenSSH public key (ssh-rsa, ssh-ed25519, or ecdsa-sha2-nistp*).": "Enter a valid OpenSSH public key (ssh-rsa, ssh-ed25519, or ecdsa-sha2-nistp*).",
   "Enter both username and password, or leave both blank": "Enter both username and password, or leave both blank",
