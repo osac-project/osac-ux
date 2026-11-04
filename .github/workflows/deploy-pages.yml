@@ -32,11 +32,8 @@ jobs:
       - name: Build mock website
         run: pnpm --filter @osac/app-frontend run build:mock
 
-      - name: Make the VMaaS prototype the Pages entry point
-        run: cp apps/app-frontend/pages-index.html apps/app-frontend/dist/index.html
-
       - name: Verify website output
-        run: test -f apps/app-frontend/dist/index.html && test -f apps/app-frontend/dist/vmaas-ux-prototype.html
+        run: test -f apps/app-frontend/dist/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
