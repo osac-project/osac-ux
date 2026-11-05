@@ -8344,8 +8344,7 @@
 
     function secretNameLinkHtml(id) {
       const sec = secretById(id);
-      if (!sec) return '—';
-      return detailNameLink(sec.name, 'data-open-secret', sec.id);
+      return detailNameLink(sec?.name || id, 'data-open-secret', id);
     }
 
     function overviewInlineConfigHtml(text) {
