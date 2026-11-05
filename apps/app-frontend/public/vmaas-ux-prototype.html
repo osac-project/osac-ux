@@ -15066,9 +15066,10 @@
       const hostHtml = `
         <div class="vm-access-section__host-row">
           <span>${hostValue}</span>
-          ${actions}
+          ${status === 'failed' ? '' : actions}
         </div>
         ${hostMeta}
+        ${status === 'failed' ? `<div class="vm-access-section__host-row pf-v6-u-mt-sm">${actions}</div>` : ''}
         ${autoAttached ? '<p class="vm-access-section__meta">This IP is managed with the VM and is detached only when the VM is deleted.</p>' : ''}`;
 
       return `
