@@ -9820,11 +9820,11 @@
     /** Review display — never echo Unattend.xml body (write-only secret). */
     function sysprepReviewDisplay(d = state.data) {
       ensureSysprepState(d);
-      if (!isSysprepConfigured(d)) return 'Not configured';
+      if (!isSysprepConfigured(d)) return 'Not provided';
       if (d.sysprepMode === 'attach') {
         const sec = SYSPREP_SECRETS.find(s => s.id === d.sysprepSecretId);
         const name = sec?.name ? String(sec.name).replace(/</g, '&lt;') : 'secret';
-        return `Provided (hidden) · ${name}`;
+        return name;
       }
       return 'Provided (hidden)';
     }
@@ -20481,9 +20481,6 @@
             ? String(secretDisplayName(d.cloudInitSecretId) || d.cloudInitSecretId).replace(/</g, '&lt;')
             : (initConfigured ? 'Configured' : 'Not configured'));
         const initLabel = windowsAccess ? 'Sysprep (Unattend.xml)' : 'Cloud-init';
-        const sysprepModeLabel = !windowsAccess
-          ? ''
-          : (d.sysprepMode === 'attach' ? 'Select secret' : 'Enter value');
         ensureNetworkingDefaults(d);
         const networkModeLabel = d.networkMode === 'custom' ? 'Custom network' : 'Tenant default';
         const vnet = d.virtualNetwork
@@ -20562,9 +20559,6 @@
               ${windowsAccess
                 ? reviewRow('Access method', 'Password / RDP after create')
                 : reviewRow('SSH public key', sshVal)}
-              ${windowsAccess && initConfigured
-                ? reviewRow('Sysprep method', sysprepModeLabel)
-                : ''}
               ${reviewRow(initLabel, initVal)}
             `)}
           </div>
