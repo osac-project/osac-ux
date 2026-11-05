@@ -14998,7 +14998,7 @@
           vm.externalIpPending = address;
           vm.externalIp = '';
           vm.externalIpAttached = false;
-          vm.externalIpError = `Failed to attach ${address}. The address may no longer be available. Try again or choose another IP.`;
+          vm.externalIpError = `Failed to attach ${address}.`;
           renderVmDetail();
           toast(`Failed to attach external IP ${address}.`, 'danger');
           return;
@@ -15009,7 +15009,7 @@
           vm.externalIpPending = address;
           vm.externalIp = '';
           vm.externalIpAttached = false;
-          vm.externalIpError = `Failed to attach ${address}. The address is no longer available.`;
+          vm.externalIpError = `Failed to attach ${address}.`;
           renderVmDetail();
           toast(`Failed to attach external IP ${address}.`, 'danger');
           return;
