@@ -7194,7 +7194,7 @@
               <span class="pf-v6-c-form-control__toggle-icon"><svg viewBox="0 0 320 512" aria-hidden="true" focusable="false"><path d="M31.3 192h257.3c17.8 0 26.7 21.5 14.1 34.1L174.1 354.8c-7.8 7.8-20.5 7.8-28.3 0L17.2 226.1C4.6 213.5 13.5 192 31.3 192z"/></svg></span>
             </span>
           </span>
-          <span class="prototype-build-tag" id="prototype-build-tag">Build Nov 4 · UX audit</span>
+          <span class="prototype-build-tag" id="prototype-build-tag">UX audit prototype</span>
         </div>
       </div>
       <div class="console__body">
@@ -13482,18 +13482,24 @@
       return `<p class="form-helper ci-access-help" id="ci-access-help">${CATALOG_ACCESS_HELP_TEXT}</p>`;
     }
 
-    /**
-     * PF6 Switch. Accessible name is static and describes ON ("Editable").
-     * Visible label is aria-hidden and shows Editable / Locked from :checked.
-     */
+    /** PF6 Switch: keep the visible state short and name the field for screen readers. */
     function renderCatalogAccessSwitch({ stateKey, value }) {
       const editable = value !== 'locked';
       const id = `ci-access-${stateKey}`;
+      const fieldNames = {
+        diskImageAccess: 'disk image',
+        computeAccess: 'instance type',
+        bootDiskAccess: 'boot disk size',
+        bootStorageTierAccess: 'boot storage tier',
+        extraDisksAccess: 'additional disks',
+        initAccess: 'initial run configuration',
+      };
+      const accessibleName = `Editable: ${fieldNames[stateKey] || 'field'}`;
       return `
         <label class="pf-v6-c-switch" for="${id}">
           <input class="pf-v6-c-switch__input" type="checkbox" role="switch" id="${id}"
             data-ci-access-state="${stateKey}"
-            aria-label="Editable"
+            aria-label="${accessibleName}"
             ${editable ? 'checked' : ''} />
           <span class="pf-v6-c-switch__toggle">
             <span class="pf-v6-c-switch__toggle-icon">
@@ -23310,7 +23316,8 @@
           c.fieldErrors.tenant = errors.ciTenants;
         }
         renderCreateCatalogItemWizard();
-        toast(Object.values(errors)[0] || 'Fix the highlighted fields.');
+        const otherError = Object.entries(errors).find(([field]) => field !== 'ciTenants')?.[1];
+        if (otherError) toast(otherError);
         return false;
       }
       state.fieldErrors = {};
