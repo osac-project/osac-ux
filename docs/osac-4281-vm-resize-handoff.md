@@ -29,6 +29,8 @@ When the API reports that a resize is applying without a restart, keep **Running
 
 After the user restarts a VM with a scheduled resize, remove **Restart required** and show **Resize in progress** while the resize is still applying, even if the VM power state has returned to **Running**. Its tooltip says, “The VM has restarted. The new CPU and memory are still being applied.” The collapsed info notification has the distinct visible title **Resize in progress after restart**. Expanding it displays the requested changes and operation timing. Do not prompt for another restart. The mockup uses `fedora-aqua-barnacle-58` for this state; restarting `azure-baboon-27` also demonstrates the transition.
 
+Recent activity identifies which phase is applying and shows when the resize started. It must not say **No recent activity** during an active resize.
+
 Remove the progress label and info notification only when the API confirms completion. Then show the new instance type, CPU, and memory as active values and keep **Resize completed** in Recent activity until new VM work starts. Keep configuration progress separate from the VM power state, as required by OSAC-6578. These states require operation phase, timing, and active versus requested values from the API; the mockup timer only demonstrates completion and must not be used as production logic.
 
 The API must expose or allow derivation of both active and requested configuration values, the restart-required condition, and the resize operation phase. Backend acceptance of the update depends on OSAC-5328.

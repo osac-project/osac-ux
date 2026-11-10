@@ -17066,9 +17066,11 @@
             </section>
             <section class="catalog-hw-specs vm-overview-v2__aside-card" aria-labelledby="vm-activity-title">
               <h3 class="catalog-hw-specs__title" id="vm-activity-title">Recent activity</h3>
-              ${v.lastResizeOutcome
-                ? `<p>${v.lastResizeOutcome.label}</p><p class="muted">${v.lastResizeOutcome.time}</p>`
-                : '<p class="vm-overview-v2__aside-empty muted">No recent activity</p>'}
+              ${v.resizeProgress
+                ? `<p>${v.resizeProgress.phase === 'after-restart' ? 'VM restarted; resize in progress' : 'Resize in progress without restart'}</p><p class="muted">Started ${String(v.resizeProgress.startedAt || 'just now').replace(/</g, '&lt;')}</p>`
+                : v.lastResizeOutcome
+                  ? `<p>${v.lastResizeOutcome.label}</p><p class="muted">${v.lastResizeOutcome.time}</p>`
+                  : '<p class="vm-overview-v2__aside-empty muted">No recent activity</p>'}
             </section>
           </aside>
           </div>
