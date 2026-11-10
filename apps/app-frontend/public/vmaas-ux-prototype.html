@@ -1311,9 +1311,6 @@
     .vm-restart-required {
       margin: 0 0 20px;
     }
-    .vm-restart-required .pf-v6-c-alert {
-      --pf-v6-c-alert--m-warning--BorderTopColor: #f0ab00;
-    }
     .vm-resize-scheduled {
       margin-inline-start: 8px;
       width: max-content;
@@ -8913,7 +8910,7 @@
         title: 'Restart required',
         message: message || existing?.message || 'Changes apply after the virtual machine is restarted.',
         changes,
-        expanded: true,
+        expanded: false,
       };
       if (!Array.isArray(vm.conditions)) vm.conditions = [];
       if (!vm.conditions.some(c => /RestartRequired/i.test(c))) {
@@ -8942,7 +8939,7 @@
     function vmRestartRequiredAlertHtml(vm) {
       const rr = vm?.restartRequired;
       if (!rr || !Array.isArray(rr.changes) || !rr.changes.length) return '';
-      const expanded = rr.expanded !== false;
+      const expanded = rr.expanded === true;
       const msg = String(rr.message || 'Changes apply after the virtual machine is restarted.').replace(/</g, '&lt;');
       const changes = rr.changes.map(c => {
         const section = String(c.section || 'Details').replace(/</g, '&lt;');
@@ -8955,7 +8952,7 @@
       }).join('');
       return `
         <div class="vm-restart-required" id="vm-restart-required">
-          <div class="pf-v6-c-alert pf-m-inline pf-m-warning pf-m-expandable ${expanded ? 'pf-m-expanded' : ''}" role="status">
+          <div class="pf-v6-c-alert pf-m-inline pf-m-info pf-m-expandable ${expanded ? 'pf-m-expanded' : ''}" role="status">
             <div class="pf-v6-c-alert__toggle">
               <button class="pf-v6-c-button pf-m-plain" type="button" data-vm-restart-alert-toggle
                 aria-label="Restart required details" aria-expanded="${expanded}" aria-controls="vm-restart-required-body">
@@ -8966,7 +8963,7 @@
                 </span></span>
               </button>
             </div>
-            <div class="pf-v6-c-alert__icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></div>
+            <div class="pf-v6-c-alert__icon"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></div>
             <h4 class="pf-v6-c-alert__title">${rr.changes.some(c => c.label === 'Instance type') ? 'Restart required to apply resize' : 'Restart required'}</h4>
             <div class="pf-v6-c-alert__description" id="vm-restart-required-body" ${expanded ? '' : 'hidden'}>
               <div class="vm-restart-required__body">
