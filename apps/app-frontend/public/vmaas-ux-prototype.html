@@ -8808,12 +8808,12 @@
 
     function vmResizeScheduledLabelHtml(vm) {
       if (!vm?.activeComputeId) return '';
-      return `<span class="pf-v6-c-label pf-m-outline pf-m-grey pf-m-compact vm-resize-scheduled"
-        title="Restart the VM to apply the new CPU and memory.">
+      return `<button type="button" class="pf-v6-c-label pf-m-outline pf-m-grey pf-m-compact vm-resize-scheduled"
+        data-pf-tooltip="Restart the VM to apply the new CPU and memory.">
         <span class="pf-v6-c-label__content">
-          <span class="pf-v6-c-label__text">Resize scheduled<span class="pf-v6-screen-reader">. Restart the VM to apply the new CPU and memory.</span></span>
+          <span class="pf-v6-c-label__text">Resize scheduled</span>
         </span>
-      </span>`;
+      </button>`;
     }
 
     function vmRequiresGpu(vm) {
@@ -16294,7 +16294,7 @@
       }
       content.textContent = text;
       pfTooltipTrigger = trigger;
-      trigger.setAttribute('aria-describedby', 'pf-tooltip');
+      trigger.setAttribute('aria-describedby', 'pf-tooltip-content');
       tip.hidden = false;
       tip.classList.add('pf-m-open');
       tip.classList.add('pf-m-top');
@@ -16335,6 +16335,9 @@
       });
       document.addEventListener('focusout', e => {
         if (e.target.closest('[data-pf-tooltip]')) hidePfTooltip();
+      });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') hidePfTooltip();
       });
       window.addEventListener('scroll', hidePfTooltip, true);
       window.addEventListener('resize', hidePfTooltip);
@@ -25782,6 +25785,11 @@
       </button>
       <div class="pf-v6-c-popover__body" id="fs-help-popover-body">The following information regarding how the disks are partitioned is provided by the guest agent.</div>
     </div>
+  </div>
+
+  <div class="pf-v6-c-tooltip pf-m-top" id="pf-tooltip" role="tooltip" hidden>
+    <div class="pf-v6-c-tooltip__arrow"></div>
+    <div class="pf-v6-c-tooltip__content" id="pf-tooltip-content"></div>
   </div>
 
   <div class="pf-v6-c-popover pf-m-right" id="util-help-popover" role="dialog" aria-modal="true" aria-label="Utilization information" hidden>
