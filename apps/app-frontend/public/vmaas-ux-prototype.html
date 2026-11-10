@@ -8915,7 +8915,6 @@
      */
     function upsertVmRestartRequired(vm, { message, change } = {}) {
       if (!vm) return;
-      vm.lastResizeOutcome = null;
       const existing = vm.restartRequired && typeof vm.restartRequired === 'object'
         ? vm.restartRequired
         : null;
@@ -8956,7 +8955,6 @@
 
     function beginVmResizeApplying(vm, phase, changes) {
       if (!vm) return;
-      vm.lastResizeOutcome = null;
       const now = new Date();
       const timestamp = now.toLocaleString('en-GB');
       vm.resizeProgress = {
@@ -8992,7 +8990,6 @@
       vm.activeComputeId = null;
       vm.restartRequired = null;
       vm.resizeProgress = null;
-      vm.lastResizeOutcome = { label: 'Resize completed', time: new Date().toLocaleString('en-GB') };
       if (Array.isArray(vm.conditions)) {
         vm.conditions = vm.conditions.filter(c => !/RestartRequired/i.test(c));
       }
@@ -9002,26 +8999,12 @@
     }
 
     function vmResizeStatusAlertHtml(vm) {
-      const applying = !!vm?.resizeProgress;
-      const rr = applying ? vm.resizeProgress : vm?.restartRequired;
+      const rr = vm?.restartRequired;
       if (!rr || !Array.isArray(rr.changes) || !rr.changes.length) return '';
       const expanded = rr.expanded === true;
-      const title = applying ? (rr.phase === 'after-restart'
-        ? 'Resize in progress after restart'
-        : 'Resize in progress — no restart required')
-        : (rr.changes.some(c => c.label === 'Instance type') ? 'Restart required to apply resize' : 'Restart required');
-      const message = applying
-        ? (rr.phase === 'after-restart'
-          ? 'The VM has restarted. The requested configuration is still being applied.'
-          : 'The requested configuration is being applied without a restart.')
-        : (rr.message || 'Changes apply after the virtual machine is restarted.');
+      const title = rr.changes.some(c => c.label === 'Instance type') ? 'Restart required to apply resize' : 'Restart required';
+      const message = rr.message || 'Changes apply after the virtual machine is restarted.';
       const msg = String(message).replace(/</g, '&lt;');
-      const elapsed = rr.elapsed || (rr.startedAtMs
-        ? `${Math.max(1, Math.floor((Date.now() - rr.startedAtMs) / 60000))} min`
-        : '<1 min');
-      const progressMeta = applying
-        ? `<p class="muted">Started ${String(rr.startedAt || 'just now').replace(/</g, '&lt;')} · Last updated ${String(rr.lastUpdatedAt || 'just now').replace(/</g, '&lt;')} · Elapsed <span data-resize-elapsed="${rr.startedAtMs || ''}">${String(elapsed).replace(/</g, '&lt;')}</span></p>`
-        : '';
       const changes = rr.changes.map(c => {
         const section = String(c.section || 'Details').replace(/</g, '&lt;');
         const label = String(c.label || 'Change').replace(/</g, '&lt;');
@@ -9049,8 +9032,7 @@
             <div class="pf-v6-c-alert__description" id="vm-resize-status-body" ${expanded ? '' : 'hidden'}>
               <div class="vm-restart-required__body">
                 <p>${msg}</p>
-                ${progressMeta}
-                <p class="vm-restart-required__changes-label">${applying ? 'Requested changes:' : 'Scheduled changes:'}</p>
+                <p class="vm-restart-required__changes-label">Scheduled changes:</p>
                 <ul class="vm-restart-required__changes">${changes}</ul>
               </div>
             </div>
@@ -16304,13 +16286,6 @@
 
     let vmPowerActionTimer = null;
 
-    setInterval(() => {
-      document.querySelectorAll('[data-resize-elapsed]').forEach(el => {
-        const startedAt = Number(el.getAttribute('data-resize-elapsed'));
-        if (startedAt) el.textContent = `${Math.max(1, Math.floor((Date.now() - startedAt) / 60000))} min`;
-      });
-    }, 60000);
-
     function refreshVmStatusViews() {
       if (document.getElementById('view-vm')?.classList.contains('pf-m-active')) {
         renderVmDetail();
@@ -16880,7 +16855,7 @@
                 <section class="ethan-detail-col" aria-labelledby="vm-overview-title">
                   <h3 class="ethan-detail-col__title" id="vm-overview-title">Overview</h3>
                   ${itField('Project', projectDisplay)}
-                  ${itField('Status', statusCell(v.status, v.name))}
+                  ${itField('Status', `${statusCell(v.status, v.name)}${v.resizeProgress ? vmResizeScheduledLabelHtml(v) : ''}`)}
                   ${itField('Created', v.created || '—')}
                   ${itField('Catalog item', catalogItemDisplay)}
                 </section>
@@ -17066,11 +17041,7 @@
             </section>
             <section class="catalog-hw-specs vm-overview-v2__aside-card" aria-labelledby="vm-activity-title">
               <h3 class="catalog-hw-specs__title" id="vm-activity-title">Recent activity</h3>
-              ${v.resizeProgress
-                ? `<p>${v.resizeProgress.phase === 'after-restart' ? 'VM restarted; resize in progress' : 'Resize in progress without restart'}</p><p class="muted">Started ${String(v.resizeProgress.startedAt || 'just now').replace(/</g, '&lt;')}</p>`
-                : v.lastResizeOutcome
-                  ? `<p>${v.lastResizeOutcome.label}</p><p class="muted">${v.lastResizeOutcome.time}</p>`
-                  : '<p class="vm-overview-v2__aside-empty muted">No recent activity</p>'}
+              <p class="vm-overview-v2__aside-empty muted">No recent activity</p>
             </section>
           </aside>
           </div>
@@ -17137,7 +17108,6 @@
         alert?.classList.toggle('pf-m-expanded', expanded);
         if (description) description.hidden = !expanded;
         if (v.restartRequired) v.restartRequired.expanded = expanded;
-        if (v.resizeProgress) v.resizeProgress.expanded = expanded;
       });
       root.querySelector('#vm-detail-actions-btn')?.addEventListener('click', e => {
           e.stopPropagation();

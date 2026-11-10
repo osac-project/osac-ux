@@ -25,13 +25,11 @@ On the VM list, retain the normal power status (for example, Running). Add a sep
 
 ## Resize in progress
 
-When the API reports that a resize is applying without a restart, keep **Running** as the VM power state and show a separate **Resize in progress** label in card and table views. Its tooltip says, “The new CPU and memory are being applied without a restart.” On VM Overview, use the collapsed-by-default PF6 info notification with the visible title **Resize in progress — no restart required**. When expanded, show the requested changes and when work started, when details last changed, and elapsed time. Keep the active instance type, CPU, and memory as the main values until the API confirms the new configuration is active. The mockup uses `indigo-quokka-89` for this state.
+When the API reports that a resize is applying without a restart, keep **Running** as the VM power state and show a separate **Resize in progress** label in card and table views and beside Status on VM Overview. Its tooltip says, “The new CPU and memory are being applied without a restart.” Keep the active instance type, CPU, and memory as the main values until the API confirms the new configuration is active. The mockup uses `indigo-quokka-89` for this state.
 
-After the user restarts a VM with a scheduled resize, remove **Restart required** and show **Resize in progress** while the resize is still applying, even if the VM power state has returned to **Running**. Its tooltip says, “The VM has restarted. The new CPU and memory are still being applied.” The collapsed info notification has the distinct visible title **Resize in progress after restart**. Expanding it displays the requested changes and operation timing. Do not prompt for another restart. The mockup uses `fedora-aqua-barnacle-58` for this state; restarting `azure-baboon-27` also demonstrates the transition.
+After the user restarts a VM with a scheduled resize, remove **Restart required** and show the same compact **Resize in progress** label while the resize is still applying, even if the VM power state has returned to **Running**. Its tooltip says, “The VM has restarted. The new CPU and memory are still being applied.” Do not prompt for another restart. The mockup uses `fedora-aqua-barnacle-58` for this state; restarting `azure-baboon-27` also demonstrates the transition.
 
-Recent activity identifies which phase is applying and shows when the resize started. It must not say **No recent activity** during an active resize.
-
-Remove the progress label and info notification only when the API confirms completion. Then show the new instance type, CPU, and memory as active values and keep **Resize completed** in Recent activity until new VM work starts. Keep configuration progress separate from the VM power state, as required by OSAC-6578. These states require operation phase, timing, and active versus requested values from the API; the mockup timer only demonstrates completion and must not be used as production logic.
+Do not show a persistent progress notification, timing details, or a Recent activity entry for this brief operation. Remove the progress label only when the API confirms completion, then show the new instance type, CPU, and memory as active values and a brief success toast. Keep configuration progress separate from the VM power state, as required by OSAC-6578. These states require operation phase and active versus requested values from the API; the mockup timer only demonstrates completion and must not be used as production logic. If the operation stalls or fails, show a prominent message with details.
 
 The API must expose or allow derivation of both active and requested configuration values, the restart-required condition, and the resize operation phase. Backend acceptance of the update depends on OSAC-5328.
 
@@ -52,14 +50,6 @@ The API must expose or allow derivation of both active and requested configurati
 **VM table with separate power and resize statuses.** `indigo-quokka-89` is applying without restart; `azure-baboon-27` needs restart; `fedora-aqua-barnacle-58` is still applying after restart.
 
 ![VM table showing both resize progress cases and a scheduled resize](screenshots/vm-resize/resize-progress-table.png)
-
-**No-restart resize in progress.** The expanded info notification explains the operation while the main configuration remains active.
-
-![No-restart resize in progress on indigo-quokka-89](screenshots/vm-resize/resize-hot-in-progress.png)
-
-**Resize still in progress after restart.** The VM is Running; the operation is tracked separately.
-
-![Post-restart resize in progress on fedora-aqua-barnacle-58](screenshots/vm-resize/resize-post-restart-in-progress.png)
 
 **Expanded info notification showing scheduled changes and the active configuration on VM Overview.**
 
