@@ -9006,7 +9006,9 @@
       const rr = applying ? vm.resizeProgress : vm?.restartRequired;
       if (!rr || !Array.isArray(rr.changes) || !rr.changes.length) return '';
       const expanded = rr.expanded === true;
-      const title = applying ? 'Resize in progress'
+      const title = applying ? (rr.phase === 'after-restart'
+        ? 'Resize in progress after restart'
+        : 'Resize in progress — no restart required')
         : (rr.changes.some(c => c.label === 'Instance type') ? 'Restart required to apply resize' : 'Restart required');
       const message = applying
         ? (rr.phase === 'after-restart'
