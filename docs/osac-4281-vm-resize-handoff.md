@@ -19,7 +19,7 @@ The modal has a required typeahead Instance type field and Save/Cancel actions. 
 
 ## After Save
 
-A success toast confirms the saved request. For a Running or Paused VM that requires restart, show a persistent warning at the top of VM Overview: **Restart required to apply resize**. Keep the VM's **active** instance type, vCPUs, and memory as the main configuration values. Under **Scheduled changes**, show current → requested values for instance type, vCPUs, and memory. Keep the details visible; there is no collapsed version. A Restart action in the warning is optional and depends on the supported VM action.
+A success toast confirms the saved request. For a Running or Paused VM that requires restart, show a persistent warning at the top of VM Overview: **Restart required to apply resize**. Keep the VM's **active** instance type, vCPUs, and memory as the main configuration values. Under **Scheduled changes (current → after restart)**, show instance type, vCPUs, and memory without repeating “Configuration” before each field. Keep the details visible; there is no collapsed version. A Restart action in the warning is optional and depends on the supported VM action.
 
 On the VM list, retain the normal power status (for example, Running). Add a separate, neutral, outlined PatternFly 6 **Resize scheduled** label beside the VM name. Its tooltip says, “Restart the VM to apply the new CPU and memory.” Clear the warning and label only when the new configuration is confirmed active. A Stopped VM's new size applies on its next start.
 
