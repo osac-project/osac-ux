@@ -9117,7 +9117,7 @@
           storAbs: null, storOf: null, netIn: '0 Bs', netOut: '0 Bs',
         };
       }
-      const computeId = resolveVmComputeId(vm);
+      const computeId = vmActiveComputeId(vm);
       const specs = computeResourceSpecs(computeId);
       const cpuCount = parseInt(String(specs.cpu).match(/\d+/)?.[0] || '1', 10) || 1;
       const memOfStr = specs.mem && specs.mem !== '—' ? specs.mem : (vm.mem || '2 GiB');
