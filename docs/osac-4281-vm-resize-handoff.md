@@ -35,6 +35,10 @@ The API must expose or allow derivation of both active and requested configurati
 
 ![VM table row with Resize scheduled badge](screenshots/vm-resize/resize-scheduled-table.png)
 
+**Resize scheduled tooltip in the VM table view.** Show it on hover or keyboard focus of the label.
+
+![VM table Resize scheduled label with tooltip](screenshots/vm-resize/resize-scheduled-table-tooltip.png)
+
 **Expanded info notification showing scheduled changes and the active configuration on VM Overview.**
 
 ![Resize info notification with current and after-restart values](screenshots/vm-resize/restart-required-overview.png)
