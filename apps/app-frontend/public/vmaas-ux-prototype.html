@@ -1320,6 +1320,15 @@
       align-self: flex-start;
       margin-inline-start: 0;
     }
+    .vm-status-with-resize {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .vm-status-with-resize .vm-resize-scheduled {
+      margin-inline-start: 0;
+    }
     .vm-restart-required__body {
       margin-top: 4px;
     }
@@ -16855,7 +16864,9 @@
                 <section class="ethan-detail-col" aria-labelledby="vm-overview-title">
                   <h3 class="ethan-detail-col__title" id="vm-overview-title">Overview</h3>
                   ${itField('Project', projectDisplay)}
-                  ${itField('Status', `${statusCell(v.status, v.name)}${v.resizeProgress ? vmResizeScheduledLabelHtml(v) : ''}`)}
+                  ${itField('Status', v.resizeProgress
+                    ? `<span class="vm-status-with-resize">${statusCell(v.status, v.name)}${vmResizeScheduledLabelHtml(v)}</span>`
+                    : statusCell(v.status, v.name))}
                   ${itField('Created', v.created || '—')}
                   ${itField('Catalog item', catalogItemDisplay)}
                 </section>
