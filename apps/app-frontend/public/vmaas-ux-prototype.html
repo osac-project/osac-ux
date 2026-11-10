@@ -8457,6 +8457,7 @@
       { name: 'rhel9-black-gunnysack-58', ns: 'project-a', status: 'running', os: 'RHEL', osFull: 'Red Hat Enterprise Linux 9', imageLabel: 'RHEL 9.4', catalogItem: 'vm-gpu-training-server', conditions: ['DataVolumesReady=True', 'Ready=True'], node: 'cnvge-080.lab.eng.thv2.redhat.com', ip: '10.130.1.224', created: '19 Jan 2026, 7:29', computeResource: 'large-gpu', gpuDevices: [{ name: 'NVIDIA A100 80 GB' }], hostDevices: [{ name: 'host-pci-1' }], sshSecretId: 'ssh-cluster-admin', cloudInitSource: 'inline', cloudInit: '#cloud-config\npackages:\n  - nginx\n', bootDiskAccessMode: 'RWO' },
       { name: 'windows-golden-eider-58', ns: 'project-a', status: 'stopped', os: 'Windows', osFull: 'Microsoft Windows Server 2022', imageLabel: 'Windows Server 2022', catalogItem: 'vm-windows-workstation', conditions: ['Ready=True'], node: 'cnvge-079.lab.eng.thv2.redhat.com', ip: '—', created: '11 Feb 2026, 9:48', sysprepConfigured: true, sysprepSecretId: 'sysprep-corp-std', bootDiskAccessMode: 'RWO' },
       { name: 'fedora-aqua-barnacle-58', ns: 'yifat', status: 'running', os: 'Fedora', osFull: 'Fedora Linux 41', imageLabel: 'Fedora 41', catalogItem: 'vm-dev-workstation', conditions: ['DataVolumesReady=True', 'LiveMigratable=True'], node: 'cnvge-081.lab.eng.thv2.redhat.com', ip: '10.130.1.231', created: '11 Feb 2026, 8:49', computeResource: 'large', activeComputeId: 'small', resizeProgress: { phase: 'after-restart', startedAtMs: Date.now() - 8 * 60000, startedAt: new Date(Date.now() - 8 * 60000).toLocaleString('en-GB'), lastUpdatedAt: new Date(Date.now() - 5 * 60000).toLocaleString('en-GB'), changes: [{ section: 'Configuration', label: 'Instance type', from: 'small', to: 'large' }, { section: 'Configuration', label: 'vCPUs', from: '1 vCPU', to: '2 vCPUs' }, { section: 'Configuration', label: 'Memory', from: '2 GiB', to: '8 GiB' }] }, hostDevices: [{ name: 'host-usb-1' }], sshSecretId: 'ssh-yifat-dev', cloudInitSource: 'secret', cloudInitSecretId: 'ud-fedora-init' },
+      { name: 'debian-cobalt-heron-41', ns: 'yifat', status: 'running', os: 'Other', osFull: 'Debian 12', imageLabel: 'Debian 12', catalogItem: 'vm-dev-workstation', conditions: ['Ready=True'], node: 'cnvge-081.lab.eng.thv2.redhat.com', ip: '10.130.1.238', created: '10 Nov 2026, 16:05', computeResource: 'large', activeComputeId: 'small', resizeFailure: { reason: 'The requested instance type is unavailable. The VM is still using its previous resources.' }, bootDiskAccessMode: 'RWO' },
       { name: 'rhel8-mystic-eagle-22', ns: 'vmaas', status: 'ErrorPvcNotFound', os: 'RHEL', osFull: 'Red Hat Enterprise Linux 8', imageLabel: 'RHEL 8.10', catalogItem: 'vm-legacy-app-server', conditions: ['Provisioning=False', 'Ready=False'], node: 'cnvge-080.lab.eng.thv2.redhat.com', ip: '—', created: '22 Jan 2026, 14:42', alerts: [{ severity: 'warning', message: 'Boot disk is unavailable' }, { severity: 'warning', message: 'Virtual machine is not Ready' }], bootDiskAccessMode: 'RWO' },
       { name: 'gpu-provisioning-failed', ns: 'project-a', status: 'starting', provisioningFailed: true, provisioningFailureReason: 'ProvisioningFailed', provisioningFailureMessage: 'AAP job failed', os: 'RHEL', osFull: 'Red Hat Enterprise Linux 9', imageLabel: 'RHEL 9.4', computeResource: 'small-gpu', conditions: ['PROVISIONED=False', 'ProvisioningFailed'], node: '—', ip: '—', created: '9 Nov 2026, 15:57' },
     ];
@@ -8831,12 +8832,18 @@
 
     function vmResizeScheduledLabelHtml(vm) {
       if (!vm?.activeComputeId) return '';
+      const target = escAttr(resolveVmComputeId(vm) || 'the requested instance type');
+      if (vm.resizeFailure) {
+        return `<span class="pf-v6-c-label pf-m-outline pf-m-red pf-m-compact vm-resize-scheduled">
+          <span class="pf-v6-c-label__content"><span class="pf-v6-c-label__text">Resize failed</span></span>
+        </span>`;
+      }
       const applying = !!vm.resizeProgress;
       const label = applying ? 'Resize in progress' : 'Resize scheduled';
       const tooltip = applying
         ? (vm.resizeProgress.phase === 'after-restart'
-          ? 'The VM has restarted. The new CPU and memory are still being applied.'
-          : 'The new CPU and memory are being applied without a restart.')
+          ? `Applying ${target} after restart. No further restart is needed.`
+          : `Applying ${target} without a restart.`)
         : 'Restart the VM to apply the new CPU and memory.';
       return `<button type="button" class="pf-v6-c-label pf-m-outline pf-m-grey pf-m-compact vm-resize-scheduled"
         data-pf-tooltip="${tooltip}">
@@ -8881,11 +8888,16 @@
     /** Enabled when RUNNING, PAUSED, or STOPPED; disabled STARTING / STOPPING / DELETING. */
     function canResizeVmInstanceType(vm) {
       const kind = vmPowerKind(vm?.status);
-      return !vm?.resizeProgress && (kind === 'running' || kind === 'paused' || kind === 'stopped');
+      return !vm?.resizeProgress && !vm?.resizeFailure && !vm?.restartRequired?.changes?.some(c => c.label === 'Instance type')
+        && (kind === 'running' || kind === 'paused' || kind === 'stopped');
     }
 
     function resizeVmInstanceTypeDisabledReason(vm) {
       if (vm?.resizeProgress) return 'Resize is unavailable while a resize is in progress.';
+      if (vm?.resizeFailure) return 'Resize is unavailable while the failed resize is being resolved.';
+      if (vm?.restartRequired?.changes?.some(c => c.label === 'Instance type')) {
+        return 'Restart the VM to apply the scheduled resize before choosing another instance type.';
+      }
       const kind = vmPowerKind(vm?.status);
       if (kind === 'starting') {
         return 'Resize is unavailable while the virtual machine is starting.';
@@ -16387,6 +16399,9 @@
         return;
       }
       content.textContent = text;
+      if (pfTooltipTrigger && pfTooltipTrigger !== trigger) {
+        pfTooltipTrigger.removeAttribute('aria-describedby');
+      }
       pfTooltipTrigger = trigger;
       trigger.setAttribute('aria-describedby', 'pf-tooltip-content');
       tip.hidden = false;
@@ -16418,10 +16433,14 @@
       });
       document.addEventListener('mouseout', e => {
         const trigger = e.target.closest('[data-pf-tooltip]');
-        if (!trigger) return;
         const related = e.relatedTarget;
-        if (related && trigger.contains(related)) return;
-        hidePfTooltip();
+        if (trigger) {
+          if (related && (trigger.contains(related) || related.closest('#pf-tooltip'))) return;
+          hidePfTooltip();
+        } else if (e.target.closest('#pf-tooltip')) {
+          if (related && (related.closest('#pf-tooltip') || related.closest('[data-pf-tooltip]') === pfTooltipTrigger)) return;
+          hidePfTooltip();
+        }
       });
       document.addEventListener('focusin', e => {
         const trigger = e.target.closest('[data-pf-tooltip]');
@@ -16848,6 +16867,12 @@
       `;
 
       const resizeStatusHtml = vmResizeStatusAlertHtml(v);
+      const resizeFailureHtml = v.resizeFailure ? `
+        <div class="pf-v6-c-alert pf-m-inline pf-m-danger vm-restart-required" role="alert">
+          <div class="pf-v6-c-alert__icon"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i></div>
+          <h4 class="pf-v6-c-alert__title">Resize failed</h4>
+          <div class="pf-v6-c-alert__description">${String(v.resizeFailure.reason || 'The requested instance type could not be applied.').replace(/</g, '&lt;')}</div>
+        </div>` : '';
       const provisioningFailureHtml = v.provisioningFailed ? `
         <div class="pf-v6-c-alert pf-m-inline pf-m-danger" role="alert">
           <div class="pf-v6-c-alert__icon"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i></div>
@@ -16858,13 +16883,14 @@
         <div class="vm-overview-v2">
           <div class="vm-overview-v2__main">
             ${resizeStatusHtml}
+            ${resizeFailureHtml}
             ${provisioningFailureHtml}
             <section class="vm-overview-v2__details" aria-label="Details">
               <div class="vm-overview-v2__detail-cols">
                 <section class="ethan-detail-col" aria-labelledby="vm-overview-title">
                   <h3 class="ethan-detail-col__title" id="vm-overview-title">Overview</h3>
                   ${itField('Project', projectDisplay)}
-                  ${itField('Status', v.resizeProgress
+                  ${itField('Status', v.resizeProgress || v.resizeFailure
                     ? `<span class="vm-status-with-resize">${statusCell(v.status, v.name)}${vmResizeScheduledLabelHtml(v)}</span>`
                     : statusCell(v.status, v.name))}
                   ${itField('Created', v.created || '—')}
