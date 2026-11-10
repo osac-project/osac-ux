@@ -1315,11 +1315,7 @@
       --pf-v6-c-alert--m-warning--BorderTopColor: #f0ab00;
     }
     .vm-resize-scheduled {
-      display: inline-block;
-      margin-left: 8px;
-      color: var(--pf-t--global--text--color--subtle, #6a6e73);
-      font-size: 12px;
-      font-weight: 600;
+      margin-inline-start: 8px;
     }
     .vm-restart-required__body {
       margin-top: 4px;
@@ -8815,6 +8811,16 @@
       return vm?.activeComputeId || resolveVmComputeId(vm);
     }
 
+    function vmResizeScheduledLabelHtml(vm) {
+      if (!vm?.activeComputeId) return '';
+      return `<span class="pf-v6-c-label pf-m-outline pf-m-grey pf-m-compact vm-resize-scheduled"
+        title="Restart the VM to apply the new CPU and memory.">
+        <span class="pf-v6-c-label__content">
+          <span class="pf-v6-c-label__text">Resize scheduled<span class="pf-v6-screen-reader">. Restart the VM to apply the new CPU and memory.</span></span>
+        </span>
+      </span>`;
+    }
+
     function vmRequiresGpu(vm) {
       if (computeResourceHasGpu(resolveVmComputeId(vm))) return true;
       return Array.isArray(vm?.gpuDevices) && vm.gpuDevices.length > 0;
@@ -10290,7 +10296,7 @@
           return `<span class="cell-res">
               <span class="res-icon res-icon--vm" aria-hidden="true">VM</span>
               <button type="button" class="name-link" data-open-vm="${v.name}">${v.name}</button>
-            </span>${v.activeComputeId ? '<span class="vm-resize-scheduled" title="Restart the VM to apply the new CPU and memory.">Resize scheduled</span>' : ''}`;
+            </span>${vmResizeScheduledLabelHtml(v)}`;
         case 'project':
           return `<span class="cell-res">
               <span class="res-icon res-icon--ns" aria-hidden="true">NS</span>
@@ -12522,7 +12528,7 @@
           </div>
           <div class="vm-list-card__title-block">
             <button type="button" class="vm-list-card__name" data-open-vm="${v.name}">${v.name}</button>
-            ${v.activeComputeId ? '<span class="vm-resize-scheduled" title="Restart the VM to apply the new CPU and memory.">Resize scheduled</span>' : ''}
+            ${vmResizeScheduledLabelHtml(v)}
             <p class="vm-list-card__subtitle">${subtitle}</p>
           </div>
           <dl class="vm-list-card__specs">
