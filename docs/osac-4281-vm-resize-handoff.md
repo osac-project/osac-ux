@@ -4,7 +4,7 @@ Contact: Yifat Friman Menchik, UXD
 Updated: 10 November 2026
 
 UX Google Doc: https://docs.google.com/document/d/1kgln_LzTA3-VSP0SUM0jLce2Nvw0pix3oTYkwZuX-wE/edit  
-Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=6231410&role=admin&vm=azure-baboon-27
+Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=6cbc8ac&role=admin&vm=azure-baboon-27
 Feature: [OSAC-4277](https://redhat.atlassian.net/browse/OSAC-4277)  
 Resize: [OSAC-4281](https://redhat.atlassian.net/browse/OSAC-4281)  
 Related work: [OSAC-7576](https://redhat.atlassian.net/browse/OSAC-7576), [OSAC-7463](https://redhat.atlassian.net/browse/OSAC-7463), [OSAC-7582](https://redhat.atlassian.net/browse/OSAC-7582), [OSAC-6578](https://redhat.atlassian.net/browse/OSAC-6578)
@@ -35,33 +35,17 @@ The API must expose or allow derivation of both active and requested configurati
 
 ## Current mockup screenshots
 
-**Resize scheduled badge on the VM list.** The tooltip appears on hover or keyboard focus.
+**Restart required.** The active values remain visible until restart.
 
-![VM list card with Resize scheduled badge](screenshots/vm-resize/resize-scheduled-card.png)
+![Restart-required resize with scheduled changes](screenshots/vm-resize/restart-required-current.jpg)
 
-**Resize scheduled badge in the VM table view.**
+**Resize applying without restart.** A compact label appears beside the VM status.
 
-![VM table row with Resize scheduled badge](screenshots/vm-resize/resize-scheduled-table.png)
+![Resize in progress without restart](screenshots/vm-resize/resize-in-progress-no-restart.jpg)
 
-**Resize scheduled tooltip in the VM table view.** Show it on hover or keyboard focus of the label.
+**Resize still applying after restart.** The same label has a phase-specific tooltip.
 
-![VM table Resize scheduled label with tooltip](screenshots/vm-resize/resize-scheduled-table-tooltip.png)
-
-**VM table with separate power and resize statuses.** `indigo-quokka-89` is applying without restart; `azure-baboon-27` needs restart; `fedora-aqua-barnacle-58` is still applying after restart.
-
-![VM table showing both resize progress cases and a scheduled resize](screenshots/vm-resize/resize-progress-table.png)
-
-**Expanded info notification showing scheduled changes and the active configuration on VM Overview.**
-
-![Resize info notification with current and after-restart values](screenshots/vm-resize/restart-required-overview.png)
-
-**Default collapsed info notification.** The title remains visible, and the toggle opens the scheduled changes.
-
-![Collapsed resize info notification with persistent title](screenshots/vm-resize/restart-required-collapsed.png)
-
-**Utilization before restart shows the active 1 vCPU and 2 GiB.**
-
-![VM utilization using active CPU and memory totals](screenshots/vm-resize/active-utilization.png)
+![Resize in progress after restart](screenshots/vm-resize/resize-in-progress-after-restart.jpg)
 
 ## Provisioning failure (separate state)
 
