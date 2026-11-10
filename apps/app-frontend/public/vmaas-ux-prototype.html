@@ -8913,6 +8913,7 @@
         title: 'Restart required',
         message: message || existing?.message || 'Changes apply after the virtual machine is restarted.',
         changes,
+        expanded: true,
       };
       if (!Array.isArray(vm.conditions)) vm.conditions = [];
       if (!vm.conditions.some(c => /RestartRequired/i.test(c))) {
@@ -8941,6 +8942,7 @@
     function vmRestartRequiredAlertHtml(vm) {
       const rr = vm?.restartRequired;
       if (!rr || !Array.isArray(rr.changes) || !rr.changes.length) return '';
+      const expanded = rr.expanded !== false;
       const msg = String(rr.message || 'Changes apply after the virtual machine is restarted.').replace(/</g, '&lt;');
       const changes = rr.changes.map(c => {
         const section = String(c.section || 'Details').replace(/</g, '&lt;');
@@ -8953,10 +8955,20 @@
       }).join('');
       return `
         <div class="vm-restart-required" id="vm-restart-required">
-          <div class="pf-v6-c-alert pf-m-inline pf-m-warning" role="status">
+          <div class="pf-v6-c-alert pf-m-inline pf-m-warning pf-m-expandable ${expanded ? 'pf-m-expanded' : ''}" role="status">
+            <div class="pf-v6-c-alert__toggle">
+              <button class="pf-v6-c-button pf-m-plain" type="button" data-vm-restart-alert-toggle
+                aria-label="Restart required details" aria-expanded="${expanded}" aria-controls="vm-restart-required-body">
+                <span class="pf-v6-c-button__icon"><span class="pf-v6-c-alert__toggle-icon">
+                  <svg class="pf-v6-svg" fill="currentColor" viewBox="0 0 20 20" width="1em" height="1em" aria-hidden="true">
+                    <path d="M18.71 5.29a.996.996 0 0 0-1.41 0l-7.29 7.29-7.3-7.29a.987.987 0 0 0-1.41-.02.987.987 0 0 0-.02 1.41l.02.02 7.65 7.65c.29.29.68.44 1.06.44s.77-.15 1.06-.44l7.65-7.65a.996.996 0 0 0 0-1.41Z" />
+                  </svg>
+                </span></span>
+              </button>
+            </div>
             <div class="pf-v6-c-alert__icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></div>
             <h4 class="pf-v6-c-alert__title">${rr.changes.some(c => c.label === 'Instance type') ? 'Restart required to apply resize' : 'Restart required'}</h4>
-            <div class="pf-v6-c-alert__description" id="vm-restart-required-body">
+            <div class="pf-v6-c-alert__description" id="vm-restart-required-body" ${expanded ? '' : 'hidden'}>
               <div class="vm-restart-required__body">
                 <p>${msg}</p>
                 <p class="vm-restart-required__changes-label">Scheduled changes:</p>
@@ -17020,6 +17032,16 @@
           hidePfTooltip();
           applyVmPowerAction(b.dataset.vmAction, v.name);
         });
+      });
+      root.querySelector('[data-vm-restart-alert-toggle]')?.addEventListener('click', e => {
+        const toggle = e.currentTarget;
+        const alert = toggle.closest('.pf-v6-c-alert');
+        const description = alert?.querySelector('#vm-restart-required-body');
+        const expanded = toggle.getAttribute('aria-expanded') !== 'true';
+        toggle.setAttribute('aria-expanded', String(expanded));
+        alert?.classList.toggle('pf-m-expanded', expanded);
+        if (description) description.hidden = !expanded;
+        if (v.restartRequired) v.restartRequired.expanded = expanded;
       });
       root.querySelector('#vm-detail-actions-btn')?.addEventListener('click', e => {
           e.stopPropagation();
