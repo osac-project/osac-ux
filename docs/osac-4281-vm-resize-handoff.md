@@ -35,6 +35,10 @@ The API must expose or allow derivation of both active and requested configurati
 
 ## Current mockup screenshots
 
+**Collapsed restart notice.** The title remains visible until the VM restarts.
+
+![Collapsed restart-required notification](screenshots/vm-resize/restart-required-collapsed-current.jpg)
+
 **Restart required.** The active values remain visible until restart.
 
 ![Restart-required resize with scheduled changes](screenshots/vm-resize/restart-required-current.jpg)
@@ -46,6 +50,10 @@ The API must expose or allow derivation of both active and requested configurati
 **Resize still applying after restart.** The same label has a phase-specific tooltip.
 
 ![Resize in progress after restart](screenshots/vm-resize/resize-in-progress-after-restart.jpg)
+
+**VM table.** Resize scheduled and Resize in progress appear alongside power status.
+
+![VM table with resize status labels](screenshots/vm-resize/resize-table-current.jpg)
 
 ## Provisioning failure (separate state)
 
