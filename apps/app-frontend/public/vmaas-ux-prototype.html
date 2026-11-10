@@ -1314,26 +1314,12 @@
     .vm-restart-required .pf-v6-c-alert {
       --pf-v6-c-alert--m-warning--BorderTopColor: #f0ab00;
     }
-    .vm-restart-required__toggle {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 1.5rem;
-      height: 1.5rem;
-      margin: 0 4px 0 0;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      color: inherit;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .vm-restart-required__toggle i {
+    .vm-resize-scheduled {
+      display: inline-block;
+      margin-left: 8px;
+      color: var(--pf-t--global--text--color--subtle, #6a6e73);
       font-size: 12px;
-      transition: transform 0.15s ease;
-    }
-    .vm-restart-required__toggle[aria-expanded="false"] i {
-      transform: rotate(180deg);
+      font-weight: 600;
     }
     .vm-restart-required__body {
       margin-top: 4px;
@@ -8453,11 +8439,12 @@
           network: '5.3 KBps', netIn: '2.9 KBps', netOut: '2.4 KBps',
         },
       },
-      { name: 'azure-baboon-27', ns: 'yifat', status: 'running', os: 'RHEL', osFull: 'Red Hat Enterprise Linux 9', imageLabel: 'RHEL 9.4', catalogItem: 'vm-inference-standard', conditions: ['DataVolumesReady=True', 'LiveMigratable=True'], node: 'cnvge-079.lab.eng.thv2.redhat.com', ip: '10.130.1.223', created: '11 Feb 2026, 8:38', bootDiskAccessMode: 'RWO' },
+      { name: 'azure-baboon-27', ns: 'yifat', status: 'running', os: 'RHEL', osFull: 'Red Hat Enterprise Linux 9', imageLabel: 'RHEL 9.4', catalogItem: 'vm-inference-standard', conditions: ['DataVolumesReady=True', 'LiveMigratable=True', 'RestartRequired=True'], node: 'cnvge-079.lab.eng.thv2.redhat.com', ip: '10.130.1.223', created: '11 Feb 2026, 8:38', computeResource: 'large', activeComputeId: 'small', restartRequired: { message: 'The VM is still using its current configuration. Restart it to apply the resize.', changes: [{ section: 'Configuration', label: 'Instance type', from: 'small', to: 'large' }, { section: 'Configuration', label: 'vCPUs', from: '1 vCPU', to: '2 vCPUs' }, { section: 'Configuration', label: 'Memory', from: '2 GiB', to: '8 GiB' }] }, bootDiskAccessMode: 'RWO' },
       { name: 'rhel9-black-gunnysack-58', ns: 'project-a', status: 'running', os: 'RHEL', osFull: 'Red Hat Enterprise Linux 9', imageLabel: 'RHEL 9.4', catalogItem: 'vm-gpu-training-server', conditions: ['DataVolumesReady=True', 'Ready=True'], node: 'cnvge-080.lab.eng.thv2.redhat.com', ip: '10.130.1.224', created: '19 Jan 2026, 7:29', computeResource: 'large-gpu', gpuDevices: [{ name: 'NVIDIA A100 80 GB' }], hostDevices: [{ name: 'host-pci-1' }], sshSecretId: 'ssh-cluster-admin', cloudInitSource: 'inline', cloudInit: '#cloud-config\npackages:\n  - nginx\n', bootDiskAccessMode: 'RWO' },
       { name: 'windows-golden-eider-58', ns: 'project-a', status: 'stopped', os: 'Windows', osFull: 'Microsoft Windows Server 2022', imageLabel: 'Windows Server 2022', catalogItem: 'vm-windows-workstation', conditions: ['Ready=True'], node: 'cnvge-079.lab.eng.thv2.redhat.com', ip: '—', created: '11 Feb 2026, 9:48', sysprepConfigured: true, sysprepSecretId: 'sysprep-corp-std', bootDiskAccessMode: 'RWO' },
       { name: 'fedora-aqua-barnacle-58', ns: 'yifat', status: 'running', os: 'Fedora', osFull: 'Fedora Linux 41', imageLabel: 'Fedora 41', catalogItem: 'vm-dev-workstation', conditions: ['DataVolumesReady=True', 'LiveMigratable=True'], node: 'cnvge-081.lab.eng.thv2.redhat.com', ip: '10.130.1.231', created: '11 Feb 2026, 8:49', hostDevices: [{ name: 'host-usb-1' }], sshSecretId: 'ssh-yifat-dev', cloudInitSource: 'secret', cloudInitSecretId: 'ud-fedora-init' },
       { name: 'rhel8-mystic-eagle-22', ns: 'vmaas', status: 'ErrorPvcNotFound', os: 'RHEL', osFull: 'Red Hat Enterprise Linux 8', imageLabel: 'RHEL 8.10', catalogItem: 'vm-legacy-app-server', conditions: ['Provisioning=False', 'Ready=False'], node: 'cnvge-080.lab.eng.thv2.redhat.com', ip: '—', created: '22 Jan 2026, 14:42', alerts: [{ severity: 'warning', message: 'Boot disk is unavailable' }, { severity: 'warning', message: 'Virtual machine is not Ready' }], bootDiskAccessMode: 'RWO' },
+      { name: 'gpu-provisioning-failed', ns: 'project-a', status: 'starting', provisioningFailed: true, provisioningFailureReason: 'ProvisioningFailed', provisioningFailureMessage: 'AAP job failed', os: 'RHEL', osFull: 'Red Hat Enterprise Linux 9', imageLabel: 'RHEL 9.4', computeResource: 'small-gpu', conditions: ['PROVISIONED=False', 'ProvisioningFailed'], node: '—', ip: '—', created: '9 Nov 2026, 15:57' },
     ];
 
     const FILTER_CATALOG = {
@@ -8740,6 +8727,7 @@
       { id: 'small-gpu', label: 'small-gpu: 1 vCPU, 2 GiB Memory, 1 GPU', hourly: 1.90, gpus: 1, gpuResource: 'NVIDIA A100 40 GB' },
       { id: 'medium-gpu', label: 'medium-gpu: 2 vCPUs, 8 GiB Memory, 1 GPU', hourly: 5.80, gpus: 1, gpuResource: 'NVIDIA A100 40 GB' },
       { id: 'large-gpu', label: 'large-gpu: 4 vCPUs, 16 GiB Memory, 1 GPU', hourly: 12.40, gpus: 1, gpuResource: 'NVIDIA A100 80 GB' },
+      { id: 'xlarge-gpu', label: 'xlarge-gpu: 8 vCPUs, 32 GiB Memory, 1 GPU', hourly: 20.40, gpus: 1, gpuResource: 'NVIDIA A100 80 GB' },
       { id: '2xlarge-gpu', label: '2xlarge-gpu: 8 vCPUs, 32 GiB Memory, 2 GPUs', hourly: 28.60, gpus: 2, gpuResource: 'NVIDIA A100 80 GB' },
     ];
     const CATALOG_BOOT_DISK_GIB = [5, 10, 20];
@@ -8765,12 +8753,24 @@
       return { title: label, desc: '', hourly: c?.hourly, gpus: Number(c?.gpus) || 0 };
     }
 
+    function vmResizeGpuSummary(id) {
+      const specs = computeResourceSpecs(id);
+      return specs.gpus > 0 ? `${specs.gpus} × ${specs.gpuResource || 'GPU'}` : 'No GPU';
+    }
+
+    function vmResizeGpuCompatible(currentId, candidateId) {
+      const current = computeResourceSpecs(currentId);
+      const candidate = computeResourceSpecs(candidateId);
+      return current.gpus === candidate.gpus && current.gpuResource === candidate.gpuResource;
+    }
+
     function filteredVmComputeResources(filter = '', opts = {}) {
       const q = (filter || '').toLowerCase();
-      const { requireGpu } = opts;
+      const { requireGpu, compatibleWith } = opts;
       return COMPUTE_RESOURCES.filter(c => {
         if (requireGpu === true && !computeResourceHasGpu(c)) return false;
         if (requireGpu === false && computeResourceHasGpu(c)) return false;
+        if (compatibleWith && !vmResizeGpuCompatible(compatibleWith, c.id)) return false;
         if (!q) return true;
         return `${c.id} ${c.label}`.toLowerCase().includes(q);
       });
@@ -8809,6 +8809,10 @@
         vm.gpuDevices = [];
         vm.gpuPci = '';
       }
+    }
+
+    function vmActiveComputeId(vm) {
+      return vm?.activeComputeId || resolveVmComputeId(vm);
     }
 
     function vmRequiresGpu(vm) {
@@ -8898,16 +8902,10 @@
         if (idx >= 0) changes[idx] = { ...changes[idx], ...change };
         else changes.push(change);
       }
-      const multi = changes.length > 1;
       vm.restartRequired = {
         title: 'Restart required',
-        message: multi
-          ? 'Changes apply after the virtual machine is restarted.'
-          : (message
-            || existing?.message
-            || 'Changes apply after the virtual machine is restarted.'),
+        message: message || existing?.message || 'Changes apply after the virtual machine is restarted.',
         changes,
-        expanded: existing?.expanded !== false,
       };
       if (!Array.isArray(vm.conditions)) vm.conditions = [];
       if (!vm.conditions.some(c => /RestartRequired/i.test(c))) {
@@ -8923,6 +8921,7 @@
 
     function clearVmRestartRequired(vm) {
       if (!vm) return;
+      vm.activeComputeId = null;
       vm.restartRequired = null;
       if (Array.isArray(vm.conditions)) {
         vm.conditions = vm.conditions.filter(c => !/RestartRequired/i.test(c));
@@ -8935,28 +8934,26 @@
     function vmRestartRequiredAlertHtml(vm) {
       const rr = vm?.restartRequired;
       if (!rr || !Array.isArray(rr.changes) || !rr.changes.length) return '';
-      const expanded = rr.expanded !== false;
       const msg = String(rr.message || 'Changes apply after the virtual machine is restarted.').replace(/</g, '&lt;');
       const changes = rr.changes.map(c => {
         const section = String(c.section || 'Details').replace(/</g, '&lt;');
         const label = String(c.label || 'Change').replace(/</g, '&lt;');
-        return `<li>${section} &gt; ${label}</li>`;
+        const values = c.from != null && c.to != null
+          ? `: ${String(c.from).replace(/</g, '&lt;')} &rarr; ${String(c.to).replace(/</g, '&lt;')}`
+          : '';
+        return `<li>${section} &gt; ${label}${values}</li>`;
       }).join('');
       return `
         <div class="vm-restart-required" id="vm-restart-required">
           <div class="pf-v6-c-alert pf-m-inline pf-m-warning" role="status">
             <div class="vm-restart-required__head">
-              <button type="button" class="vm-restart-required__toggle" id="vm-restart-required-toggle"
-                aria-expanded="${expanded}" aria-controls="vm-restart-required-body" aria-label="Toggle restart required details">
-                <i class="fa-solid fa-chevron-up" aria-hidden="true"></i>
-              </button>
               <div class="pf-v6-c-alert__icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></div>
-              <div class="pf-v6-c-alert__title">Restart required</div>
+              <div class="pf-v6-c-alert__title">${rr.changes.some(c => c.label === 'Instance type') ? 'Restart required to apply resize' : 'Restart required'}</div>
             </div>
-            <div class="pf-v6-c-alert__description" id="vm-restart-required-body"${expanded ? '' : ' hidden'}>
+            <div class="pf-v6-c-alert__description" id="vm-restart-required-body">
               <div class="vm-restart-required__body">
-                <p style="margin:0;">${msg}</p>
-                <p class="vm-restart-required__changes-label">Detected changes:</p>
+                <p>${msg}</p>
+                <p class="vm-restart-required__changes-label">Scheduled changes:</p>
                 <ul class="vm-restart-required__changes">${changes}</ul>
               </div>
             </div>
@@ -9007,7 +9004,7 @@
 
     /** Overview Configuration: Instance type name + specs for nested fields. */
     function vmComputeOverviewFields(vm) {
-      const computeId = resolveVmComputeId(vm);
+      const computeId = vmActiveComputeId(vm);
       const parts = computeResourceParts(computeId);
       const specs = computeResourceSpecs(computeId);
       const cpuCount = parseInt(String(specs.cpu).match(/\d+/)?.[0] || '1', 10) || 1;
@@ -9203,7 +9200,7 @@
       const selectedParts = computeResourceParts(m.selectedId);
       const toggleDesc = selectedParts.desc || '';
       const requireGpu = !!m.requireGpu;
-      const vmComputeOptions = filteredVmComputeResources(m.filter, { requireGpu });
+      const vmComputeOptions = filteredVmComputeResources(m.filter, { requireGpu, compatibleWith: m.initialId });
       const selectionChanged = !!m.initialId && m.selectedId !== m.initialId;
       const resizeAlert = editComputeResizeAlertHtml(m.resizePath, selectionChanged);
       const submitErrorAlert = editComputeSubmitErrorAlertHtml(m.submitError);
@@ -9214,6 +9211,7 @@
         body.innerHTML = `
           ${submitErrorAlert}
           ${resizeAlert}
+          <p class="muted">${requireGpu ? `GPU configuration: ${richSelectEsc(vmResizeGpuSummary(m.initialId))}. ` : ''}GPU configuration cannot change during resize.</p>
           <div class="form-field">
           <label id="f-edit-compute-resource-label">Instance type <span class="req">*</span></label>
           <div class="rich-select rich-select--typeahead ${m.menuOpen ? 'pf-m-expanded' : ''}" id="edit-compute-select">
@@ -9239,7 +9237,7 @@
                 ${vmComputeOptions.map(c => {
                   const parts = computeResourceParts(c.id);
                   const rate = formatComputeHourlyRate(c.hourly);
-                  const desc = [parts.desc, rate].filter(Boolean).join(' · ');
+                  const desc = [parts.desc, vmResizeGpuSummary(c.id), rate].filter(Boolean).join(' · ');
                   return `
                   <button type="button" class="pf-v6-c-menu__item rich-select__option ${m.selectedId === c.id ? 'pf-m-selected' : ''}"
                     data-edit-compute="${richSelectEsc(c.id)}" role="option">
@@ -9294,7 +9292,7 @@
       if (!vm || !canResizeVmInstanceType(vm)) return;
       const requireGpu = vmRequiresGpu(vm);
       const selectedId = resolveVmComputeId(vm);
-      const matching = filteredVmComputeResources('', { requireGpu });
+      const matching = filteredVmComputeResources('', { requireGpu, compatibleWith: selectedId });
       const initialId = matching.some(c => c.id === selectedId) ? selectedId : (matching[0]?.id || selectedId);
       state.editComputeModal = {
         selectedId: initialId,
@@ -9338,7 +9336,7 @@
         );
         return;
       }
-      if (state.editComputeModal && computeResourceHasGpu(id) !== !!state.editComputeModal.requireGpu) {
+      if (state.editComputeModal && !vmResizeGpuCompatible(state.editComputeModal.initialId, id)) {
         setEditComputeSubmitError(
           'cannot change GPU configuration when resizing from the current instance type to the selected type',
         );
@@ -9346,16 +9344,20 @@
       }
       const path = state.editComputeModal?.resizePath || vmResizePath(vm);
       const changed = !!state.editComputeModal?.initialId && id !== state.editComputeModal.initialId;
+      const activeId = vmActiveComputeId(vm);
+      if (changed && (path === 'running' || path === 'paused')) vm.activeComputeId = activeId;
       applyComputeResourceToVm(vm, id);
       if (changed && (path === 'running' || path === 'paused')) {
         // API status condition stand-in (CNV-style Overview banner).
         markVmRestartRequiredChange(
           vm,
-          { section: 'Details', label: 'Instance type', focus: 'instance-type' },
-          path === 'paused'
-            ? 'Instance type updated while the virtual machine is paused. Changes apply after restart.'
-            : 'Instance type updated. Changes apply after the virtual machine is restarted.',
+          { section: 'Configuration', label: 'Instance type', from: activeId, to: id, focus: 'instance-type' },
+          'The VM is still using its current configuration. Restart it to apply the resize.',
         );
+        const before = computeResourceSpecs(activeId);
+        const after = computeResourceSpecs(id);
+        markVmRestartRequiredChange(vm, { section: 'Configuration', label: 'vCPUs', from: before.cpu, to: after.cpu });
+        markVmRestartRequiredChange(vm, { section: 'Configuration', label: 'Memory', from: before.mem, to: after.mem });
       }
       closeEditComputeModal();
       renderVmDetail();
@@ -10288,14 +10290,14 @@
           return `<span class="cell-res">
               <span class="res-icon res-icon--vm" aria-hidden="true">VM</span>
               <button type="button" class="name-link" data-open-vm="${v.name}">${v.name}</button>
-            </span>`;
+            </span>${v.activeComputeId ? '<span class="vm-resize-scheduled" title="Restart the VM to apply the new CPU and memory.">Resize scheduled</span>' : ''}`;
         case 'project':
           return `<span class="cell-res">
               <span class="res-icon res-icon--ns" aria-hidden="true">NS</span>
               <button type="button" class="name-link">${v.ns}</button>
             </span>`;
         case 'status':
-          return statusCell(v.status);
+          return statusCell(v.status, v.name);
         case 'conditions':
           return conditionCell(v.conditions);
         case 'node':
@@ -10308,9 +10310,9 @@
         case 'created':
           return enriched.created || v.created || '—';
         case 'memory':
-          return (enriched.mem || v.mem || '—');
+          return v.activeComputeId ? computeResourceSpecs(v.activeComputeId).mem : (enriched.mem || v.mem || '—');
         case 'cpu':
-          return (enriched.cpu || v.cpu || '—');
+          return v.activeComputeId ? computeResourceSpecs(v.activeComputeId).cpu : (enriched.cpu || v.cpu || '—');
         case 'network':
           return (enriched.utilization && enriched.utilization.network) || (v.utilization && v.utilization.network) || '—';
         case 'deletionProtection':
@@ -11778,6 +11780,8 @@
     }
 
     function statusCell(s, vmName = '') {
+      const vm = VMS.find(v => v.name === vmName);
+      if (vm?.provisioningFailed) return `<span class="status-static" title="${escAttr(vm.provisioningFailureMessage || 'Provisioning failed')}">Failed to provision</span>`;
       const vmAttr = vmName ? ` data-status-vm="${vmName}"` : '';
       if (s === 'running') {
         return `<button type="button" class="status-link" data-status-popover="running"${vmAttr} aria-haspopup="dialog" aria-expanded="false">${statusIcon('running')}<span class="status-link__label">Running</span></button>`;
@@ -12475,6 +12479,7 @@
     }
 
     function vmCardStatusPill(v) {
+      if (v.provisioningFailed) return `<span class="vm-list-card__status-pill vm-list-card__status-pill--error" title="${escAttr(v.provisioningFailureMessage || 'Provisioning failed')}">Failed to provision</span>`;
       const meta = vmCardStatusMeta(v.status);
       const interactive = meta.key !== 'starting';
       if (!interactive) {
@@ -12492,7 +12497,7 @@
       const project = projectDisplayName(v.ns) || v.ns || '—';
       const subtitle = String(enriched.catalogItem || enriched.osFull || enriched.os || 'Virtual machine')
         .replace(/</g, '&lt;');
-      const instanceType = String(enriched.computeResource || enriched.instanceType || '—').replace(/</g, '&lt;');
+      const instanceType = String(vmActiveComputeId(v) || enriched.instanceType || '—').replace(/</g, '&lt;');
       const created = String(v.created || '—').replace(/</g, '&lt;');
       return `
         <article class="tpl-card vm-list-card${selected ? ' pf-m-selected' : ''}"
@@ -12517,6 +12522,7 @@
           </div>
           <div class="vm-list-card__title-block">
             <button type="button" class="vm-list-card__name" data-open-vm="${v.name}">${v.name}</button>
+            ${v.activeComputeId ? '<span class="vm-resize-scheduled" title="Restart the VM to apply the new CPU and memory.">Resize scheduled</span>' : ''}
             <p class="vm-list-card__subtitle">${subtitle}</p>
           </div>
           <dl class="vm-list-card__specs">
@@ -16746,10 +16752,17 @@
       `;
 
       const restartRequiredHtml = vmRestartRequiredAlertHtml(v);
+      const provisioningFailureHtml = v.provisioningFailed ? `
+        <div class="pf-v6-c-alert pf-m-inline pf-m-danger" role="alert">
+          <div class="pf-v6-c-alert__icon"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i></div>
+          <div class="pf-v6-c-alert__title">Failed to provision</div>
+          <div class="pf-v6-c-alert__description">${String(v.provisioningFailureReason || 'ProvisioningFailed').replace(/</g, '&lt;')}: ${String(v.provisioningFailureMessage || 'The VM could not be provisioned.').replace(/</g, '&lt;')}</div>
+        </div>` : '';
       const body = `
         <div class="vm-overview-v2">
           <div class="vm-overview-v2__main">
             ${restartRequiredHtml}
+            ${provisioningFailureHtml}
             <section class="vm-overview-v2__details" aria-label="Details">
               <div class="vm-overview-v2__detail-cols">
                 <section class="ethan-detail-col" aria-labelledby="vm-overview-title">
@@ -16949,12 +16962,6 @@
 
       root.innerHTML = header + body;
 
-      root.querySelector('#vm-restart-required-toggle')?.addEventListener('click', () => {
-        const rawVm = VMS.find(x => x.name === v.name);
-        if (!rawVm?.restartRequired) return;
-        rawVm.restartRequired.expanded = rawVm.restartRequired.expanded === false;
-        renderVmDetail();
-      });
       root.querySelector('[data-breadcrumb-vms]')?.addEventListener('click', e => {
         e.preventDefault();
         state.selectedVmName = null;
