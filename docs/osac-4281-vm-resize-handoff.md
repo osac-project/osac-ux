@@ -4,14 +4,14 @@ Contact: Yifat Friman Menchik, UXD
 Updated: 10 November 2026
 
 UX Google Doc: https://docs.google.com/document/d/1kgln_LzTA3-VSP0SUM0jLce2Nvw0pix3oTYkwZuX-wE/edit  
-Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=6cbc8ac&role=admin&vm=azure-baboon-27
+Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=d321683&role=admin&vm=azure-baboon-27
 Feature: [OSAC-4277](https://redhat.atlassian.net/browse/OSAC-4277)  
 Resize: [OSAC-4281](https://redhat.atlassian.net/browse/OSAC-4281)  
 Related work: [OSAC-7576](https://redhat.atlassian.net/browse/OSAC-7576), [OSAC-7463](https://redhat.atlassian.net/browse/OSAC-7463), [OSAC-7582](https://redhat.atlassian.net/browse/OSAC-7582), [OSAC-6578](https://redhat.atlassian.net/browse/OSAC-6578)
 
 ## Entry and availability
 
-On VM Overview, select the pencil beside Instance type. Tenant Admin and Tenant User can resize. The action is available for Running, Paused, and Stopped VMs, and unavailable during transitional states or while another resize is in progress.
+On VM Overview, select the pencil beside Instance type. Tenant Admin and Tenant User can resize. The action is available for Running, Paused, and Stopped VMs, and unavailable during transitional states, while a resize is scheduled or applying, or while a failed resize is being resolved.
 
 ## Select an instance type
 
@@ -25,13 +25,13 @@ On the VM list, retain the normal power status (for example, Running). Add a sep
 
 ## Resize in progress
 
-When the API reports that a resize is applying without a restart, keep **Running** as the VM power state and show a separate **Resize in progress** label in card and table views and beside Status on VM Overview. Its tooltip says, “The new CPU and memory are being applied without a restart.” Keep the active instance type, CPU, and memory as the main values until the API confirms the new configuration is active. The mockup uses `indigo-quokka-89` for this state.
+When the API reports that a resize is applying without a restart, keep **Running** as the VM power state and show a separate **Resize in progress** label in card and table views and beside Status on VM Overview. Its tooltip names the requested instance type and explains that it is applying without a restart. Keep the active instance type, CPU, and memory as the main values until the API confirms the new configuration is active. The mockup uses `indigo-quokka-89` for this state.
 
-After the user restarts a VM with a scheduled resize, remove **Restart required** and show the same compact **Resize in progress** label while the resize is still applying, even if the VM power state has returned to **Running**. Its tooltip says, “The VM has restarted. The new CPU and memory are still being applied.” Do not prompt for another restart. The mockup uses `fedora-aqua-barnacle-58` for this state; restarting `azure-baboon-27` also demonstrates the transition.
+After the user restarts a VM with a scheduled resize, remove **Restart required** and show the same compact **Resize in progress** label while the resize is still applying, even if the VM power state has returned to **Running**. Its tooltip names the requested instance type and explains that no further restart is needed. The mockup uses `fedora-aqua-barnacle-58` for this state; restarting `azure-baboon-27` also demonstrates the transition.
 
-Do not show a persistent progress notification, timing details, or a Recent activity entry for this brief operation. Remove the progress label only when the API confirms completion, then show the new instance type, CPU, and memory as active values and a brief success toast. Keep configuration progress separate from the VM power state, as required by OSAC-6578. These states require operation phase and active versus requested values from the API; the mockup timer only demonstrates completion and must not be used as production logic. If the operation stalls or fails, show a prominent message with details.
+Do not show a persistent progress notification, timing details, or a Recent activity entry for this brief operation. Remove the progress label only when the API confirms completion, then show the new instance type, CPU, and memory as active values and a brief success toast. Keep configuration progress separate from the VM power state, as required by OSAC-6578. These states require operation phase and active versus requested values from the API; the mockup timer only demonstrates completion and must not be used as production logic. If the operation stalls or fails, keep the current resources visible and show **Resize failed** in the list and VM detail, with a danger notification containing the reason. Do not offer an unsupported recovery action.
 
-The API must expose or allow derivation of both active and requested configuration values, the restart-required condition, and the resize operation phase. Backend acceptance of the update depends on OSAC-5328.
+The API must expose or allow derivation of both active and requested configuration values, the restart-required condition, the resize operation phase, and a failure reason. Backend acceptance of the update depends on OSAC-5328.
 
 ## Current mockup screenshots
 
@@ -47,6 +47,10 @@ The API must expose or allow derivation of both active and requested configurati
 
 ![Resize in progress without restart](screenshots/vm-resize/resize-in-progress-no-restart.jpg)
 
+**Progress tooltip.** The requested instance type and phase are visible on focus or hover.
+
+![Resize progress tooltip](screenshots/vm-resize/resize-progress-tooltip.png)
+
 **Resize still applying after restart.** The same label has a phase-specific tooltip.
 
 ![Resize in progress after restart](screenshots/vm-resize/resize-in-progress-after-restart.jpg)
@@ -54,6 +58,10 @@ The API must expose or allow derivation of both active and requested configurati
 **VM table.** Resize scheduled and Resize in progress appear alongside power status.
 
 ![VM table with resize status labels](screenshots/vm-resize/resize-table-current.jpg)
+
+**Resize failure.** Current resources stay visible; the reason appears in a danger notification.
+
+![Resize failure on VM Overview](screenshots/vm-resize/resize-failed.png)
 
 ## Provisioning failure (separate state)
 
