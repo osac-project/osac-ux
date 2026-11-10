@@ -25,6 +25,20 @@ On the VM list, retain the normal power status (for example, Running). Add a sep
 
 The API must expose or allow derivation of both active and requested configuration values and the restart-required condition. Backend acceptance of the update depends on OSAC-5328.
 
+## Current mockup screenshots
+
+**Resize scheduled badge on the VM list.** The tooltip appears on hover or keyboard focus.
+
+![VM list card with Resize scheduled badge](screenshots/vm-resize/resize-scheduled-card.png)
+
+**Restart required warning and active configuration on VM Overview.**
+
+![Resize warning with current and after-restart values](screenshots/vm-resize/restart-required-overview.png)
+
+**Utilization before restart shows the active 1 vCPU and 2 GiB.**
+
+![VM utilization using active CPU and memory totals](screenshots/vm-resize/active-utilization.png)
+
 ## Provisioning failure (separate state)
 
 When provisioning fails, show **Failed to provision** in the VM list and overview instead of leaving the VM at Starting. Show the failure reason. Do not invent Stop, Cancel, or Retry actions; add a recovery action only after the backend supports a safe transition. Track this separately in [OSAC-7582](https://redhat.atlassian.net/browse/OSAC-7582).
