@@ -13,6 +13,8 @@ This rule applies to the instance type menus in **Create VM**, **Create VM Catal
 
 An existing VM or catalog item that uses a Deprecated or Obsolete type still displays its current type and lifecycle label on its details page. Do not silently replace the current value when the edit form opens. If the current type is Obsolete, show it as the existing value and explain that a different type must be chosen for a new VM or resize. Keep Obsolete out of the menu of new targets. The UI must receive lifecycle status from the instance type data rather than infer it from the name.
 
+If a selected catalog item or template still has an Obsolete type as its default, the Create VM wizard must not silently substitute another type or create the VM with that default. If instance type is editable, require a valid replacement. If it is locked, explain that the user must choose a different catalog item.
+
 Related: [VM resize handoff](osac-4281-vm-resize-handoff.md) · [OSAC-4281](https://redhat.atlassian.net/browse/OSAC-4281)
 
 ## Screenshots

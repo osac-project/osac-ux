@@ -9977,6 +9977,7 @@
           : field === 'project' ? 'f-project'
           : field === 'osImage' ? 'f-os-image'
           : field === 'diskImage' ? 'vm-disk-image-toggle'
+          : field === 'computeResource' ? 'f-compute-resource-toggle'
           : field === 'virtualNetwork' ? 'f-virtual-network'
           : field === 'subnet' ? 'f-subnet'
           : field === 'securityGroups' ? 'f-security-groups'
@@ -10000,6 +10001,13 @@
     function validateConfigureFields(d = state.data) {
       const errors = {};
       if (!d.diskImageId) errors.diskImage = 'Select a disk image to continue.';
+      const lifecycle = COMPUTE_RESOURCES.find(c => c.id === d.computeResource)?.lifecycle
+        || getCatalogInstanceType(d.computeResource)?.lifecycle;
+      if (lifecycle === 'Obsolete') {
+        errors.computeResource = 'This instance type is obsolete. Choose another catalog item or instance type.';
+      } else if (!d.computeResource) {
+        errors.computeResource = 'Select an instance type to continue.';
+      }
       return errors;
     }
 
@@ -10033,7 +10041,7 @@
     }
 
     function focusFirstFieldError(errors = state.fieldErrors) {
-      const order = ['catalog', 'name', 'project', 'diskImage', 'osImage', 'virtualNetwork', 'subnet', 'securityGroups'];
+      const order = ['catalog', 'name', 'project', 'diskImage', 'computeResource', 'osImage', 'virtualNetwork', 'subnet', 'securityGroups'];
       const field = order.find(f => errors?.[f]);
       if (!field) return;
       if (field === 'catalog') {
@@ -10044,6 +10052,7 @@
         field === 'name' ? 'f-name'
         : field === 'project' ? (document.getElementById('f-tpl-project') ? 'f-tpl-project' : 'f-project')
         : field === 'diskImage' ? 'vm-disk-image-toggle'
+        : field === 'computeResource' ? 'f-compute-resource-toggle'
         : field === 'osImage' ? 'f-os-image'
         : field === 'virtualNetwork' ? 'f-virtual-network-toggle'
         : field === 'subnet' ? 'f-subnet-toggle'
@@ -19083,13 +19092,15 @@
           if (!d.diskImageId && tpl.diskImageId) {
             applyDiskImageToForm(d, tpl.diskImageId, { syncInit: !d.initMethod });
           }
-          if (tpl.computeResource && !d.computeResource) {
+          if (tpl.computeResource && !d.computeResource
+            && COMPUTE_RESOURCES.find(c => c.id === tpl.computeResource)?.lifecycle !== 'Obsolete') {
             d.computeResource = tpl.computeResource;
             state.vmShowGpuIts = computeResourceHasGpu(tpl.computeResource);
           }
           if (d.bootDiskGiB == null && tpl.bootDiskGiB != null) d.bootDiskGiB = tpl.bootDiskGiB;
         }
-        if (!d.computeResource || !COMPUTE_RESOURCES.some(c => c.id === d.computeResource)) {
+        if ((!d.computeResource && COMPUTE_RESOURCES.find(c => c.id === tpl?.computeResource)?.lifecycle !== 'Obsolete')
+          || (d.computeResource && !COMPUTE_RESOURCES.some(c => c.id === d.computeResource))) {
           d.computeResource = COMPUTE_RESOURCES[2].id; // small
         }
         if (d.bootDiskGiB == null) d.bootDiskGiB = CATALOG_BOOT_DISK_GIB[CATALOG_BOOT_DISK_GIB.length - 1];
@@ -19128,8 +19139,11 @@
           const requireGpu = showGpuIts;
           let vmComputeOptions = filteredVmComputeResources(state.vmComputeFilter, { requireGpu });
           // Search should not change the selected type; switching GPU pools may.
-          if (computeEditable && !filteredVmComputeResources('', { requireGpu }).some(c => c.id === d.computeResource && c.lifecycle !== 'Obsolete')) {
-            const pool = filteredVmComputeResources('', { requireGpu }).filter(c => c.lifecycle !== 'Obsolete');
+          if (computeEditable && COMPUTE_RESOURCES.find(c => c.id === d.computeResource)?.lifecycle === 'Obsolete') {
+            d.computeResource = '';
+          } else if (computeEditable && d.computeResource
+            && !filteredVmComputeResources('', { requireGpu }).some(c => c.id === d.computeResource)) {
+            const pool = filteredVmComputeResources('', { requireGpu });
             if (pool.length) d.computeResource = pool[0].id;
             vmComputeOptions = filteredVmComputeResources(state.vmComputeFilter, { requireGpu });
           }
@@ -19142,7 +19156,7 @@
               </label>
           ` : '';
           const computeFieldHtml = computeEditable ? `
-              <div class="form-field">
+              <div class="form-field ${state.fieldErrors.computeResource ? 'pf-m-error' : ''}" data-field="computeResource">
                 <label id="f-compute-resource-label">Instance type <span class="req">*</span></label>
                 ${gpuFilterHtml}
                 <div class="rich-select rich-select--typeahead ${state.vmComputeMenuOpen ? 'pf-m-expanded' : ''}" id="vm-compute-select">
@@ -19151,9 +19165,10 @@
                     ariaLabelledby: 'f-compute-resource-label',
                     ariaExpanded: state.vmComputeMenuOpen,
                     stacked: true,
-                    tooltip: instanceTypeLifecycleTooltip(selectedComputeFresh.lifecycle),
+                    extraClass: state.fieldErrors.computeResource ? 'pf-m-error' : '',
+                    tooltip: selectedComputeFresh.lifecycle === 'Deprecated' ? INSTANCE_TYPE_DEPRECATED_TOOLTIP : '',
                     mainHtml: `
-                      <span class="rich-select__toggle-label" id="f-compute-resource">${selectedComputeFresh.title} ${instanceTypeLifecycleLabel(selectedComputeFresh.lifecycle)}</span>
+                      <span class="rich-select__toggle-label" id="f-compute-resource">${d.computeResource ? selectedComputeFresh.title : 'Select an instance type'} ${instanceTypeLifecycleLabel(selectedComputeFresh.lifecycle)}</span>
                       ${vmComputeToggleDesc ? `<span class="rich-select__toggle-desc">${vmComputeToggleDesc}</span>` : ''}
                     `,
                   })}
@@ -19184,9 +19199,10 @@
                     </div>
                   </div>
                 </div>
+                ${fieldErrorHtml('computeResource')}
               </div>
           ` : `
-              <div class="form-field">
+              <div class="form-field ${state.fieldErrors.computeResource ? 'pf-m-error' : ''}" data-field="computeResource">
                 <label for="f-compute-resource" class="label-with-optional">
                   <span>Instance type</span>
                   ${fieldGovBadge('locked')}
@@ -19196,6 +19212,7 @@
                   disabled aria-disabled="true" aria-label="Instance type"
                   aria-describedby="f-compute-locked-help" />
                 <p class="form-helper" id="f-compute-locked-help">This size is set by the template and can’t be changed during create. You can edit the instance type after the virtual machine is created.</p>
+                ${fieldErrorHtml('computeResource')}
               </div>
           `;
           if (d.diskImageMenuOpen == null) d.diskImageMenuOpen = false;
@@ -23337,6 +23354,9 @@
       if (key === 'ci-access') {
         if (c.diskImageAccess === 'locked' && !c.diskImageId) {
           errors.ciDiskImage = 'Select a disk image to continue.';
+        }
+        if (!state.catalogEditId && getCatalogInstanceType(c.instanceTypeId || c.computeResourceId)?.lifecycle === 'Obsolete') {
+          errors.ciInstanceType = 'Choose an active or deprecated instance type.';
         }
         if ((c.computeAccess || 'editable') === 'locked' && !(c.instanceTypeId || c.computeResourceId)) {
           errors.ciInstanceType = 'Select an instance type to continue.';
