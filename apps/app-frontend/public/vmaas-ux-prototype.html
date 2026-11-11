@@ -8733,12 +8733,12 @@
       { id: 'micro', label: 'micro: 1 vCPU, 1 GiB Memory', hourly: 0.12, gpus: 0 },
       { id: 'small', label: 'small: 1 vCPU, 2 GiB Memory', hourly: 0.80, gpus: 0 },
       { id: 'medium', label: 'medium: 1 vCPU, 4 GiB Memory', hourly: 1.60, gpus: 0 },
-      { id: '2xmedium', label: '2xmedium: 2 vCPUs, 4 GiB Memory', hourly: 2.40, gpus: 0 },
+      { id: '2xmedium', label: '2xmedium: 2 vCPUs, 4 GiB Memory', hourly: 2.40, gpus: 0, lifecycle: 'Deprecated' },
       { id: 'large', label: 'large: 2 vCPUs, 8 GiB Memory', hourly: 4.70, gpus: 0 },
       { id: 'xlarge', label: 'xlarge: 4 vCPUs, 16 GiB Memory', hourly: 9.40, gpus: 0 },
       { id: '2xlarge', label: '2xlarge: 8 vCPUs, 32 GiB Memory', hourly: 18.80, gpus: 0 },
       { id: '4xlarge', label: '4xlarge: 16 vCPUs, 64 GiB Memory', hourly: 37.60, gpus: 0 },
-      { id: '8xlarge', label: '8xlarge: 32 vCPUs, 128 GiB Memory', hourly: 75.20, gpus: 0 },
+      { id: '8xlarge', label: '8xlarge: 32 vCPUs, 128 GiB Memory', hourly: 75.20, gpus: 0, lifecycle: 'Obsolete' },
       { id: 'small-gpu', label: 'small-gpu: 1 vCPU, 2 GiB Memory, 1 GPU', hourly: 1.90, gpus: 1, gpuResource: 'NVIDIA A100 40 GB' },
       { id: 'medium-gpu', label: 'medium-gpu: 2 vCPUs, 8 GiB Memory, 1 GPU', hourly: 5.80, gpus: 1, gpuResource: 'NVIDIA A100 40 GB' },
       { id: 'large-gpu', label: 'large-gpu: 4 vCPUs, 16 GiB Memory, 1 GPU', hourly: 12.40, gpus: 1, gpuResource: 'NVIDIA A100 80 GB' },
@@ -8764,8 +8764,22 @@
       const c = COMPUTE_RESOURCES.find(x => x.id === id);
       const label = c?.label || id || '—';
       const m = String(label).match(/^([^:]+):\s*(.+)$/);
-      if (m) return { title: m[1].trim(), desc: m[2].trim(), hourly: c?.hourly, gpus: Number(c?.gpus) || 0 };
-      return { title: label, desc: '', hourly: c?.hourly, gpus: Number(c?.gpus) || 0 };
+      if (m) return { title: m[1].trim(), desc: m[2].trim(), hourly: c?.hourly, gpus: Number(c?.gpus) || 0, lifecycle: c?.lifecycle };
+      return { title: label, desc: '', hourly: c?.hourly, gpus: Number(c?.gpus) || 0, lifecycle: c?.lifecycle };
+    }
+
+    const INSTANCE_TYPE_DEPRECATED_TOOLTIP =
+      'Still available, but being phased out. We recommend an active type.';
+    const INSTANCE_TYPE_OBSOLETE_TOOLTIP = 'Unavailable for new VMs or resizes.';
+
+    function instanceTypeLifecycleLabel(lifecycle) {
+      if (lifecycle !== 'Deprecated' && lifecycle !== 'Obsolete') return '';
+      return `<span class="pf-v6-c-label pf-m-outline pf-m-compact ${lifecycle === 'Deprecated' ? 'pf-m-gold' : 'pf-m-grey'}"><span class="pf-v6-c-label__content"><span class="pf-v6-c-label__text">${lifecycle}</span></span></span>`;
+    }
+
+    function instanceTypeLifecycleTooltip(lifecycle) {
+      return lifecycle === 'Deprecated' ? INSTANCE_TYPE_DEPRECATED_TOOLTIP
+        : lifecycle === 'Obsolete' ? INSTANCE_TYPE_OBSOLETE_TOOLTIP : '';
     }
 
     function vmResizeGpuSummary(id) {
@@ -8787,7 +8801,7 @@
         if (requireGpu === false && computeResourceHasGpu(c)) return false;
         if (compatibleWith && !vmResizeGpuCompatible(compatibleWith, c.id)) return false;
         if (!q) return true;
-        return `${c.id} ${c.label}`.toLowerCase().includes(q);
+        return `${c.id} ${c.label} ${c.lifecycle || ''}`.toLowerCase().includes(q);
       });
     }
 
@@ -9321,8 +9335,9 @@
               ariaExpanded: m.menuOpen,
               ariaControls: 'edit-compute-menu',
               stacked: true,
+              tooltip: instanceTypeLifecycleTooltip(selectedParts.lifecycle),
               mainHtml: `
-                <span class="rich-select__toggle-label">${richSelectEsc(selectedParts.title)}</span>
+                <span class="rich-select__toggle-label">${richSelectEsc(selectedParts.title)} ${instanceTypeLifecycleLabel(selectedParts.lifecycle)}</span>
                 ${toggleDesc ? `<span class="rich-select__toggle-desc">${richSelectEsc(toggleDesc)}</span>` : ''}
               `,
             })}
@@ -9338,12 +9353,14 @@
                   const parts = computeResourceParts(c.id);
                   const rate = formatComputeHourlyRate(c.hourly);
                   const desc = [parts.desc, vmResizeGpuSummary(c.id), rate].filter(Boolean).join(' · ');
+                  const tooltip = instanceTypeLifecycleTooltip(c.lifecycle);
                   return `
-                  <button type="button" class="pf-v6-c-menu__item rich-select__option ${m.selectedId === c.id ? 'pf-m-selected' : ''}"
-                    data-edit-compute="${richSelectEsc(c.id)}" role="option">
+                  <button type="button" class="pf-v6-c-menu__item rich-select__option ${m.selectedId === c.id ? 'pf-m-selected' : ''} ${c.lifecycle === 'Obsolete' ? 'pf-m-disabled' : ''}"
+                    data-edit-compute="${richSelectEsc(c.id)}" role="option" ${c.lifecycle === 'Obsolete' ? 'aria-disabled="true"' : ''}
+                    ${tooltip ? `data-pf-tooltip="${richSelectEsc(tooltip)}" aria-label="${richSelectEsc(`${parts.title}, ${c.lifecycle}. ${tooltip}`)}"` : ''}>
                     <span class="pf-v6-c-menu__item-main">
                       <span class="rich-select__option-body">
-                        <span class="rich-select__option-title">${richSelectEsc(parts.title)}</span>
+                        <span class="rich-select__option-title">${richSelectEsc(parts.title)} ${instanceTypeLifecycleLabel(c.lifecycle)}</span>
                         <span class="rich-select__option-desc">${richSelectEsc(desc)}</span>
                       </span>
                     </span>
@@ -9434,6 +9451,10 @@
         setEditComputeSubmitError(
           resizeVmInstanceTypeDisabledReason(vm) || 'Resize is unavailable for this virtual machine.',
         );
+        return;
+      }
+      if (COMPUTE_RESOURCES.find(c => c.id === id)?.lifecycle === 'Obsolete') {
+        setEditComputeSubmitError(INSTANCE_TYPE_OBSOLETE_TOOLTIP);
         return;
       }
       if (state.editComputeModal && !vmResizeGpuCompatible(state.editComputeModal.initialId, id)) {
@@ -10934,6 +10955,7 @@
       stacked = false,
       extraClass = '',
       disabled = false,
+      tooltip = '',
     }) {
       const classes = ['pf-v6-c-form-control', 'rich-select__control', extraClass, disabled ? 'pf-m-disabled' : '']
         .filter(Boolean).join(' ');
@@ -10946,6 +10968,7 @@
             aria-expanded="${ariaExpanded}"
             aria-haspopup="listbox"
             ${ariaControls ? `aria-controls="${ariaControls}"` : ''}
+            ${tooltip ? `data-pf-tooltip="${richSelectEsc(tooltip)}"` : ''}
             ${disabled ? 'disabled aria-disabled="true"' : ''}>
             <span class="${mainClass}">${mainHtml}</span>
           </button>
@@ -11008,8 +11031,8 @@
       const useStacked = !!(stacked && selected?.desc);
       const toggleMain = selected
         ? (useStacked
-          ? `<span class="rich-select__toggle-label">${richSelectEsc(selected.title)}</span><span class="rich-select__toggle-desc">${richSelectEsc(selected.desc)}</span>`
-          : `<span class="rich-select__toggle-label">${richSelectEsc(selected.title)}</span>`)
+          ? `<span class="rich-select__toggle-label">${richSelectEsc(selected.title)} ${instanceTypeLifecycleLabel(selected.lifecycle)}</span><span class="rich-select__toggle-desc">${richSelectEsc(selected.desc)}</span>`
+          : `<span class="rich-select__toggle-label">${richSelectEsc(selected.title)} ${instanceTypeLifecycleLabel(selected.lifecycle)}</span>`)
         : `<span class="rich-select__toggle-label">${richSelectEsc(placeholder)}</span>`;
       const controlExtra = [
         selected ? '' : 'pf-m-placeholder',
@@ -11025,6 +11048,7 @@
             ariaControls: menuId,
             stacked: useStacked,
             extraClass: controlExtra,
+            tooltip: instanceTypeLifecycleTooltip(selected?.lifecycle),
             mainHtml: toggleMain,
           })}
           <div class="pf-v6-c-menu rich-select__menu" id="${menuId}" role="listbox" ${open ? '' : 'hidden'}>
@@ -11036,11 +11060,12 @@
             <hr class="rich-select__menu-divider" />
             <div class="rich-select__menu-list">
               ${filtered.map(o => `
-                <button type="button" class="pf-v6-c-menu__item rich-select__option ${o.id === selectedId ? 'pf-m-selected' : ''}"
-                  ${optionAttr}="${richSelectEsc(o.id)}" role="option">
+                <button type="button" class="pf-v6-c-menu__item rich-select__option ${o.id === selectedId ? 'pf-m-selected' : ''} ${o.disabled ? 'pf-m-disabled' : ''}"
+                  ${optionAttr}="${richSelectEsc(o.id)}" role="option" ${o.disabled ? 'aria-disabled="true"' : ''}
+                  ${o.lifecycle ? `data-pf-tooltip="${richSelectEsc(instanceTypeLifecycleTooltip(o.lifecycle))}" aria-label="${richSelectEsc(`${o.title}, ${o.lifecycle}. ${instanceTypeLifecycleTooltip(o.lifecycle)}`)}"` : ''}>
                   <span class="pf-v6-c-menu__item-main">
                     <span class="rich-select__option-body">
-                      <span class="rich-select__option-title">${richSelectEsc(o.title)}</span>
+                      <span class="rich-select__option-title">${richSelectEsc(o.title)} ${instanceTypeLifecycleLabel(o.lifecycle)}</span>
                       ${o.desc ? `<span class="rich-select__option-desc">${richSelectEsc(o.desc)}</span>` : ''}
                     </span>
                   </span>
@@ -11105,6 +11130,7 @@
         opt.addEventListener('click', e => {
           e.preventDefault();
           e.stopPropagation();
+          if (opt.getAttribute('aria-disabled') === 'true') return;
           onSelectId(getOptionId(opt));
         });
       });
@@ -13383,7 +13409,7 @@
         if (requireGpu === true && !hasGpu) return false;
         if (requireGpu === false && hasGpu) return false;
         if (!q) return true;
-        const hay = `${it.label || ''} ${it.name || ''} ${it.cpu} ${it.memoryGiB} ${it.gpuResource || ''} ${opt.rateHour}`.toLowerCase();
+        const hay = `${it.label || ''} ${it.name || ''} ${it.cpu} ${it.memoryGiB} ${it.gpuResource || ''} ${it.lifecycle || ''} ${opt.rateHour}`.toLowerCase();
         return hay.includes(q);
       });
     }
@@ -13396,6 +13422,8 @@
         id: opt.id,
         title: it.label || it.name,
         desc: `${cpu} · ${it.memoryGiB} GiB · ${formatCatalogInstanceTypeGpu(it)} · ${opt.rateHour}`,
+        lifecycle: it.lifecycle === 'Deprecated' || it.lifecycle === 'Obsolete' ? it.lifecycle : '',
+        disabled: it.lifecycle === 'Obsolete',
       };
     }
 
@@ -19091,9 +19119,9 @@
           const showGpuIts = !!state.vmShowGpuIts;
           const requireGpu = showGpuIts;
           let vmComputeOptions = filteredVmComputeResources(state.vmComputeFilter, { requireGpu });
-          // Keep selection in the active GPU pool (create is where GPU vs non-GPU is chosen).
-          if (computeEditable && !vmComputeOptions.some(c => c.id === d.computeResource)) {
-            const pool = filteredVmComputeResources('', { requireGpu });
+          // Search should not change the selected type; switching GPU pools may.
+          if (computeEditable && !filteredVmComputeResources('', { requireGpu }).some(c => c.id === d.computeResource && c.lifecycle !== 'Obsolete')) {
+            const pool = filteredVmComputeResources('', { requireGpu }).filter(c => c.lifecycle !== 'Obsolete');
             if (pool.length) d.computeResource = pool[0].id;
             vmComputeOptions = filteredVmComputeResources(state.vmComputeFilter, { requireGpu });
           }
@@ -19115,8 +19143,9 @@
                     ariaLabelledby: 'f-compute-resource-label',
                     ariaExpanded: state.vmComputeMenuOpen,
                     stacked: true,
+                    tooltip: instanceTypeLifecycleTooltip(selectedComputeFresh.lifecycle),
                     mainHtml: `
-                      <span class="rich-select__toggle-label" id="f-compute-resource">${selectedComputeFresh.title}</span>
+                      <span class="rich-select__toggle-label" id="f-compute-resource">${selectedComputeFresh.title} ${instanceTypeLifecycleLabel(selectedComputeFresh.lifecycle)}</span>
                       ${vmComputeToggleDesc ? `<span class="rich-select__toggle-desc">${vmComputeToggleDesc}</span>` : ''}
                     `,
                   })}
@@ -19131,11 +19160,13 @@
                         const parts = computeResourceParts(c.id);
                         const rate = formatComputeHourlyRate(c.hourly);
                         const desc = [parts.desc, rate].filter(Boolean).join(' · ');
+                        const tooltip = instanceTypeLifecycleTooltip(c.lifecycle);
                         return `
-                        <button type="button" class="pf-v6-c-menu__item rich-select__option ${d.computeResource === c.id ? 'pf-m-selected' : ''}" data-vm-compute="${c.id}" role="option">
+                        <button type="button" class="pf-v6-c-menu__item rich-select__option ${d.computeResource === c.id ? 'pf-m-selected' : ''} ${c.lifecycle === 'Obsolete' ? 'pf-m-disabled' : ''}" data-vm-compute="${c.id}" role="option" ${c.lifecycle === 'Obsolete' ? 'aria-disabled="true"' : ''}
+                          ${tooltip ? `data-pf-tooltip="${richSelectEsc(tooltip)}" aria-label="${richSelectEsc(`${parts.title}, ${c.lifecycle}. ${tooltip}`)}"` : ''}>
                           <span class="pf-v6-c-menu__item-main">
                             <span class="rich-select__option-body">
-                              <span class="rich-select__option-title">${parts.title}</span>
+                              <span class="rich-select__option-title">${parts.title} ${instanceTypeLifecycleLabel(c.lifecycle)}</span>
                               <span class="rich-select__option-desc">${desc}</span>
                             </span>
                           </span>
@@ -19270,7 +19301,7 @@
               state.vmShowGpuIts = !!e.target.checked;
               state.vmComputeMenuOpen = false;
               state.vmComputeFilter = '';
-              const pool = filteredVmComputeResources('', { requireGpu: state.vmShowGpuIts });
+              const pool = filteredVmComputeResources('', { requireGpu: state.vmShowGpuIts }).filter(c => c.lifecycle !== 'Obsolete');
               if (!pool.some(c => c.id === d.computeResource)) {
                 d.computeResource = pool[0]?.id || d.computeResource;
               }
@@ -19285,6 +19316,7 @@
               onOpen: () => { state.vmComputeMenuOpen = true; },
               onClose: () => { state.vmComputeMenuOpen = false; },
               onSelect: opt => {
+                if (opt.getAttribute('aria-disabled') === 'true') return;
                 d.computeResource = opt.dataset.vmCompute;
                 updateCostEstimate(key);
                 renderWizard();
@@ -21517,6 +21549,8 @@
       { id: 'small', instanceTypeName: 'catalog-small', rateHour: '$5.68/hr', rateMonth: '$3,400/mo per instance' },
       { id: 'medium', instanceTypeName: 'catalog-medium', rateHour: '$8.50/hr', rateMonth: '$5,200/mo per instance' },
       { id: 'large', instanceTypeName: 'catalog-large', rateHour: '$4.25/hr', rateMonth: '$2,850/mo per instance' },
+      { id: 'Large_R_12', instanceTypeName: 'Large_R_12', rateHour: '$6.20/hr', rateMonth: '$4,526/mo per instance' },
+      { id: 'bbb', instanceTypeName: 'bbb', rateHour: '$3.10/hr', rateMonth: '$2,263/mo per instance' },
     ];
 
     /** Shared searchable tenant catalog (create wizards, catalog visibility, filters). */
@@ -22169,6 +22203,7 @@
       root.querySelectorAll(optionSel).forEach(opt => {
         opt.addEventListener('click', e => {
           e.preventDefault();
+          if (opt.getAttribute('aria-disabled') === 'true') return;
           onSelect?.(opt);
           setOpen(false);
         });
@@ -22608,6 +22643,7 @@
           setOpen: (open) => { c.computeMenuOpen = open; },
           setFilter: (v) => { c.computeFilter = v; },
           onSelectId: (id) => {
+            if (getCatalogInstanceType(id)?.lifecycle === 'Obsolete') return;
             c.instanceTypeId = id || '';
             c.computeMenuOpen = false;
             c.computeFilter = '';
