@@ -23,4 +23,16 @@ Related: [VM resize handoff](osac-4281-vm-resize-handoff.md) · [OSAC-4281](http
 
 ![Deprecated instance type selected in Create VM](screenshots/instance-type-lifecycle/create-vm-deprecated.png)
 
-**Obsolete:** hidden from all three selection menus. Existing resources still display their current type; the resize modal preserves it until the user chooses a replacement.
+**Create VM Catalog Item:** Deprecated remains labeled after selection.
+
+![Deprecated instance type selected in Create VM Catalog Item](screenshots/instance-type-lifecycle/catalog-deprecated-selected.png)
+
+**Existing VM:** The current Obsolete type remains visible on Overview and in Resize. Save stays disabled until a replacement is selected.
+
+![Existing VM shows its Obsolete instance type](screenshots/instance-type-lifecycle/legacy-obsolete-overview.png)
+
+![Resize preserves the current Obsolete type](screenshots/instance-type-lifecycle/legacy-obsolete-current.png)
+
+**Obsolete:** hidden from selection menus, including search results.
+
+![Searching for an Obsolete type returns no new target](screenshots/instance-type-lifecycle/legacy-obsolete-search.png)

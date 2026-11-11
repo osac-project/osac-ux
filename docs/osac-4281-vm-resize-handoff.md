@@ -41,6 +41,8 @@ The API must expose or allow derivation of both active and requested configurati
 
 ![Deprecated instance type selected for resize](screenshots/instance-type-lifecycle/resize-deprecated.png)
 
+![Current Obsolete type remains visible but cannot be saved unchanged](screenshots/instance-type-lifecycle/legacy-obsolete-current.png)
+
 
 **Collapsed restart notice.** The title remains visible until the VM restarts.
 
