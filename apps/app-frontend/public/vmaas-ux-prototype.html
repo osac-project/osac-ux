@@ -9340,7 +9340,7 @@
               ariaExpanded: m.menuOpen,
               ariaControls: 'edit-compute-menu',
               stacked: true,
-              tooltip: instanceTypeLifecycleTooltip(selectedParts.lifecycle),
+              tooltip: selectedParts.lifecycle === 'Deprecated' ? INSTANCE_TYPE_DEPRECATED_TOOLTIP : '',
               mainHtml: `
                 <span class="rich-select__toggle-label">${richSelectEsc(selectedParts.title)} ${instanceTypeLifecycleLabel(selectedParts.lifecycle)}</span>
                 ${toggleDesc ? `<span class="rich-select__toggle-desc">${richSelectEsc(toggleDesc)}</span>` : ''}
@@ -11055,7 +11055,7 @@
             ariaControls: menuId,
             stacked: useStacked,
             extraClass: controlExtra,
-            tooltip: instanceTypeLifecycleTooltip(selected?.lifecycle),
+            tooltip: selected?.lifecycle === 'Deprecated' ? INSTANCE_TYPE_DEPRECATED_TOOLTIP : '',
             mainHtml: toggleMain,
           })}
           <div class="pf-v6-c-menu rich-select__menu" id="${menuId}" role="listbox" ${open ? '' : 'hidden'}>
@@ -16943,7 +16943,7 @@
                   ${itField('Guest operating system family', guestOsFamilyDisplay)}
                   ${itField('Disk image', diskImageDisplay)}
                   ${itSubtitleRow}
-                  ${itField('Name', itNameSafe)}
+                  ${itField('Name', `${itNameSafe} ${instanceTypeLifecycleLabel(COMPUTE_RESOURCES.find(c => c.id === vmActiveComputeId(v))?.lifecycle)}`)}
                   ${itField('vCPUs', String(computeFields.vcpu).replace(/</g, '&lt;'))}
                   ${itField('Memory', String(computeFields.memory).replace(/</g, '&lt;'))}
                   ${gpuFieldsHtml}
@@ -24003,7 +24003,7 @@
       const safe = String(name).replace(/</g, '&lt;');
       const it = INSTANCE_TYPES.find(x => x.name === name);
       if (!it) return safe;
-      return `<button type="button" class="name-link" data-instance-type="${escAttr(name)}">${safe}</button>`;
+      return `<button type="button" class="name-link" data-instance-type="${escAttr(name)}">${safe}</button> ${instanceTypeLifecycleLabel(it.lifecycle)}`;
     }
 
     function catalogOverviewInitHtml(item) {
