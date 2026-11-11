@@ -8460,6 +8460,7 @@
       { name: 'debian-cobalt-heron-41', ns: 'yifat', status: 'running', os: 'Other', osFull: 'Debian 12', imageLabel: 'Debian 12', catalogItem: 'vm-dev-workstation', conditions: ['Ready=True'], node: 'cnvge-081.lab.eng.thv2.redhat.com', ip: '10.130.1.238', created: '10 Nov 2026, 16:05', computeResource: 'large', activeComputeId: 'small', resizeFailure: { reason: 'The requested instance type is unavailable. The VM is still using its previous resources.' }, bootDiskAccessMode: 'RWO' },
       { name: 'rhel8-mystic-eagle-22', ns: 'vmaas', status: 'ErrorPvcNotFound', os: 'RHEL', osFull: 'Red Hat Enterprise Linux 8', imageLabel: 'RHEL 8.10', catalogItem: 'vm-legacy-app-server', conditions: ['Provisioning=False', 'Ready=False'], node: 'cnvge-080.lab.eng.thv2.redhat.com', ip: '—', created: '22 Jan 2026, 14:42', alerts: [{ severity: 'warning', message: 'Boot disk is unavailable' }, { severity: 'warning', message: 'Virtual machine is not Ready' }], bootDiskAccessMode: 'RWO' },
       { name: 'gpu-provisioning-failed', ns: 'project-a', status: 'starting', provisioningFailed: true, provisioningFailureReason: 'ProvisioningFailed', provisioningFailureMessage: 'AAP job failed', os: 'RHEL', osFull: 'Red Hat Enterprise Linux 9', imageLabel: 'RHEL 9.4', computeResource: 'small-gpu', conditions: ['PROVISIONED=False', 'ProvisioningFailed'], node: '—', ip: '—', created: '9 Nov 2026, 15:57' },
+      { name: 'legacy-obsolete-vm', ns: 'project-a', status: 'stopped', os: 'RHEL', osFull: 'Red Hat Enterprise Linux 9', imageLabel: 'RHEL 9.4', computeResource: '8xlarge', conditions: ['Ready=True'], node: 'cnvge-079.lab.eng.thv2.redhat.com', ip: '—', created: '8 Nov 2026, 10:21', bootDiskAccessMode: 'RWO' },
     ];
 
     const FILTER_CATALOG = {
@@ -9322,7 +9323,10 @@
       const descEl = document.getElementById('compute-modal-desc');
       if (descEl) descEl.textContent = editComputeModalDescription();
       const saveBtn = document.getElementById('compute-modal-save');
-      if (saveBtn) saveBtn.textContent = 'Save';
+      if (saveBtn) {
+        saveBtn.textContent = 'Save';
+        saveBtn.disabled = m.selectedId === m.initialId;
+      }
         body.innerHTML = `
           ${submitErrorAlert}
           ${resizeAlert}
@@ -9371,6 +9375,8 @@
             </div>
             <input type="hidden" id="f-edit-compute-resource" value="${richSelectEsc(m.selectedId)}" />
           </div>
+          ${COMPUTE_RESOURCES.find(c => c.id === m.initialId)?.lifecycle === 'Obsolete'
+            ? '<p class="muted">The current instance type is obsolete. Select a different type to resize.</p>' : ''}
           </div>
         `;
 
@@ -9410,8 +9416,7 @@
       if (!vm || !canResizeVmInstanceType(vm)) return;
       const requireGpu = vmRequiresGpu(vm);
       const selectedId = resolveVmComputeId(vm);
-      const matching = filteredVmComputeResources('', { requireGpu, compatibleWith: selectedId });
-      const initialId = matching.some(c => c.id === selectedId) ? selectedId : (matching[0]?.id || selectedId);
+      const initialId = selectedId;
       state.editComputeModal = {
         selectedId: initialId,
         initialId,
@@ -11002,6 +11007,7 @@
       filter = '',
       searchPlaceholder = 'Search',
       selectedId = '',
+      selectedOption = null,
       placeholder = 'Select…',
       options = [],
       optionAttr = 'data-option',
@@ -11013,7 +11019,7 @@
       emptyNoun = 'options',
       footerHtml = '',
     }) {
-      const selected = options.find(o => o.id === selectedId);
+      const selected = selectedOption || options.find(o => o.id === selectedId);
       const valueId = hiddenInputId || `${rootId}-value`;
       const hidden = `<input type="hidden" id="${valueId}" value="${richSelectEsc(selectedId)}" />`;
       if (disabled) {
@@ -22511,7 +22517,8 @@
         const showGpuIts = !!c.showGpuIts;
         const requireGpu = showGpuIts;
         const gpuPool = filteredCatalogInstanceTypeOptions('', { requireGpu });
-        if (c.instanceTypeId && !gpuPool.some(o => o.id === c.instanceTypeId)) {
+        const currentObsolete = !!state.catalogEditId && getCatalogInstanceType(c.instanceTypeId)?.lifecycle === 'Obsolete';
+        if (c.instanceTypeId && !currentObsolete && !gpuPool.some(o => o.id === c.instanceTypeId)) {
           c.instanceTypeId = '';
         }
         const computeOptions = filteredCatalogInstanceTypeOptions(c.computeFilter, { requireGpu });
@@ -22582,6 +22589,8 @@
               filter: c.computeFilter || '',
               searchPlaceholder: 'Search instance types',
               selectedId: c.instanceTypeId || '',
+              selectedOption: currentObsolete
+                ? catalogInstanceTypeOptionMeta(getCatalogInstanceTypeOption(c.instanceTypeId)) : null,
               placeholder: 'Select an instance type',
               optionAttr: 'data-ci-compute',
               emptyNoun: 'instance types',
@@ -22590,6 +22599,7 @@
               describedBy: state.fieldErrors.ciInstanceType ? 'err-ciInstanceType' : '',
               options: computeOptions.map(catalogInstanceTypeOptionMeta),
             })}
+            ${currentObsolete ? '<p class="muted">The current instance type is obsolete. Choose a different type for new VMs.</p>' : ''}
             ${providerFieldErrorHtml(state.fieldErrors.ciInstanceType, 'err-ciInstanceType')}
           </div>
         `;
