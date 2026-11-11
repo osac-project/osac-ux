@@ -8797,6 +8797,7 @@
       const q = (filter || '').toLowerCase();
       const { requireGpu, compatibleWith } = opts;
       return COMPUTE_RESOURCES.filter(c => {
+        if (c.lifecycle === 'Obsolete') return false;
         if (requireGpu === true && !computeResourceHasGpu(c)) return false;
         if (requireGpu === false && computeResourceHasGpu(c)) return false;
         if (compatibleWith && !vmResizeGpuCompatible(compatibleWith, c.id)) return false;
@@ -13405,6 +13406,7 @@
       return CATALOG_INSTANCE_TYPE_OPTIONS.filter(opt => {
         const it = getCatalogInstanceType(opt.id);
         if (!it) return false;
+        if (it.lifecycle === 'Obsolete') return false;
         const hasGpu = Number(it.gpus) > 0;
         if (requireGpu === true && !hasGpu) return false;
         if (requireGpu === false && hasGpu) return false;

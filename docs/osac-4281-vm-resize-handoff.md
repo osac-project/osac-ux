@@ -4,7 +4,7 @@ Contact: Yifat Friman Menchik, UXD
 Updated: 10 November 2026
 
 UX Google Doc: https://docs.google.com/document/d/1kgln_LzTA3-VSP0SUM0jLce2Nvw0pix3oTYkwZuX-wE/edit  
-Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=555caae&role=admin&vm=windows-golden-eider-58
+Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=20261111-obsolete-hidden&role=admin&vm=windows-golden-eider-58
 Feature: [OSAC-4277](https://redhat.atlassian.net/browse/OSAC-4277)  
 Resize: [OSAC-4281](https://redhat.atlassian.net/browse/OSAC-4281)  
 Related work: [OSAC-7576](https://redhat.atlassian.net/browse/OSAC-7576), [OSAC-7463](https://redhat.atlassian.net/browse/OSAC-7463), [OSAC-7582](https://redhat.atlassian.net/browse/OSAC-7582), [OSAC-6578](https://redhat.atlassian.net/browse/OSAC-6578)
@@ -17,7 +17,7 @@ On VM Overview, select the pencil beside Instance type. Tenant Admin and Tenant 
 
 The modal has a required typeahead Instance type field and Save/Cancel actions. Each option shows its name, vCPUs, memory, GPU count and model, and rate. The VM's GPU configuration cannot change during resize. Exclude instance types with a different GPU count or resource. Do not predict hot-plug or restart from boot-disk access mode before submission. Show submit failures inside the modal.
 
-Show Deprecated instance types as selectable options with a **Deprecated** label and tooltip: “Still available, but being phased out. We recommend an active type.” Show Obsolete types in the menu with an **Obsolete** label, but disable them and explain: “Unavailable for new VMs or resizes.” Keep the lifecycle label visible after selecting a Deprecated type. The same rule applies in Create VM and Create VM Catalog Item; see [instance type lifecycle selection](instance-type-lifecycle-selection.md).
+Show Deprecated instance types as selectable options with a **Deprecated** label and tooltip: “Still available, but being phased out. We recommend an active type.” Omit Obsolete types from the menu. Keep the lifecycle label visible after selecting a Deprecated type. The same rule applies in Create VM and Create VM Catalog Item; see [instance type lifecycle selection](instance-type-lifecycle-selection.md).
 
 ## After Save
 
@@ -37,11 +37,10 @@ The API must expose or allow derivation of both active and requested configurati
 
 ## Current mockup screenshots
 
-**Instance type lifecycle.** Deprecated remains selectable and labeled; Obsolete stays visible but cannot be selected.
+**Instance type lifecycle.** Deprecated remains selectable and labeled; Obsolete is omitted from the menu.
 
 ![Deprecated instance type selected for resize](screenshots/instance-type-lifecycle/resize-deprecated.png)
 
-![Obsolete instance type disabled for resize](screenshots/instance-type-lifecycle/resize-obsolete.png)
 
 **Collapsed restart notice.** The title remains visible until the VM restarts.
 
