@@ -19199,6 +19199,8 @@
                     </div>
                   </div>
                 </div>
+                ${COMPUTE_RESOURCES.find(c => c.id === selectedTpl?.computeResource)?.lifecycle === 'Obsolete' && !d.computeResource
+                  ? '<p class="form-helper">This template’s default instance type is obsolete. Select another type to continue.</p>' : ''}
                 ${fieldErrorHtml('computeResource')}
               </div>
           ` : `
@@ -19210,8 +19212,10 @@
                 <input type="text" id="f-compute-resource" class="unit-size-input"
                   value="${(computeLabel || '—').replace(/"/g, '&quot;')}"
                   disabled aria-disabled="true" aria-label="Instance type"
-                  aria-describedby="f-compute-locked-help" />
-                <p class="form-helper" id="f-compute-locked-help">This size is set by the template and can’t be changed during create. You can edit the instance type after the virtual machine is created.</p>
+                  aria-describedby="f-compute-locked-help${state.fieldErrors.computeResource ? ' err-computeResource' : ''}" />
+                <p class="form-helper" id="f-compute-locked-help">${COMPUTE_RESOURCES.find(c => c.id === d.computeResource)?.lifecycle === 'Obsolete'
+                  ? 'This template uses an obsolete instance type. Choose a different catalog item to continue.'
+                  : 'This size is set by the template and can’t be changed during create. You can edit the instance type after the virtual machine is created.'}</p>
                 ${fieldErrorHtml('computeResource')}
               </div>
           `;

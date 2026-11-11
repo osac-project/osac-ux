@@ -15,7 +15,7 @@ An existing VM or catalog item that uses a Deprecated or Obsolete type still dis
 
 If a selected catalog item or template still has an Obsolete type as its default, the Create VM wizard must not silently substitute another type or create the VM with that default. If instance type is editable, require a valid replacement. If it is locked, explain that the user must choose a different catalog item.
 
-Related: [VM resize handoff](osac-4281-vm-resize-handoff.md) · [OSAC-4281](https://redhat.atlassian.net/browse/OSAC-4281)
+Related: [VM resize handoff](osac-4281-vm-resize-handoff.md) · [OSAC-7656 lifecycle bug](https://redhat.atlassian.net/browse/OSAC-7656) · [OSAC-4281 resize](https://redhat.atlassian.net/browse/OSAC-4281)
 
 ## Screenshots
 
