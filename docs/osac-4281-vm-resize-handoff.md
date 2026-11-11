@@ -4,7 +4,7 @@ Contact: Yifat Friman Menchik, UXD
 Updated: 10 November 2026
 
 UX Google Doc: https://docs.google.com/document/d/1kgln_LzTA3-VSP0SUM0jLce2Nvw0pix3oTYkwZuX-wE/edit  
-Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=d321683&role=admin&vm=azure-baboon-27
+Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=555caae&role=admin&vm=windows-golden-eider-58
 Feature: [OSAC-4277](https://redhat.atlassian.net/browse/OSAC-4277)  
 Resize: [OSAC-4281](https://redhat.atlassian.net/browse/OSAC-4281)  
 Related work: [OSAC-7576](https://redhat.atlassian.net/browse/OSAC-7576), [OSAC-7463](https://redhat.atlassian.net/browse/OSAC-7463), [OSAC-7582](https://redhat.atlassian.net/browse/OSAC-7582), [OSAC-6578](https://redhat.atlassian.net/browse/OSAC-6578)
@@ -36,6 +36,12 @@ Do not show a persistent progress notification, timing details, or a Recent acti
 The API must expose or allow derivation of both active and requested configuration values, the restart-required condition, the resize operation phase, and a failure reason. Backend acceptance of the update depends on OSAC-5328.
 
 ## Current mockup screenshots
+
+**Instance type lifecycle.** Deprecated remains selectable and labeled; Obsolete stays visible but cannot be selected.
+
+![Deprecated instance type selected for resize](screenshots/instance-type-lifecycle/resize-deprecated.png)
+
+![Obsolete instance type disabled for resize](screenshots/instance-type-lifecycle/resize-obsolete.png)
 
 **Collapsed restart notice.** The title remains visible until the VM restarts.
 
