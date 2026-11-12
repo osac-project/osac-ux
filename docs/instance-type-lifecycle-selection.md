@@ -3,9 +3,11 @@
 Contact: Yifat Friman Menchik, UXD  
 Updated: 11 November 2026
 
-Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=20261111-obsolete-hidden&role=admin&vm=windows-golden-eider-58
+Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=38890d7&role=admin&vm=windows-golden-eider-58
 
 This rule applies to the instance type menus in **Create VM**, **Create VM Catalog Item**, and **Edit instance type** (resize).
+
+Every option uses the instance type name as its first line and CPU, memory, and, when present, GPU count and readable model in its description. Do not show PCI IDs in the visible description. The selected type keeps its lifecycle label; compatibility checks still use the full GPU specification.
 
 - **Active:** selectable without an additional label.
 - **Deprecated:** selectable with a **Deprecated** label. On hover or focus, show: “Still available, but being phased out. We recommend an active type.” Keep the label visible after selection.
