@@ -3933,19 +3933,15 @@
     .icon-tool:hover { background: var(--vmaas-bg-subtle); color: var(--vmaas-text); }
     .list-pagination { display: flex; justify-content: flex-end; margin-block: 12px; }
     .list-pagination--top { margin-block-start: 0; }
-    .list-pagination .pf-v6-c-pagination { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .list-pagination .pf-v6-c-pagination__nav { display: flex; align-items: center; gap: 4px; }
+    .list-pagination .pf-v6-c-pagination { display: flex; align-items: center; gap: 16px; }
+    .list-pagination .pf-v6-c-pagination__nav { display: flex; align-items: center; gap: 8px; }
     .list-pagination .pf-v6-c-pagination__nav-control { width: 32px; height: 32px; }
-    .list-pagination .pf-v6-c-pagination__nav-page-select { width: 44px; text-align: center; }
-    .list-pagination .pf-v6-c-form-control { width: auto; min-width: 64px; }
-    .list-pagination .pf-v6-c-form-select { width: 64px; }
+    .list-pagination .list-pagination__range-select {
+      width: auto; min-width: 104px; border: 0; background-color: transparent;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+    }
     @media (max-width: 768px) {
-      .list-pagination--top .pf-v6-c-pagination__per-page,
       .list-pagination--top .pf-v6-c-pagination__nav { display: none; }
-      .list-pagination--bottom .list-pagination__first,
-      .list-pagination--bottom .list-pagination__last,
-      .list-pagination--bottom .pf-v6-c-pagination__nav-page-select,
-      .list-pagination--bottom .list-pagination__page-total { display: none; }
     }
     .res-icon {
       display: inline-flex; align-items: center; justify-content: center;
@@ -12725,28 +12721,19 @@
       const pages = Math.max(1, Math.ceil(total / perPage));
       const start = (page - 1) * perPage + 1;
       const end = Math.min(page * perPage, total);
-      const button = (action, label, icon, disabled, extraClass = '') => `
-        <button type="button" class="pf-v6-c-button pf-m-plain pf-v6-c-pagination__nav-control ${extraClass}"
+      const button = (action, label, icon, disabled) => `
+        <button type="button" class="pf-v6-c-button pf-m-plain pf-v6-c-pagination__nav-control"
           data-list-page="${key}" data-page-action="${action}" aria-label="${label}" ${disabled ? 'disabled' : ''}>
           <i class="fa-solid ${icon}" aria-hidden="true"></i>
         </button>`;
-      return `<nav class="pf-v6-c-pagination pf-m-${position}" aria-label="${position === 'top' ? 'Top' : 'Bottom'} pagination">
-        <span class="pf-v6-c-pagination__per-page">
-          <label for="${key}-${position}-per-page">Items per page</label>
-          <select class="pf-v6-c-form-select" id="${key}-${position}-per-page" data-list-per-page="${key}">
-            ${[10, 20, 50, 100].map(n => `<option value="${n}" ${perPage === n ? 'selected' : ''}>${n}</option>`).join('')}
-          </select>
-        </span>
-        <span class="pf-v6-c-pagination__total-items" aria-live="polite">${start}–${end} of ${total}</span>
+      return `<nav class="pf-v6-c-pagination pf-m-${position} pf-m-compact" aria-label="${position === 'top' ? 'Top' : 'Bottom'} pagination" data-list-pages="${pages}">
+        <label class="pf-v6-screen-reader" for="${key}-${position}-per-page">Items per page</label>
+        <select class="pf-v6-c-form-select list-pagination__range-select" id="${key}-${position}-per-page" data-list-per-page="${key}" aria-label="${start}–${end} of ${total}; items per page">
+          ${[10, 20, 50, 100].map(n => `<option value="${n}" ${perPage === n ? 'selected' : ''}>${perPage === n ? `${start}–${end} of ${total}` : `${n} per page`}</option>`).join('')}
+        </select>
         <div class="pf-v6-c-pagination__nav">
-          ${button('first', 'Go to first page', 'fa-angles-left', page === 1, 'list-pagination__first')}
           ${button('previous', 'Go to previous page', 'fa-angle-left', page === 1)}
-          <label class="pf-v6-screen-reader" for="${key}-${position}-page">Current page</label>
-          <input class="pf-v6-c-form-control pf-v6-c-pagination__nav-page-select" id="${key}-${position}-page"
-            type="number" min="1" max="${pages}" value="${page}" data-list-page-input="${key}" aria-label="Current page" />
-          <span class="list-pagination__page-total">of ${pages}</span>
           ${button('next', 'Go to next page', 'fa-angle-right', page === pages)}
-          ${button('last', 'Go to last page', 'fa-angles-right', page === pages, 'list-pagination__last')}
         </div>
       </nav>`;
     }
@@ -12773,26 +12760,18 @@
       const key = button.dataset.listPage;
       const current = state.listPagination?.[key];
       if (!current) return;
-      const total = Number(document.querySelector(`#${key}-pagination-top [data-list-page-input]`)?.max || 1);
-      const action = button.dataset.pageAction;
-      current.page = action === 'first' ? 1 : action === 'last' ? total
-        : Math.min(total, Math.max(1, current.page + (action === 'next' ? 1 : -1)));
+      const total = Number(document.querySelector(`#${key}-pagination-top [data-list-pages]`)?.dataset.listPages || 1);
+      current.page = Math.min(total, Math.max(1, current.page + (button.dataset.pageAction === 'next' ? 1 : -1)));
       LIST_RENDERERS[key]?.();
     });
     document.addEventListener('change', e => {
       const perPageKey = e.target.dataset?.listPerPage;
-      const pageKey = e.target.dataset?.listPageInput;
-      if (!perPageKey && !pageKey) return;
-      const key = perPageKey || pageKey;
-      const current = state.listPagination?.[key];
+      if (!perPageKey) return;
+      const current = state.listPagination?.[perPageKey];
       if (!current) return;
-      if (perPageKey) {
-        current.perPage = Number(e.target.value);
-        current.page = 1;
-      } else {
-        current.page = Math.min(Number(e.target.max), Math.max(1, Number(e.target.value) || 1));
-      }
-      LIST_RENDERERS[key]?.();
+      current.perPage = Number(e.target.value);
+      current.page = 1;
+      LIST_RENDERERS[perPageKey]?.();
     });
 
     function renderVms(q = state.vmFilter) {
