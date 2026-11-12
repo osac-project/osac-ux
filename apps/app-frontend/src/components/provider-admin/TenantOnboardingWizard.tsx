@@ -1,0 +1,1419 @@
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { ExternalLinkAltIcon } from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon'
+import { InfoCircleIcon } from '@patternfly/react-icons/dist/esm/icons/info-circle-icon'
+import { RedoIcon } from '@patternfly/react-icons/dist/esm/icons/redo-icon'
+import {
+  Alert,
+  Button,
+  Content,
+  DescriptionList,
+  DescriptionListDescription,
+  DescriptionListGroup,
+  DescriptionListTerm,
+  Form,
+  FormGroup,
+  FormHelperText,
+  FormSelect,
+  FormSelectOption,
+  HelperText,
+  HelperTextItem,
+  Label,
+  Modal,
+  ModalVariant,
+  Spinner,
+  TextInput,
+  Title,
+  Wizard,
+  WizardFooter,
+  WizardHeader,
+  WizardStep,
+  useWizardContext,
+} from '@patternfly/react-core'
+import { RouterButton } from '../RouterButton'
+import type { ProviderCatalogDraft } from '../../providerSetup/storage'
+import {
+  BLUESOLACE_ONBOARDING_M360_ACCOUNT_NAME,
+  DEFAULT_ONBOARDING_M360_ACCOUNT_NAME,
+  fetchM360BillingAccounts,
+  findM360AccountByReference,
+  findM360AccountByTenantName,
+  formatM360PortalValue,
+  buildM360AccountDetailPath,
+  getM360AccountLinkConflictMessage,
+  getM360AccountTenantName,
+  isM360AccountLinkedToAnotherTenant,
+  isM360BillingAccountInactive,
+  linkM360AccountInDemoStore,
+  mergeResumedM360BillingAccounts,
+  resolveM360AccountRateCard,
+  type M360BillingAccount,
+} from '../../billing/m360Accounts'
+import { resolveM360ConnectionStatus } from '../../billing/m360'
+import {
+  BILLING_PLATFORM_OPTIONS,
+  DEFAULT_BILLING_PLATFORM_ID,
+  formatBillingPlatformAccountSummary,
+  getBillingPlatformOption,
+  type BillingPlatformId,
+} from '../../billing/billingPlatforms'
+import { KubernetesResourceNameField } from '../shared/KubernetesResourceNameHelper'
+import { ResourceCreatePageShell } from '../shared/ResourceCreatePageShell'
+import { useWizardLeaveConfirm } from '../shared/useWizardLeaveConfirm'
+import { getAssignableExternalIpPools } from '../../providerAdmin/externalIpPools'
+import {
+  getProviderExternalIpPools,
+  getProviderRegisteredOrganizations,
+} from '../../providerSetup/storage'
+import {
+  buildNextRegisterOrganizationForm,
+  areAdditionalDomainsValid,
+  buildRegisterBreakGlassFields,
+  EXTERNAL_BILLING_ID_MAX_LENGTH,
+  formFromRegisteredOrganization,
+  generateOrganizationId,
+  getTakenEmailDomains,
+  isOrganizationDomainTaken,
+  isOrganizationNameTaken,
+  isOrganizationSlugTaken,
+  isValidPrimaryDomain,
+  normalizeAdditionalDomains,
+  normalizeExternalBillingId,
+  normalizePrimaryDomain,
+  slugifyOrganizationName,
+  TENANT_ONBOARDING_STEPS,
+  type RegisterOrganizationForm,
+  type RegisteredOrganization,
+  type TenantOnboardingStepId,
+} from '../../providerAdmin/organizations'
+import {
+  AdditionalEmailDomainsField,
+  AdditionalEmailDomainsValue,
+} from './AdditionalEmailDomainsField'
+import { CatalogEditChangesSummary } from './CatalogEditChangesSummary'
+import { TenantCompanyLogoField } from './TenantCompanyLogoField'
+import {
+  buildOrganizationEditSnapshot,
+  buildOrganizationEditSnapshotFromOrganization,
+  getOrganizationEditChanges,
+  getOrganizationEditModifiedStepIds,
+} from '../../providerAdmin/organizationEditDiff'
+import {
+  getKubernetesResourceNameValidation,
+  isValidKubernetesResourceName,
+} from '../../shared/kubernetesResourceName'
+import {
+  getWorkspaceStepParam,
+  resolveWorkspaceWizardStartIndex,
+  syncWorkspaceStepParam,
+} from '../../shared/workspaceNavUrl'
+
+type TenantOnboardingWizardProps = {
+  isOpen: boolean
+  /** `page` replaces the Tenants list. Use `modal` when stacked over another flow (e.g. catalog create). */
+  presentation?: 'modal' | 'page'
+  catalogDraft: ProviderCatalogDraft | null
+  /** Resume billing setup for an existing tenant (starts on Billing; General is read-only). */
+  resumeOrganization?: RegisteredOrganization | null
+  /** Full edit of an existing tenant (General → Billing → Review). */
+  editingOrganization?: RegisteredOrganization | null
+  /** Which step to open on. Defaults to General; Billing pending uses `billing_account`. */
+  initialStepId?: TenantOnboardingStepId
+  onClose: () => void
+  onPersistOrganization: (organization: RegisteredOrganization) => void
+  onComplete?: (organization: RegisteredOrganization) => void
+}
+
+type BillingApiState = 'idle' | 'loading' | 'ready' | 'error'
+type BillingLinkTiming = 'now' | 'later'
+
+
+const BILLING_LINK_TIMING_OPTIONS: ReadonlyArray<{
+  id: BillingLinkTiming
+  title: string
+  detail: string
+  badge?: string
+}> = [
+  {
+    id: 'now',
+    title: 'Link a billing account now',
+    detail: 'Recommended when the account is already available on a billing platform.',
+    badge: 'Recommended',
+  },
+  {
+    id: 'later',
+    title: 'Set up billing later',
+    detail: 'Register without billing now and link an account from tenant details later.',
+  },
+]
+
+function buildTenantOnboardingForm(
+  existingOrganizations: RegisteredOrganization[],
+): RegisterOrganizationForm {
+  return {
+    ...buildNextRegisterOrganizationForm(existingOrganizations),
+    additionalDomains: [],
+  }
+}
+
+type TenantOnboardingNavigateFooterProps = {
+  onClose: () => void
+  isNextDisabled?: boolean
+  nextButtonText?: ReactNode
+  onNavigateNext: () => boolean | Promise<boolean>
+}
+
+function TenantOnboardingNavigateFooter({
+  onClose,
+  isNextDisabled = false,
+  nextButtonText,
+  onNavigateNext,
+}: TenantOnboardingNavigateFooterProps) {
+  const { goToNextStep, goToPrevStep, activeStep } = useWizardContext()
+
+  const handleNext = async () => {
+    const shouldAdvance = await onNavigateNext()
+    if (shouldAdvance) {
+      goToNextStep()
+    }
+  }
+
+  if (!activeStep) {
+    return null
+  }
+
+  return (
+    <WizardFooter
+      activeStep={activeStep}
+      onBack={goToPrevStep}
+      onClose={onClose}
+      isBackDisabled={activeStep.index === 1}
+      isNextDisabled={isNextDisabled}
+      nextButtonText={nextButtonText}
+      onNext={handleNext}
+    />
+  )
+}
+
+export function TenantOnboardingWizard({
+  isOpen,
+  presentation = 'page',
+  catalogDraft,
+  resumeOrganization = null,
+  editingOrganization = null,
+  initialStepId = 'general',
+  onClose,
+  onPersistOrganization,
+  onComplete,
+}: TenantOnboardingWizardProps) {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const isPage = presentation === 'page'
+  const sourceOrganization = editingOrganization ?? resumeOrganization
+  const isEditMode = Boolean(editingOrganization)
+  const isResumeBillingMode = Boolean(resumeOrganization) && !editingOrganization
+  const isExistingTenantMode = Boolean(sourceOrganization)
+  const syncStepToUrl = isPage && !isExistingTenantMode
+  const wizardTitle = isExistingTenantMode ? 'Edit tenant' : 'Register tenant'
+  const urlStepId = syncStepToUrl ? getWorkspaceStepParam(searchParams) : null
+  const wizardStartIndex = (() => {
+    if (isResumeBillingMode) {
+      return 2
+    }
+    if (syncStepToUrl && urlStepId) {
+      return resolveWorkspaceWizardStartIndex(TENANT_ONBOARDING_STEPS, urlStepId)
+    }
+    const stepIndex = TENANT_ONBOARDING_STEPS.findIndex((step) => step.id === initialStepId)
+    return stepIndex >= 0 ? stepIndex + 1 : 1
+  })()
+  const [form, setForm] = useState<RegisterOrganizationForm>(() =>
+    buildTenantOnboardingForm(getProviderRegisteredOrganizations()),
+  )
+  const [createdOrganization, setCreatedOrganization] = useState<RegisteredOrganization | null>(
+    null,
+  )
+  const [billingAccounts, setBillingAccounts] = useState<M360BillingAccount[]>([])
+  const [billingApiState, setBillingApiState] = useState<BillingApiState>('idle')
+  const [billingLinkTiming, setBillingLinkTiming] = useState<BillingLinkTiming>('now')
+  const [billingPlatformId, setBillingPlatformId] = useState<BillingPlatformId>(
+    DEFAULT_BILLING_PLATFORM_ID,
+  )
+  const [selectedAccountName, setSelectedAccountName] = useState('')
+  const [linkError, setLinkError] = useState<string | null>(null)
+  const [isLinking, setIsLinking] = useState(false)
+  const linkBillingNow = billingLinkTiming === 'now'
+  const selectedBillingPlatform = getBillingPlatformOption(billingPlatformId)
+  const isM360PlatformSelected = billingPlatformId === 'm360'
+
+  const existingOrganizations = useMemo(
+    () => (isOpen ? getProviderRegisteredOrganizations() : []),
+    [isOpen],
+  )
+
+  const excludeOrganizationId = sourceOrganization?.id
+  const nameTaken = isOrganizationNameTaken(
+    form.organizationName,
+    existingOrganizations,
+    excludeOrganizationId,
+  )
+  const domainTaken = isOrganizationDomainTaken(
+    form.primaryDomain,
+    existingOrganizations,
+    excludeOrganizationId,
+  )
+  const slugTaken = isOrganizationSlugTaken(
+    form.organizationName,
+    existingOrganizations,
+    excludeOrganizationId,
+  )
+  const nameFormat = getKubernetesResourceNameValidation(form.organizationName)
+  const takenEmailDomains = useMemo(
+    () => getTakenEmailDomains(existingOrganizations, excludeOrganizationId),
+    [existingOrganizations, excludeOrganizationId],
+  )
+  const additionalDomainsValid = areAdditionalDomainsValid(
+    form.additionalDomains,
+    form.primaryDomain,
+    takenEmailDomains,
+  )
+  const isGeneralStepValid =
+    isValidKubernetesResourceName(form.organizationName) &&
+    isValidPrimaryDomain(form.primaryDomain) &&
+    additionalDomainsValid &&
+    !nameTaken &&
+    !domainTaken &&
+    !slugTaken
+
+  const editBaseline = useMemo(() => {
+    if (!isEditMode || !editingOrganization) {
+      return null
+    }
+
+    return buildOrganizationEditSnapshotFromOrganization(editingOrganization)
+  }, [editingOrganization, isEditMode])
+
+  const currentEditSnapshot = useMemo(() => {
+    if (!isEditMode) {
+      return null
+    }
+
+    return buildOrganizationEditSnapshot(form, { m360AccountId: selectedAccountName })
+  }, [form, isEditMode, selectedAccountName])
+
+  const editChanges = useMemo(() => {
+    if (!editBaseline || !currentEditSnapshot) {
+      return []
+    }
+
+    return getOrganizationEditChanges(editBaseline, currentEditSnapshot)
+  }, [currentEditSnapshot, editBaseline])
+
+  const modifiedStepIds = useMemo(
+    () => getOrganizationEditModifiedStepIds(editChanges),
+    [editChanges],
+  )
+
+  const canSaveOrganizationEdit = !isEditMode || editChanges.length > 0
+
+  const draftTenantName =
+    createdOrganization?.name.trim() ||
+    sourceOrganization?.name.trim() ||
+    form.organizationName.trim()
+
+  const matchedExternalAccount = useMemo(() => {
+    if (!draftTenantName || billingAccounts.length === 0) {
+      return null
+    }
+    return findM360AccountByTenantName(draftTenantName, billingAccounts)
+  }, [billingAccounts, draftTenantName])
+
+  const selectedAccount = selectedAccountName
+    ? findM360AccountByReference(selectedAccountName)
+    : null
+  const selectedAccountInactive = isM360BillingAccountInactive(selectedAccount)
+  const draftOrganizationSlug = slugifyOrganizationName(form.organizationName)
+  const accountConflict =
+    selectedAccount &&
+    (createdOrganization?.slug || sourceOrganization?.slug || draftOrganizationSlug)
+      ? isM360AccountLinkedToAnotherTenant(
+          selectedAccount,
+          createdOrganization?.slug || sourceOrganization?.slug || draftOrganizationSlug,
+        )
+      : false
+
+  const sortedBillingAccounts = useMemo(() => {
+    const currentTenantSlug =
+      createdOrganization?.slug || sourceOrganization?.slug || draftOrganizationSlug
+
+    return [...billingAccounts].sort((left, right) => {
+      const leftLinkedElsewhere = isM360AccountLinkedToAnotherTenant(left, currentTenantSlug)
+      const rightLinkedElsewhere = isM360AccountLinkedToAnotherTenant(right, currentTenantSlug)
+
+      if (leftLinkedElsewhere !== rightLinkedElsewhere) {
+        return leftLinkedElsewhere ? 1 : -1
+      }
+
+      return getM360AccountTenantName(left).localeCompare(getM360AccountTenantName(right), undefined, {
+        sensitivity: 'base',
+      })
+    })
+  }, [
+    billingAccounts,
+    createdOrganization?.slug,
+    draftOrganizationSlug,
+    sourceOrganization?.slug,
+  ])
+
+  const getDefaultBillingSelections = (organization: RegisteredOrganization | null) => {
+    const isBluesolaceResume =
+      organization?.slug === 'bluesolace' || organization?.slug === 'evergreen'
+
+    return {
+      accountName: isBluesolaceResume
+        ? BLUESOLACE_ONBOARDING_M360_ACCOUNT_NAME
+        : DEFAULT_ONBOARDING_M360_ACCOUNT_NAME,
+    }
+  }
+
+  const resetWizard = () => {
+    setForm(buildTenantOnboardingForm(getProviderRegisteredOrganizations()))
+    setCreatedOrganization(null)
+    setBillingAccounts([])
+    setBillingApiState('idle')
+    setBillingLinkTiming('now')
+    setBillingPlatformId(DEFAULT_BILLING_PLATFORM_ID)
+    setSelectedAccountName('')
+    setLinkError(null)
+    setIsLinking(false)
+  }
+
+  const handleClose = () => {
+    resetWizard()
+    onClose()
+  }
+
+  const { requestClose, leaveConfirmModal, wrapStepFooter } = useWizardLeaveConfirm({
+    onLeave: handleClose,
+    primaryActionLabel: 'Leave',
+    titleId: 'tenant-onboarding-leave-confirm',
+  })
+
+  useEffect(() => {
+    if (!syncStepToUrl || !isOpen) {
+      return
+    }
+
+    const stepFromUrl = getWorkspaceStepParam(searchParams)
+    const isValidStep = Boolean(
+      stepFromUrl && TENANT_ONBOARDING_STEPS.some((step) => step.id === stepFromUrl),
+    )
+    if (isValidStep) {
+      return
+    }
+
+    const firstStepId = TENANT_ONBOARDING_STEPS[0]?.id
+    if (firstStepId) {
+      syncWorkspaceStepParam(setSearchParams, firstStepId, { replace: true })
+    }
+  }, [isOpen, searchParams, setSearchParams, syncStepToUrl])
+
+  useEffect(() => {
+    if (!isOpen) {
+      resetWizard()
+      return
+    }
+
+    if (sourceOrganization) {
+      const linkedReference =
+        sourceOrganization.m360AccountId?.trim() ||
+        sourceOrganization.billingAccountId.trim()
+      const resumedAccount = linkedReference
+        ? findM360AccountByReference(linkedReference)
+        : null
+      const billingDefaults = getDefaultBillingSelections(sourceOrganization)
+      setForm(formFromRegisteredOrganization(sourceOrganization))
+      setCreatedOrganization(sourceOrganization)
+      setBillingLinkTiming('now')
+      setBillingPlatformId(DEFAULT_BILLING_PLATFORM_ID)
+      setSelectedAccountName(
+        resumedAccount
+          ? getM360AccountTenantName(resumedAccount)
+          : isEditMode
+            ? ''
+            : billingDefaults.accountName,
+      )
+      setBillingApiState('idle')
+      return
+    }
+
+    setForm(buildTenantOnboardingForm(getProviderRegisteredOrganizations()))
+    setBillingLinkTiming('now')
+    setBillingPlatformId(DEFAULT_BILLING_PLATFORM_ID)
+    setSelectedAccountName(DEFAULT_ONBOARDING_M360_ACCOUNT_NAME)
+  }, [editingOrganization, isOpen, resumeOrganization])
+
+  useEffect(() => {
+    if (!isOpen || billingApiState !== 'idle') {
+      return
+    }
+
+    setBillingApiState('loading')
+    fetchM360BillingAccounts()
+      .then((accounts) => {
+        const organization = createdOrganization ?? sourceOrganization
+        const mergedAccounts = mergeResumedM360BillingAccounts(accounts, organization)
+        setBillingAccounts(mergedAccounts)
+        setBillingApiState('ready')
+        const match = draftTenantName
+          ? findM360AccountByTenantName(draftTenantName, mergedAccounts)
+          : null
+        const billingDefaults = getDefaultBillingSelections(organization)
+        const hasLinkedBilling = Boolean(
+          organization?.m360AccountId?.trim() || organization?.billingAccountId.trim(),
+        )
+        if (match && (hasLinkedBilling || !isEditMode)) {
+          setSelectedAccountName(getM360AccountTenantName(match))
+        } else {
+          setSelectedAccountName((current) =>
+            current || (isEditMode ? '' : billingDefaults.accountName),
+          )
+        }
+      })
+      .catch(() => {
+        setBillingApiState('error')
+      })
+  }, [billingApiState, createdOrganization, draftTenantName, isEditMode, isOpen, sourceOrganization])
+
+  useEffect(() => {
+    if (!matchedExternalAccount || billingApiState !== 'ready' || isEditMode) {
+      return
+    }
+
+    const matchName = getM360AccountTenantName(matchedExternalAccount)
+    setSelectedAccountName((current) => {
+      if (!current || current === DEFAULT_ONBOARDING_M360_ACCOUNT_NAME) {
+        return matchName
+      }
+      return current
+    })
+  }, [billingApiState, isEditMode, matchedExternalAccount])
+
+  const buildOrganizationFromForm = (): RegisteredOrganization | null => {
+    if (!isGeneralStepValid) {
+      return null
+    }
+
+    const slug = slugifyOrganizationName(form.organizationName)
+    const normalizedPrimaryDomain = normalizePrimaryDomain(form.primaryDomain)
+    const normalizedAdditionalDomains = normalizeAdditionalDomains(
+      form.additionalDomains,
+      normalizedPrimaryDomain,
+    )
+    const pools = getAssignableExternalIpPools(getProviderExternalIpPools())
+    const selectedPool = pools[0] ?? null
+    const breakGlass = buildRegisterBreakGlassFields(
+      form.organizationName.trim(),
+      normalizedPrimaryDomain,
+      {
+        breakGlassUsername: form.breakGlassUsername,
+        breakGlassPassword: form.breakGlassPassword,
+        slug,
+      },
+    )
+
+    const normalizedTenantName = form.organizationName.trim()
+    const organization: RegisteredOrganization = {
+      id: generateOrganizationId(),
+      name: normalizedTenantName,
+      displayName: form.displayName.trim() || normalizedTenantName,
+      tenantId: normalizedTenantName,
+      slug,
+      primaryDomain: normalizedPrimaryDomain,
+      additionalDomains: normalizedAdditionalDomains,
+      m360AccountId: '',
+      m360ConnectionStatus: 'pending',
+      billingAccountId: '',
+      billingAccountName: form.billingAccountName.trim() || `${slug}-enterprise-billing`,
+      externalBillingId: normalizeExternalBillingId(form.externalBillingId).trim(),
+      billingAccountLinked: false,
+      tenantSetupStatus: 'incomplete',
+      logoSrc: form.logoSrc.trim() || null,
+      logoFileName: form.logoFileName.trim() || null,
+      catalogItemId: catalogDraft?.catalogItemId ?? null,
+      catalogDisplayName: catalogDraft?.displayName ?? null,
+      externalIpPoolId: selectedPool?.id ?? null,
+      externalIpPoolName: selectedPool?.name ?? null,
+      externalIpPoolCidr: selectedPool?.cidr ?? null,
+      maxInstances: 20,
+      tenantAdminName: '',
+      tenantAdminEmail: '',
+      additionalTenantAdmins: [],
+      invitedTenantUserEmails: [],
+      identityProviderConnected: false,
+      identityProviderConnectedBy: null,
+      identityProviderName: null,
+      identityProviderDisplayName: null,
+      identityProviderProtocol: null,
+      identityProviderIssuerUrl: null,
+      identityProviderClientId: null,
+      identityProviders: [],
+      idpManagerEmail: null,
+      idpInviteToken: null,
+      idpInviteStatus: 'none',
+      idpInviteSentAt: null,
+      idpInviteExpiresAt: null,
+      ...breakGlass,
+      breakGlassIssuedAt: new Date().toISOString(),
+      rbacConfigured: false,
+      status: 'Pending activation',
+      createdAt: new Date().toISOString(),
+    }
+
+    return organization
+  }
+
+  const applyGeneralFormToOrganization = (
+    organization: RegisteredOrganization,
+  ): RegisteredOrganization | null => {
+    if (!isGeneralStepValid) {
+      return null
+    }
+
+    const slug = slugifyOrganizationName(form.organizationName)
+    const normalizedPrimaryDomain = normalizePrimaryDomain(form.primaryDomain)
+    const normalizedAdditionalDomains = normalizeAdditionalDomains(
+      form.additionalDomains,
+      normalizedPrimaryDomain,
+    )
+    const normalizedTenantName = form.organizationName.trim()
+
+    return {
+      ...organization,
+      name: normalizedTenantName,
+      displayName: form.displayName.trim() || normalizedTenantName,
+      tenantId: normalizedTenantName,
+      slug,
+      primaryDomain: normalizedPrimaryDomain,
+      additionalDomains: normalizedAdditionalDomains,
+      externalBillingId: normalizeExternalBillingId(form.externalBillingId).trim(),
+      logoSrc: form.logoSrc.trim() || null,
+      logoFileName: form.logoFileName.trim() || null,
+    }
+  }
+
+  const handleCreateTenant = (): boolean => {
+    if (isEditMode && editingOrganization) {
+      const organization = applyGeneralFormToOrganization(
+        createdOrganization ?? editingOrganization,
+      )
+      if (!organization) {
+        return false
+      }
+      setCreatedOrganization(organization)
+      return true
+    }
+
+    const organization = buildOrganizationFromForm()
+    if (!organization) {
+      return false
+    }
+
+    setCreatedOrganization(organization)
+    return true
+  }
+
+  const handleLinkBillingAccount = async (): Promise<RegisteredOrganization | null> => {
+    const baseOrganization =
+      createdOrganization ?? sourceOrganization ?? buildOrganizationFromForm()
+    const organization =
+      isEditMode && baseOrganization
+        ? applyGeneralFormToOrganization(baseOrganization) ?? baseOrganization
+        : baseOrganization
+    if (
+      !organization ||
+      !selectedAccount ||
+      accountConflict ||
+      isM360BillingAccountInactive(selectedAccount)
+    ) {
+      return null
+    }
+
+    if (!createdOrganization) {
+      setCreatedOrganization(organization)
+    }
+
+    setIsLinking(true)
+    setLinkError(null)
+    await new Promise((resolve) => window.setTimeout(resolve, 500))
+
+    if (isM360AccountLinkedToAnotherTenant(selectedAccount, organization.slug)) {
+      setLinkError(getM360AccountLinkConflictMessage(selectedAccount))
+      setIsLinking(false)
+      return null
+    }
+
+    const linkedTenantName = getM360AccountTenantName(selectedAccount)
+    linkM360AccountInDemoStore(linkedTenantName, organization)
+    const detectedRateCard = resolveM360AccountRateCard(selectedAccount)
+
+    const linked: RegisteredOrganization = {
+      ...organization,
+      m360AccountId: linkedTenantName,
+      billingAccountId: linkedTenantName,
+      billingAccountName: linkedTenantName,
+      externalBillingId: normalizeExternalBillingId(form.externalBillingId).trim(),
+      m360RateCardId: detectedRateCard?.id,
+      m360RateCardName: detectedRateCard?.name,
+      m360ConnectionStatus: resolveM360ConnectionStatus(linkedTenantName),
+      billingAccountLinked: true,
+      tenantSetupStatus: 'ready',
+    }
+
+    setCreatedOrganization(linked)
+    onPersistOrganization(linked)
+    setIsLinking(false)
+    return linked
+  }
+
+  const handleCompleteWithoutBilling = async (): Promise<RegisteredOrganization | null> => {
+    const baseOrganization =
+      createdOrganization ?? sourceOrganization ?? buildOrganizationFromForm()
+    const organization =
+      isEditMode && baseOrganization
+        ? applyGeneralFormToOrganization(baseOrganization) ?? baseOrganization
+        : baseOrganization
+    if (!organization) {
+      return null
+    }
+
+    setIsLinking(true)
+    setLinkError(null)
+    await new Promise((resolve) => window.setTimeout(resolve, 500))
+
+    const withoutBillingLink: RegisteredOrganization = {
+      ...organization,
+      externalBillingId: normalizeExternalBillingId(form.externalBillingId).trim(),
+    }
+
+    setCreatedOrganization(withoutBillingLink)
+    onPersistOrganization(withoutBillingLink)
+    setIsLinking(false)
+    return withoutBillingLink
+  }
+
+  const retryFetchAccounts = () => {
+    setBillingApiState('idle')
+  }
+
+  function isStepDisabled(_stepId: TenantOnboardingStepId): boolean {
+    return false
+  }
+
+  function renderGeneralStep() {
+    if (isResumeBillingMode && resumeOrganization) {
+      const resumePrimaryDomain = normalizePrimaryDomain(resumeOrganization.primaryDomain)
+      const resumeAdditionalDomains = normalizeAdditionalDomains(
+        resumeOrganization.additionalDomains ?? [],
+        resumePrimaryDomain,
+      )
+
+      return (
+        <div className="provider-admin-organizations__wizard-step tenant-onboarding__step">
+          <Content component="p" className="provider-admin-organizations__wizard-lede">
+            Review tenant details.
+          </Content>
+          <DescriptionList isCompact className="provider-admin-organizations__wizard-review">
+            <DescriptionListGroup>
+              <DescriptionListTerm>Tenant name</DescriptionListTerm>
+              <DescriptionListDescription>{resumeOrganization.name}</DescriptionListDescription>
+            </DescriptionListGroup>
+            <DescriptionListGroup>
+              <DescriptionListTerm>Primary email domain</DescriptionListTerm>
+              <DescriptionListDescription>{resumePrimaryDomain || '—'}</DescriptionListDescription>
+            </DescriptionListGroup>
+            {resumeAdditionalDomains.length > 0 ? (
+              <DescriptionListGroup>
+                <DescriptionListTerm>Additional email domains</DescriptionListTerm>
+                <DescriptionListDescription>
+                  <AdditionalEmailDomainsValue domains={resumeAdditionalDomains} />
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+            ) : null}
+            <DescriptionListGroup>
+              <DescriptionListTerm>Company logo</DescriptionListTerm>
+              <DescriptionListDescription>
+                {resumeOrganization.logoSrc ? (
+                  <div className="provider-admin-organizations__logo-preview">
+                    <img
+                      src={resumeOrganization.logoSrc}
+                      alt={
+                        resumeOrganization.logoFileName?.trim() ||
+                        resumeOrganization.name ||
+                        'Company logo'
+                      }
+                    />
+                  </div>
+                ) : (
+                  '—'
+                )}
+              </DescriptionListDescription>
+            </DescriptionListGroup>
+          </DescriptionList>
+        </div>
+      )
+    }
+
+    return (
+      <div className="provider-admin-organizations__wizard-step tenant-onboarding__step">
+        <Content component="p" className="provider-admin-organizations__wizard-lede">
+          {isEditMode ? 'Update tenant details.' : 'Enter tenant details.'}
+        </Content>
+        <Form autoComplete="off" className="provider-admin-organizations__wizard-form">
+          <FormGroup label="Tenant name" fieldId="tenant-onboarding-name" isRequired>
+            <KubernetesResourceNameField
+              id="tenant-onboarding-name"
+              value={form.organizationName}
+              onChange={(value) =>
+                setForm((current) => {
+                  const previousSlug = slugifyOrganizationName(current.organizationName)
+                  const nextSlug = slugifyOrganizationName(value)
+                  const issued = buildRegisterBreakGlassFields(value, current.primaryDomain, {
+                    breakGlassUsername:
+                      previousSlug === nextSlug ? current.breakGlassUsername : null,
+                    breakGlassPassword:
+                      previousSlug === nextSlug ? current.breakGlassPassword : null,
+                  })
+                  const shouldRefreshDisplayName =
+                    !current.displayName.trim() ||
+                    current.displayName.trim() === current.organizationName.trim()
+                  return {
+                    ...current,
+                    organizationName: value,
+                    displayName: shouldRefreshDisplayName ? value : current.displayName,
+                    breakGlassUsername: issued.breakGlassUsername,
+                    breakGlassPassword: issued.breakGlassPassword,
+                  }
+                })
+              }
+              placeholder="e.g. bluesolace-financial-group"
+              isRequired
+            />
+            {nameTaken || slugTaken || nameFormat.validated === 'error' ? (
+              <FormHelperText>
+                <HelperText>
+                  <HelperTextItem variant="error">
+                    {nameTaken
+                      ? 'A tenant with this name is already registered.'
+                      : slugTaken
+                        ? 'A tenant with this login path already exists. Choose a different name.'
+                        : nameFormat.message}
+                  </HelperTextItem>
+                </HelperText>
+              </FormHelperText>
+            ) : null}
+          </FormGroup>
+          <FormGroup label="Primary email domain" fieldId="tenant-onboarding-primary-domain" isRequired>
+            <TextInput
+              id="tenant-onboarding-primary-domain"
+              value={form.primaryDomain}
+              validated={domainTaken ? 'error' : 'default'}
+              onChange={(_event, value) =>
+                setForm((current) => ({ ...current, primaryDomain: value }))
+              }
+              placeholder="example.com"
+            />
+            <FormHelperText>
+              <HelperText>
+                <HelperTextItem variant={domainTaken ? 'error' : 'default'}>
+                  {domainTaken
+                    ? 'This email domain is already mapped to another tenant.'
+                    : 'Primary domain for tenant sign-in and IdP association.'}
+                </HelperTextItem>
+              </HelperText>
+            </FormHelperText>
+          </FormGroup>
+          <AdditionalEmailDomainsField
+            idPrefix="tenant-onboarding-additional-domain"
+            primaryDomain={form.primaryDomain}
+            domains={form.additionalDomains}
+            onChange={(additionalDomains) =>
+              setForm((current) => ({ ...current, additionalDomains }))
+            }
+            takenDomains={takenEmailDomains}
+          />
+          <TenantCompanyLogoField
+            id="tenant-onboarding-company-logo"
+            logoSrc={form.logoSrc}
+            logoFileName={form.logoFileName}
+            onLogoChange={(patch) =>
+              setForm((current) => ({
+                ...current,
+                logoSrc: patch.logoSrc ?? current.logoSrc,
+                logoFileName: patch.logoFileName ?? current.logoFileName,
+              }))
+            }
+          />
+        </Form>
+      </div>
+    )
+  }
+
+  function renderBillingAccountStep() {
+    const currentTenantSlug =
+      createdOrganization?.slug || sourceOrganization?.slug || draftOrganizationSlug
+    const platformLabel = selectedBillingPlatform?.label ?? 'billing'
+
+    return (
+      <div className="provider-admin-organizations__wizard-step tenant-onboarding__step">
+        <Content component="p" className="provider-admin-organizations__wizard-lede">
+          Billing is optional at registration. Link an account now, or finish and set it up later.
+        </Content>
+
+        <div
+          className="provider-setup-template__card-group tenant-onboarding__timing-cards"
+          role="radiogroup"
+          aria-label="Billing setup timing"
+        >
+          {BILLING_LINK_TIMING_OPTIONS.map((option) => {
+            const isSelected = billingLinkTiming === option.id
+            const titleId = `tenant-onboarding-billing-timing-${option.id}-title`
+
+            return (
+              <button
+                key={option.id}
+                type="button"
+                role="radio"
+                aria-checked={isSelected}
+                aria-labelledby={titleId}
+                className={`provider-setup-template__select-card tenant-onboarding__timing-card${
+                  isSelected ? ' provider-setup-template__select-card--selected' : ''
+                }`}
+                onClick={() => setBillingLinkTiming(option.id)}
+              >
+                {isSelected ? (
+                  <Label
+                    color="grey"
+                    isCompact
+                    className="provider-setup-template__select-card-selected-badge"
+                  >
+                    Selected
+                  </Label>
+                ) : option.badge ? (
+                  <Label
+                    color="blue"
+                    isCompact
+                    className="provider-setup-template__select-card-selected-badge"
+                  >
+                    {option.badge}
+                  </Label>
+                ) : null}
+                <Title
+                  id={titleId}
+                  headingLevel="h3"
+                  size="md"
+                  className="provider-setup-template__select-card-title"
+                >
+                  {option.title}
+                </Title>
+                <Content component="p" className="provider-setup-template__select-card-detail">
+                  {option.detail}
+                </Content>
+              </button>
+            )
+          })}
+        </div>
+
+        {linkBillingNow ? (
+          <Form autoComplete="off" className="provider-admin-organizations__wizard-form">
+            <FormGroup
+              label="Billing platform"
+              fieldId="tenant-onboarding-billing-platform"
+              className="tenant-onboarding__platform-group"
+              isRequired
+            >
+              <FormSelect
+                id="tenant-onboarding-billing-platform"
+                value={billingPlatformId}
+                aria-label="Billing platform"
+                isRequired
+                onChange={(_event, value) =>
+                  setBillingPlatformId(value as BillingPlatformId)
+                }
+              >
+                {BILLING_PLATFORM_OPTIONS.map((platform) => (
+                  <FormSelectOption
+                    key={platform.id}
+                    value={platform.id}
+                    label={platform.label}
+                    isDisabled={!platform.isAvailable}
+                  />
+                ))}
+              </FormSelect>
+              <FormHelperText>
+                <HelperText>
+                  <HelperTextItem>
+                    {selectedBillingPlatform?.detail ??
+                      'Select the billing system that holds the tenant account.'}
+                  </HelperTextItem>
+                </HelperText>
+              </FormHelperText>
+            </FormGroup>
+
+            {isM360PlatformSelected ? (
+              <>
+                {selectedAccountInactive && selectedAccount ? (
+                  <Alert
+                    variant="warning"
+                    isInline
+                    title="Selected account is inactive"
+                    className="tenant-onboarding__alert"
+                  >
+                    Activate it in {platformLabel} before linking.{' '}
+                    <RouterButton
+                      variant="link"
+                      isInline
+                      to={buildM360AccountDetailPath(getM360AccountTenantName(selectedAccount))}
+                    >
+                      Open in {platformLabel}
+                    </RouterButton>
+                  </Alert>
+                ) : null}
+
+                {billingApiState === 'loading' ? (
+                  <div className="tenant-onboarding__loading">
+                    <Spinner size="lg" aria-label={`Loading ${platformLabel} billing accounts`} />
+                    <Content component="p">
+                      Retrieving {platformLabel} billing accounts…
+                    </Content>
+                  </div>
+                ) : null}
+
+                {billingApiState === 'error' ? (
+                  <Alert
+                    variant="danger"
+                    isInline
+                    title={`${platformLabel} API unavailable`}
+                    className="tenant-onboarding__alert"
+                    actionClose={
+                      <Button variant="link" onClick={retryFetchAccounts}>
+                        Retry
+                      </Button>
+                    }
+                  >
+                    We couldn&apos;t retrieve {platformLabel} billing accounts. Try again, or choose
+                    Set up billing later.
+                  </Alert>
+                ) : null}
+
+                {billingApiState === 'ready' ? (
+                  <>
+                    <FormGroup
+                      label="Billing account"
+                      fieldId="tenant-onboarding-account"
+                      isRequired
+                    >
+                      <FormSelect
+                        id="tenant-onboarding-account"
+                        value={selectedAccountName}
+                        aria-label="Billing account"
+                        isRequired
+                        isDisabled={billingAccounts.length === 0}
+                        onChange={(_event, value) => setSelectedAccountName(value)}
+                      >
+                        <FormSelectOption
+                          value=""
+                          label={
+                            billingAccounts.length === 0
+                              ? `No ${platformLabel} accounts available`
+                              : 'Select a billing account'
+                          }
+                        />
+                        {sortedBillingAccounts.map((account) => {
+                          const tenantName = getM360AccountTenantName(account)
+                          const isInactive = account.accountStatus === 'Inactive'
+                          const isLinkedElsewhere = isM360AccountLinkedToAnotherTenant(
+                            account,
+                            currentTenantSlug,
+                          )
+                          const billingId = formatM360PortalValue(
+                            account.accountNumber || account.accountId,
+                          )
+                          const statusNote = isInactive
+                            ? ' — Inactive'
+                            : isLinkedElsewhere
+                              ? ' — Already linked'
+                              : ''
+                          return (
+                            <FormSelectOption
+                              key={account.accountId}
+                              value={tenantName}
+                              label={`${tenantName} (${billingId})${statusNote}`}
+                              isDisabled={isInactive || isLinkedElsewhere}
+                            />
+                          )
+                        })}
+                      </FormSelect>
+                      <FormHelperText>
+                        <HelperText>
+                          <HelperTextItem>
+                            Accounts for the selected billing platform. Choose Set up billing later
+                            if the account is not ready yet.
+                          </HelperTextItem>
+                        </HelperText>
+                      </FormHelperText>
+                    </FormGroup>
+
+                    <div className="tenant-onboarding__account-hint" role="note">
+                      <div className="tenant-onboarding__account-hint-copy">
+                        <InfoCircleIcon
+                          className="tenant-onboarding__account-hint-icon"
+                          aria-hidden
+                        />
+                        <Content component="p" className="tenant-onboarding__account-hint-text">
+                          Don&apos;t see the right account?
+                        </Content>
+                      </div>
+                      <div className="tenant-onboarding__account-hint-actions">
+                        <Button
+                          variant="link"
+                          isInline
+                          icon={<ExternalLinkAltIcon aria-hidden />}
+                          iconPosition="end"
+                          onClick={(event) => {
+                            event.preventDefault()
+                          }}
+                        >
+                          Open billing portal
+                        </Button>
+                        <Button
+                          variant="link"
+                          isInline
+                          icon={<RedoIcon aria-hidden />}
+                          iconPosition="end"
+                          onClick={retryFetchAccounts}
+                        >
+                          Refresh list
+                        </Button>
+                      </div>
+                    </div>
+
+                    {accountConflict ? (
+                      <Alert variant="danger" isInline title="Account already linked">
+                        {getM360AccountLinkConflictMessage(selectedAccount!)}
+                      </Alert>
+                    ) : null}
+                  </>
+                ) : null}
+              </>
+            ) : null}
+          </Form>
+        ) : (
+          <Alert
+            variant="info"
+            isInline
+            title="Billing can be linked later"
+            className="tenant-onboarding__alert tenant-onboarding__timing-later-alert"
+          >
+            The tenant will be registered without a billing account. You can link one from tenant
+            details when ready.
+          </Alert>
+        )}
+
+        <div className="tenant-onboarding__optional-billing">
+          <Form autoComplete="off" className="provider-admin-organizations__wizard-form">
+            <FormGroup
+              label="External billing ID"
+              fieldId="tenant-onboarding-external-billing-id"
+            >
+              <TextInput
+                id="tenant-onboarding-external-billing-id"
+                value={form.externalBillingId}
+                aria-label="External billing ID"
+                maxLength={EXTERNAL_BILLING_ID_MAX_LENGTH}
+                onChange={(_event, value) =>
+                  setForm((current) => ({
+                    ...current,
+                    externalBillingId: normalizeExternalBillingId(value),
+                  }))
+                }
+              />
+              <FormHelperText>
+                <HelperText>
+                  <HelperTextItem>
+                    Your billing system’s account ID. Not checked against the platform.
+                  </HelperTextItem>
+                </HelperText>
+              </FormHelperText>
+            </FormGroup>
+          </Form>
+        </div>
+      </div>
+    )
+  }
+
+  function renderReviewStep() {
+    if (isEditMode) {
+      return (
+        <div className="provider-admin-organizations__wizard-step tenant-onboarding__step">
+          <Content component="p" className="provider-admin-organizations__wizard-lede">
+            Review your changes before saving.
+          </Content>
+          <CatalogEditChangesSummary changes={editChanges} ariaLabel="Tenant changes" />
+          {linkError ? (
+            <Alert
+              variant="danger"
+              isInline
+              title="Unable to save tenant"
+              className="tenant-onboarding__alert"
+            >
+              {linkError}
+            </Alert>
+          ) : null}
+        </div>
+      )
+    }
+
+    const organization = createdOrganization ?? sourceOrganization
+    const tenantName = organization?.name || draftTenantName || '—'
+    const primaryDomain =
+      organization?.primaryDomain || normalizePrimaryDomain(form.primaryDomain) || '—'
+    const reviewAdditionalDomains = normalizeAdditionalDomains(
+      organization?.additionalDomains ?? form.additionalDomains,
+      primaryDomain === '—' ? form.primaryDomain : primaryDomain,
+    )
+    const logoSrc = organization?.logoSrc?.trim() || form.logoSrc.trim()
+    const logoFileName =
+      organization?.logoFileName?.trim() || form.logoFileName.trim() || tenantName
+
+    return (
+      <div className="provider-admin-organizations__wizard-step tenant-onboarding__step">
+        <Content component="p" className="provider-admin-organizations__wizard-lede">
+          {isExistingTenantMode
+            ? 'Review your tenant and billing settings before saving.'
+            : 'Review your tenant and billing settings before registering.'}
+        </Content>
+        <DescriptionList isCompact className="provider-admin-organizations__wizard-review">
+          <DescriptionListGroup>
+            <DescriptionListTerm>Tenant name</DescriptionListTerm>
+            <DescriptionListDescription>{tenantName}</DescriptionListDescription>
+          </DescriptionListGroup>
+          <DescriptionListGroup>
+            <DescriptionListTerm>Primary email domain</DescriptionListTerm>
+            <DescriptionListDescription>{primaryDomain}</DescriptionListDescription>
+          </DescriptionListGroup>
+          {reviewAdditionalDomains.length > 0 ? (
+            <DescriptionListGroup>
+              <DescriptionListTerm>Additional email domains</DescriptionListTerm>
+              <DescriptionListDescription>
+                <AdditionalEmailDomainsValue domains={reviewAdditionalDomains} />
+              </DescriptionListDescription>
+            </DescriptionListGroup>
+          ) : null}
+          <DescriptionListGroup>
+            <DescriptionListTerm>Company logo</DescriptionListTerm>
+            <DescriptionListDescription>
+              {logoSrc ? (
+                <div className="provider-admin-organizations__logo-preview">
+                  <img src={logoSrc} alt={logoFileName || 'Company logo'} />
+                </div>
+              ) : (
+                '—'
+              )}
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+          <DescriptionListGroup>
+            <DescriptionListTerm>Billing</DescriptionListTerm>
+            <DescriptionListDescription>
+              {linkBillingNow && isM360PlatformSelected && selectedAccount
+                ? formatBillingPlatformAccountSummary(
+                    billingPlatformId,
+                    getM360AccountTenantName(selectedAccount),
+                  )
+                : 'Set up later'}
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+          <DescriptionListGroup>
+            <DescriptionListTerm>External billing ID</DescriptionListTerm>
+            <DescriptionListDescription>
+              {normalizeExternalBillingId(form.externalBillingId).trim() || '—'}
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+        </DescriptionList>
+        {linkError ? (
+          <Alert variant="danger" isInline title="Unable to register tenant" className="tenant-onboarding__alert">
+            {linkError}
+          </Alert>
+        ) : null}
+      </div>
+    )
+  }
+
+  function renderStepContent(stepId: TenantOnboardingStepId) {
+    switch (stepId) {
+      case 'general':
+        return renderGeneralStep()
+      case 'billing_account':
+        return renderBillingAccountStep()
+      case 'review':
+        return renderReviewStep()
+      default:
+        return null
+    }
+  }
+
+  function getStepFooter(stepId: TenantOnboardingStepId) {
+    if (stepId === 'general') {
+      return (
+        <TenantOnboardingNavigateFooter
+          onClose={requestClose}
+          isNextDisabled={isResumeBillingMode ? false : !isGeneralStepValid}
+          onNavigateNext={() =>
+            isResumeBillingMode ? true : handleCreateTenant()
+          }
+        />
+      )
+    }
+
+    if (stepId === 'billing_account') {
+      const canContinue = linkBillingNow
+        ? Boolean(selectedBillingPlatform?.isAvailable) &&
+          isM360PlatformSelected &&
+          billingApiState === 'ready' &&
+          Boolean(selectedAccountName) &&
+          !accountConflict &&
+          !selectedAccountInactive
+        : true
+
+      return wrapStepFooter({
+        isNextDisabled: !canContinue,
+      })
+    }
+
+    if (stepId === 'review') {
+      const canRegister = linkBillingNow
+        ? isM360PlatformSelected &&
+          Boolean(selectedAccount) &&
+          !accountConflict &&
+          canSaveOrganizationEdit
+        : canSaveOrganizationEdit
+
+      return (
+        <TenantOnboardingNavigateFooter
+          onClose={requestClose}
+          isNextDisabled={isLinking || !canRegister}
+          nextButtonText={
+            isLinking
+              ? isExistingTenantMode
+                ? 'Saving…'
+                : 'Registering…'
+              : isExistingTenantMode
+                ? 'Save'
+                : 'Register tenant'
+          }
+          onNavigateNext={async () => {
+            const completed = linkBillingNow
+              ? await handleLinkBillingAccount()
+              : await handleCompleteWithoutBilling()
+            if (completed) {
+              onComplete?.(completed)
+              handleClose()
+            }
+            return false
+          }}
+        />
+      )
+    }
+
+    return undefined
+  }
+
+  if (!isOpen) {
+    return null
+  }
+
+  const wizardKey = editingOrganization
+    ? `tenant-onboarding-edit-${editingOrganization.id}-${initialStepId}`
+    : resumeOrganization
+      ? `tenant-onboarding-resume-${resumeOrganization.id}-${urlStepId ?? 'start'}`
+      : `tenant-onboarding-wizard-${urlStepId ?? 'start'}`
+
+  const wizard = (
+    <Wizard
+      key={wizardKey}
+      className="provider-admin-organizations__wizard tenant-onboarding__wizard"
+      height={isPage ? '100%' : '40rem'}
+      isPlain={isPage}
+      onClose={isPage ? undefined : requestClose}
+      startIndex={wizardStartIndex}
+      onStepChange={
+        syncStepToUrl
+          ? (_event, currentStep) => {
+              const stepId = String(currentStep?.id ?? '').replace(
+                'tenant-onboarding-step-',
+                '',
+              ) as TenantOnboardingStepId
+              if (TENANT_ONBOARDING_STEPS.some((step) => step.id === stepId)) {
+                syncWorkspaceStepParam(setSearchParams, stepId, { replace: true })
+              }
+            }
+          : undefined
+      }
+      header={
+        isPage ? undefined : (
+          <WizardHeader
+            title={wizardTitle}
+            titleId="tenant-onboarding-wizard-title"
+            onClose={requestClose}
+            closeButtonAriaLabel={`Close ${wizardTitle.toLowerCase()} wizard`}
+          />
+        )
+      }
+    >
+      {TENANT_ONBOARDING_STEPS.map((step) => (
+        <WizardStep
+          key={step.id}
+          name={
+            isEditMode && modifiedStepIds.has(step.id)
+              ? `${step.label} (modified)`
+              : step.label
+          }
+          id={`tenant-onboarding-step-${step.id}`}
+          isDisabled={isStepDisabled(step.id)}
+          footer={getStepFooter(step.id)}
+        >
+          {renderStepContent(step.id)}
+        </WizardStep>
+      ))}
+    </Wizard>
+  )
+
+  if (isPage) {
+    return (
+      <ResourceCreatePageShell
+        parentLabel="Tenants"
+        title={wizardTitle}
+        titleId="tenant-onboarding-wizard-title"
+        onBack={requestClose}
+      >
+        {wizard}
+        {leaveConfirmModal}
+      </ResourceCreatePageShell>
+    )
+  }
+
+  return (
+    <>
+      <Modal
+        variant={ModalVariant.medium}
+        width="64rem"
+        maxWidth="64rem"
+        isOpen={isOpen}
+        onEscapePress={requestClose}
+        aria-labelledby="tenant-onboarding-wizard-title"
+        className="provider-admin-organizations__wizard-modal"
+      >
+        {wizard}
+      </Modal>
+      {leaveConfirmModal}
+    </>
+  )
+}

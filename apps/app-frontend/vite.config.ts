@@ -9,6 +9,11 @@ export default defineConfig({
   // GitHub Pages publishes this repository below /osac-ux/. Keep local
   // development at the origin root unless the deploy workflow overrides it.
   base: process.env.VITE_BASE_PATH || '/',
+  define: {
+    __BMAAS_LANDING_LAST_UPDATED__: JSON.stringify(
+      process.env.BMAAS_LANDING_LAST_UPDATED || new Date().toISOString().slice(0, 10),
+    ),
+  },
   plugins: [
     react(),
     viteStaticCopy({

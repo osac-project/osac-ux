@@ -9,7 +9,7 @@
     "dev": "concurrently \"pnpm dev:proxy\" \"pnpm dev:frontend\"",
     "mock": "pnpm --filter @osac/app-frontend run mock",
     "build:demo": "pnpm --filter @osac/app-frontend run build:demo",
-    "dev:proxy": "cd proxy && BASE_UI_URL=http://localhost:5173 nodemon --watch 'proxy/**/*' --exec 'go run' main.go --signal SIGTERM",
+    "dev:proxy": "cd proxy && if [ -n \"${FULFILLMENT_API_URL:-}\" ]; then BASE_UI_URL=http://localhost:5173 nodemon --watch 'proxy/**/*' --exec 'go run' main.go --signal SIGTERM; else echo 'FULFILLMENT_API_URL is not set; running frontend without the fulfillment proxy'; fi",
     "dev:frontend": "pnpm --filter @osac/app-frontend run dev",
     "build": "pnpm --filter @osac/app-frontend run build && cd proxy && go build -o osac-proxy .",
     "lint": "eslint \"{apps,libs}/*/src/**\" && prettier --check \"{apps,libs}/*/src/**/*.{js,jsx,ts,tsx}\" && pnpm run i18n",

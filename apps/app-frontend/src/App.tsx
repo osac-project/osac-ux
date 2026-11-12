@@ -1,92 +1,77 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
-import {
-  Bullseye,
-  Button,
-  EmptyState,
-  EmptyStateActions,
-  EmptyStateBody,
-  EmptyStateFooter,
-  Spinner,
-} from '@patternfly/react-core';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { ConceptualDesignSticker } from './components/ConceptualDesignSticker'
+import { BmaasLandingPage } from './pages/BmaasLandingPage'
+import { IdpManagerSetupPage } from './pages/IdpManagerSetupPage'
+import { IdpManagerWorkspacePage } from './pages/IdpManagerWorkspacePage'
+import { M360AccountDetailsPage } from './pages/m360/M360AccountDetailsPage'
+import { M360AccountsPage } from './pages/m360/M360AccountsPage'
+import { ProviderAdminWorkspacePage } from './pages/ProviderAdminWorkspacePage'
+import { ProviderLoginPage } from './pages/ProviderLoginPage'
+import { TenantAdminSampleCatalogPage } from './pages/TenantAdminSampleCatalogPage'
+import { TenantAdminWorkspacePage } from './pages/TenantAdminWorkspacePage'
+import { TenantLoginPage } from './pages/TenantLoginPage'
+import { TenantUserWorkspacePage } from './pages/TenantUserWorkspacePage'
 
-import { SessionProvider, useSession } from '@osac/ui-components/hooks/use-session';
-
-import { useOIDCLogin } from './hooks/oidc-login';
-import { useMockLogin } from './mock/use-mock-login';
-import { AppShell } from './shell/AppShell';
-import { defaultRouteForRole } from './shell/shellRoutes';
-
-const MOCK_MODE = import.meta.env.VITE_MOCK_MODE === 'true';
-
-const LoggedInHomeRedirect = () => {
-  const { role } = useSession();
-  return <Navigate to={defaultRouteForRole(role)} replace />;
-};
-
-// ---------------------------------------------------------------------------
-// Live app (real OIDC + fulfillment-service)
-// ---------------------------------------------------------------------------
-
-const LiveApp = () => {
-  const [username, role, tenantId, isLoading, error, logout] = useOIDCLogin();
-
-  if (isLoading) {
-    return (
-      <Bullseye>
-        <Spinner size="xl" />
-      </Bullseye>
-    );
-  }
-
-  if (error) {
-    return (
-      <Bullseye>
-        <EmptyState titleText="Sign-in failed" headingLevel="h4">
-          <EmptyStateBody>{error}</EmptyStateBody>
-          <EmptyStateFooter>
-            <EmptyStateActions>
-              <Button variant="primary">Retry</Button>
-            </EmptyStateActions>
-          </EmptyStateFooter>
-        </EmptyState>
-      </Bullseye>
-    );
-  }
-
+function RedirectNorthstarIdpManager() {
+  const location = useLocation()
   return (
-    <SessionProvider role={role} username={username} tenantId={tenantId}>
-      <Routes>
-        <Route path="/" element={<LoggedInHomeRedirect />} />
-        <Route path="/*" element={<AppShell logout={logout} />} />
-      </Routes>
-    </SessionProvider>
-  );
-};
+    <Navigate
+      to={`${location.pathname.replace(
+        /^\/idp-manager\/northstar/,
+        '/idp-manager/bluesolace',
+      )}${location.search}${location.hash}`}
+      replace
+    />
+  )
+}
 
-// ---------------------------------------------------------------------------
-// Mock app (no OIDC, no fulfillment-service, persona switcher in header)
-// ---------------------------------------------------------------------------
-
-const MockApp = () => {
-  const [username, role, tenantId, , , logout, setRole] = useMockLogin();
-
+function RedirectNorthstarTenant() {
+  const location = useLocation()
   return (
-    <SessionProvider role={role} username={username} tenantId={tenantId}>
+    <Navigate
+      to={`${location.pathname.replace(/\/northstar\b/, '/northsummit')}${location.search}${location.hash}`}
+      replace
+    />
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <ConceptualDesignSticker />
       <Routes>
-        <Route path="/" element={<LoggedInHomeRedirect />} />
+        <Route path="/" element={<BmaasLandingPage />} />
+        <Route path="/idp-manager/northstar/change-password" element={<RedirectNorthstarIdpManager />} />
+        <Route path="/idp-manager/northstar/workspace" element={<RedirectNorthstarIdpManager />} />
+        <Route path="/idp-manager/northstar" element={<RedirectNorthstarIdpManager />} />
+        <Route path="/idp-manager/:orgSlug/change-password" element={<IdpManagerSetupPage />} />
+        <Route path="/idp-manager/:orgSlug/workspace" element={<IdpManagerWorkspacePage />} />
+        <Route path="/idp-manager/:orgSlug" element={<IdpManagerSetupPage />} />
+        <Route path="/idp-manager" element={<IdpManagerSetupPage />} />
+        <Route path="/idp-setup/:token" element={<IdpManagerSetupPage />} />
+        <Route path="/provider" element={<ProviderLoginPage />} />
+        <Route path="/provider/setup" element={<Navigate to="/provider/workspace" replace />} />
+        <Route path="/provider/workspace" element={<ProviderAdminWorkspacePage />} />
+        <Route path="/m360/accounts" element={<M360AccountsPage />} />
+        <Route path="/m360/accounts/:accountName" element={<M360AccountDetailsPage />} />
+        <Route path="/tenant-admin/catalog-sample" element={<TenantAdminSampleCatalogPage />} />
+        <Route path="/tenant-admin/northstar/workspace" element={<RedirectNorthstarTenant />} />
+        <Route path="/tenant-admin/northstar" element={<RedirectNorthstarTenant />} />
+        <Route path="/tenant-user/northstar/workspace" element={<RedirectNorthstarTenant />} />
+        <Route path="/tenant-user/northstar" element={<RedirectNorthstarTenant />} />
+        <Route path="/osac/:tenant" element={<TenantLoginPage />} />
+        <Route path="/tenant-admin/:tenant" element={<TenantLoginPage role="tenant-admin" />} />
         <Route
-          path="/*"
-          element={<AppShell logout={logout} onRoleChange={setRole} />}
+          path="/tenant-admin/:tenant/workspace"
+          element={<TenantAdminWorkspacePage />}
         />
+        <Route path="/tenant-user/:tenant" element={<TenantLoginPage role="tenant-user" />} />
+        <Route
+          path="/tenant-user/:tenant/workspace"
+          element={<TenantUserWorkspacePage />}
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </SessionProvider>
-  );
-};
-
-// ---------------------------------------------------------------------------
-// Root: pick the right app based on VITE_MOCK_MODE
-// ---------------------------------------------------------------------------
-
-const App = () => (MOCK_MODE ? <MockApp /> : <LiveApp />);
-
-export default App;
+    </BrowserRouter>
+  )
+}

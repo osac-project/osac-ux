@@ -1,12 +1,3 @@
 /// <reference types="vite/client" />
 
-interface ImportMetaEnv {
-  /** OSAC_WORKAROUND_REMOVE(vite-dev-bearer): dev-only; remove when OIDC supplies tokens. */
-  readonly VITE_DEV_BEARER_TOKEN?: string;
-  /** Set to 'true' to run the app with fully mocked data and no OIDC/proxy. */
-  readonly VITE_MOCK_MODE?: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
+declare const __BMAAS_LANDING_LAST_UPDATED__: string
