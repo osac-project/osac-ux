@@ -74,7 +74,7 @@ The API must expose or allow derivation of both active and requested configurati
 
 **VM table.** Resize scheduled and Resize in progress appear alongside power status.
 
-![VM table with resize status labels](screenshots/vm-resize/resize-table-current.jpg)
+![VM table with resize status labels and compact pagination](screenshots/latest-ux/vm-table.png)
 
 **Resize failure.** Current resources stay visible; the reason appears in a danger notification.
 

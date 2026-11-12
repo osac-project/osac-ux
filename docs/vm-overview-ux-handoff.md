@@ -12,6 +12,8 @@ The VM list uses compact PatternFly pagination in card and table views: an item-
 
 ![VM list and compact pagination](screenshots/latest-ux/vm-list.png)
 
+![VM table with resize labels and compact pagination](screenshots/latest-ux/vm-table.png)
+
 ![Resize instance type menu](screenshots/latest-ux/resize-instance-types.png)
 
 For access, networking, storage, utilization, failure states, and permissions, follow the [Google UX handoff](https://docs.google.com/document/d/1Y8hjgE924owve0VXA3rkKqTYuB4sXKif8KhXyFL3hyQ/edit).
