@@ -13989,6 +13989,8 @@
         .find(item => item.id === it.tenantId || item.name === it.scope);
       Object.assign(draft, {
         editName: it.name,
+        step: 1,
+        maxVisited: 1,
         name: it.name,
         description: it.description || '',
         labels: [...(it.labels || [])],
