@@ -15,7 +15,7 @@ On VM Overview, select the pencil beside Instance type. Tenant Admin and Tenant 
 
 ## Select an instance type
 
-The modal has a required typeahead Instance type field and Save/Cancel actions. Each option shows its name, vCPUs, memory, GPU count and model, and rate. The VM's GPU configuration cannot change during resize. Exclude instance types with a different GPU count or resource. Do not predict hot-plug or restart from boot-disk access mode before submission. Show submit failures inside the modal.
+The modal has a required typeahead Instance type field and Save/Cancel actions. Each option shows its name, vCPUs, memory, GPU count and model, and rate. Group GPU details together in the option description, for example `2 vCPUs, 2 GiB; 1 GPU (nvidia, 20B0)`, so the model and PCI selector read as GPU details. The VM's GPU configuration cannot change during resize. Exclude instance types with a different GPU count, resource name, or PCI selector. Do not predict hot-plug or restart from boot-disk access mode before submission. Show submit failures inside the modal.
 
 Show Deprecated instance types as selectable options with a **Deprecated** label and tooltip: “Still available, but being phased out. We recommend an active type.” Omit Obsolete types from the menu. If the VM currently uses an Obsolete type, show it as the current value in the resize form and require the user to choose a different type before saving. Keep the lifecycle label visible after selecting a Deprecated type. The same rule applies in Create VM and Create VM Catalog Item; see [instance type lifecycle selection](instance-type-lifecycle-selection.md).
 

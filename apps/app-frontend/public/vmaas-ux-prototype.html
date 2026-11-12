@@ -7793,11 +7793,11 @@
                     <span class="pf-v6-c-breadcrumb__item-divider" aria-hidden="true">
                       <i class="fas fa-angle-right" aria-hidden="true"></i>
                     </span>
-                    <span class="pf-v6-c-breadcrumb__link pf-m-current" aria-current="page">Create instance type</span>
+                    <span class="pf-v6-c-breadcrumb__link pf-m-current" aria-current="page" id="create-it-crumb-current">Create instance type</span>
                   </li>
                 </ol>
               </nav>
-              <h2 class="page-title pf-v6-c-title pf-m-2xl pf-m-page-title">Create instance type</h2>
+              <h2 class="page-title pf-v6-c-title pf-m-2xl pf-m-page-title" id="create-it-title">Create instance type</h2>
               <div class="create-resource-wiz__layout" id="create-it-wizard">
                 <nav class="create-resource-wiz__nav" aria-label="Create instance type steps">
                   <ol class="create-resource-wiz__nav-list" id="create-it-nav"></ol>
@@ -8793,13 +8793,26 @@
 
     function vmResizeGpuSummary(id) {
       const specs = computeResourceSpecs(id);
-      return specs.gpus > 0 ? `${specs.gpus} × ${specs.gpuResource || 'GPU'}` : 'No GPU';
+      if (!specs.gpus) return 'No GPU';
+      const gpuDetails = [specs.gpuResource, specs.gpuPci].filter(Boolean).join(', ');
+      return `${specs.gpus} GPU${specs.gpus === 1 ? '' : 's'}${gpuDetails ? ` (${gpuDetails})` : ''}`;
+    }
+
+    function vmResizeOptionDescription(id) {
+      const parts = computeResourceParts(id);
+      const specs = computeResourceSpecs(id);
+      const compute = parts.desc.replace(/,\s*\d+\s+GPUs?$/i, '');
+      const gpu = specs.gpus ? `; ${vmResizeGpuSummary(id)}` : '';
+      const rate = formatComputeHourlyRate(parts.hourly);
+      return `${compute}${gpu}${rate ? ` · ${rate}` : ''}`;
     }
 
     function vmResizeGpuCompatible(currentId, candidateId) {
       const current = computeResourceSpecs(currentId);
       const candidate = computeResourceSpecs(candidateId);
-      return current.gpus === candidate.gpus && current.gpuResource === candidate.gpuResource;
+      return current.gpus === candidate.gpus
+        && current.gpuResource === candidate.gpuResource
+        && current.gpuPci === candidate.gpuPci;
     }
 
     function filteredVmComputeResources(filter = '', opts = {}) {
@@ -8823,14 +8836,15 @@
     /** Derive card CPU/Mem from instance type so Catalog stays aligned with Compute. */
     function computeResourceSpecs(id) {
       const c = COMPUTE_RESOURCES.find(x => x.id === id);
-      if (!c) return { cpu: '—', mem: '—', gpus: 0, gpuResource: null };
+      if (!c) return { cpu: '—', mem: '—', gpus: 0, gpuResource: null, gpuPci: null };
       const m = String(c.label).match(/:\s*(\d+)\s*vCPUs?,\s*([^,]+?)\s*Memory/i);
-      if (!m) return { cpu: '—', mem: '—', gpus: Number(c.gpus) || 0, gpuResource: c.gpuResource || null };
+      if (!m) return { cpu: '—', mem: '—', gpus: Number(c.gpus) || 0, gpuResource: c.gpuResource || null, gpuPci: c.gpuPci || null };
       return {
         cpu: Number(m[1]) === 1 ? '1 vCPU' : `${m[1]} vCPUs`,
         mem: m[2].trim(),
         gpus: Number(c.gpus) || 0,
         gpuResource: c.gpuResource || null,
+        gpuPci: c.gpuPci || null,
       };
     }
 
@@ -9322,7 +9336,7 @@
       const body = document.getElementById('compute-modal-body');
       if (!m || !body) return;
       const selectedParts = computeResourceParts(m.selectedId);
-      const toggleDesc = selectedParts.desc || '';
+      const toggleDesc = vmResizeOptionDescription(m.selectedId);
       const requireGpu = !!m.requireGpu;
       const vmComputeOptions = filteredVmComputeResources(m.filter, { requireGpu, compatibleWith: m.initialId });
       const selectionChanged = !!m.initialId && m.selectedId !== m.initialId;
@@ -9364,8 +9378,7 @@
               <div class="rich-select__menu-list">
                 ${vmComputeOptions.map(c => {
                   const parts = computeResourceParts(c.id);
-                  const rate = formatComputeHourlyRate(c.hourly);
-                  const desc = [parts.desc, vmResizeGpuSummary(c.id), rate].filter(Boolean).join(' · ');
+                  const desc = vmResizeOptionDescription(c.id);
                   const tooltip = instanceTypeLifecycleTooltip(c.lifecycle);
                   return `
                   <button type="button" class="pf-v6-c-menu__item rich-select__option ${m.selectedId === c.id ? 'pf-m-selected' : ''} ${c.lifecycle === 'Obsolete' ? 'pf-m-disabled' : ''}"
@@ -13207,23 +13220,23 @@
         setTimeout(() => document.addEventListener('mousedown', onDoc, true), 0);
       }
     }
-    function renderGeneralStep(prefix, draft, help, { tenantFirst = false } = {}) {
+    function renderGeneralStep(prefix, draft, help, { tenantFirst = false, nameReadOnly = false } = {}) {
       const nameErr = draft.fieldErrors?.name;
       const nameOk = !nameErr && isValidDnsLabel(draft.name);
       const nameField = `
         <div class="form-field${nameErr ? ' pf-m-error' : ''}" id="${prefix}-name-field">
-          <label for="${prefix}-name">Name <span class="req">*</span></label>
+          <label for="${prefix}-name">Name ${nameReadOnly ? '' : '<span class="req">*</span>'}</label>
           <div class="name-row">
-            <input type="text" id="${prefix}-name" value="${escAttr(draft.name)}" autocomplete="off" required
+            <input type="text" id="${prefix}-name" value="${escAttr(draft.name)}" autocomplete="off" ${nameReadOnly ? 'disabled' : 'required'}
               ${nameErr
                 ? `aria-describedby="${prefix}-name-error" aria-invalid="true"`
                 : `aria-describedby="${prefix}-name-help"`} />
             <span class="name-valid" ${nameOk ? '' : 'hidden'} aria-hidden="true">
               <i class="fa-solid fa-check"></i>
             </span>
-            <button type="button" class="icon-btn" id="${prefix}-regen-name" title="Generate name" aria-label="Generate name">
+            ${nameReadOnly ? '' : `<button type="button" class="icon-btn" id="${prefix}-regen-name" title="Generate name" aria-label="Generate name">
               <i class="fa-solid fa-rotate" aria-hidden="true"></i>
-            </button>
+            </button>`}
           </div>
           ${nameErr
             ? providerFieldErrorHtml(nameErr, `${prefix}-name-error`)
@@ -13231,7 +13244,7 @@
           <div class="pf-v6-c-form__helper-text">
             <div class="pf-v6-c-helper-text">
               <div class="pf-v6-c-helper-text__item">
-                <span class="pf-v6-c-helper-text__item-text" id="${prefix}-name-help">Enter a name or click the generate name one.</span>
+                <span class="pf-v6-c-helper-text__item-text" id="${prefix}-name-help">${nameReadOnly ? 'The name cannot be changed after creation.' : 'Enter a name or click the generate name one.'}</span>
               </div>
             </div>
           </div>`}
@@ -13967,10 +13980,43 @@
       renderCreateInstanceTypeWizard();
     }
 
+    function openEditInstanceType(name) {
+      const it = INSTANCE_TYPES.find(item => item.name === name);
+      if (!it) return;
+      closeInstanceTypeActionsMenu();
+      const draft = defaultCreateInstanceTypeState();
+      const tenant = (typeof PROVIDER_TENANTS !== 'undefined' ? PROVIDER_TENANTS : [])
+        .find(item => item.id === it.tenantId || item.name === it.scope);
+      Object.assign(draft, {
+        editName: it.name,
+        name: it.name,
+        description: it.description || '',
+        labels: [...(it.labels || [])],
+        isGlobal: !tenant,
+        tenantId: tenant?.id || '',
+        cpu: it.cpu,
+        memoryGiB: it.memoryGiB,
+        gpuCount: it.gpus || 0,
+        gpuResource: it.gpuResource || '',
+        gpuPci: it.gpuPci || '',
+      });
+      state.createInstanceType = draft;
+      state.selectedInstanceTypeName = it.name;
+      setView('create-instance-type');
+      renderCreateInstanceTypeWizard();
+    }
+
     function closeCreateInstanceType() {
+      const editName = state.createInstanceType?.editName;
       state.createInstanceType = null;
-      setView('instance-types');
-      renderInstanceTypes();
+      if (editName) {
+        state.selectedInstanceTypeName = editName;
+        setView('instance-type');
+        renderInstanceTypeDetail();
+      } else {
+        setView('instance-types');
+        renderInstanceTypes();
+      }
     }
 
     function syncCreateInstanceTypeFields() {
@@ -13989,7 +14035,12 @@
     function validateCreateInstanceTypeStep() {
       const draft = state.createInstanceType;
       if (!draft) return false;
-      if (draft.step === 0) return validateGeneralStep(draft, INSTANCE_TYPES.map(it => it.name));
+      if (draft.step === 0) {
+        if (!draft.editName) return validateGeneralStep(draft, INSTANCE_TYPES.map(it => it.name));
+        draft.fieldErrors = !draft.isGlobal && !draft.tenantId
+          ? { tenant: 'Select a tenant, or choose Global scope.' } : {};
+        return Object.keys(draft.fieldErrors).length === 0;
+      }
       if (draft.step === 1) {
         const errors = {};
         if (!Number.isFinite(draft.cpu) || draft.cpu < 1) errors.cpu = 'Enter vCPUs.';
@@ -14007,15 +14058,25 @@
       const back = document.getElementById('create-it-back');
       const next = document.getElementById('create-it-next');
       if (!panel) return;
+      const isEdit = !!draft.editName;
+      const title = isEdit ? 'Edit instance type' : 'Create instance type';
+      const titleEl = document.getElementById('create-it-title');
+      const crumbEl = document.getElementById('create-it-crumb-current');
+      const navEl = document.querySelector('#create-it-wizard .create-resource-wiz__nav');
+      if (titleEl) titleEl.textContent = title;
+      if (crumbEl) crumbEl.textContent = title;
+      if (navEl) navEl.setAttribute('aria-label', `${title} steps`);
       renderProviderCreateNav('create-it-nav', draft, renderCreateInstanceTypeWizard);
       if (back) back.disabled = draft.step === 0;
-      if (next) next.textContent = draft.step === PROVIDER_CREATE_STEPS.length - 1 ? 'Create instance type' : 'Next';
+      if (next) next.textContent = draft.step === PROVIDER_CREATE_STEPS.length - 1
+        ? (isEdit ? 'Save changes' : 'Create instance type') : 'Next';
 
       if (draft.step === 0) {
         panel.innerHTML = renderGeneralStep('create-it', draft,
-          'Assign the instance type to a tenant (or make it global), then enter a name. Names are unique per tenant.',
-          { tenantFirst: true });
-        bindProviderNameRegen('create-it', draft, 'instance-type', renderCreateInstanceTypeWizard);
+          isEdit ? 'Update the description, scope, or labels. The name cannot be changed.'
+            : 'Assign the instance type to a tenant (or make it global), then enter a name. Names are unique per tenant.',
+          { tenantFirst: true, nameReadOnly: isEdit });
+        if (!isEdit) bindProviderNameRegen('create-it', draft, 'instance-type', renderCreateInstanceTypeWizard);
         bindTenantEditor('create-it', draft, renderCreateInstanceTypeWizard);
         bindLabelsEditor('create-it', draft, renderCreateInstanceTypeWizard);
       } else if (draft.step === 1) {
@@ -14066,8 +14127,8 @@
           </div>`;
         const labels = draft.labels.length ? draft.labels.map(escAttr).join(', ') : '—';
         panel.innerHTML = `
-          <h3>Review and create</h3>
-          <p class="create-resource-wiz__help">Confirm instance type settings before create.</p>
+          <h3>${isEdit ? 'Review changes' : 'Review and create'}</h3>
+          <p class="create-resource-wiz__help">${isEdit ? 'Review the updated instance type settings before saving.' : 'Confirm instance type settings before create.'}</p>
           <div class="review-nebius">
             ${reviewNebiusSection('General', 'general', `
               ${reviewRow('Name', escAttr(draft.name))}
@@ -14128,7 +14189,11 @@
       const draft = state.createInstanceType;
       if (!draft) return;
       syncCreateInstanceTypeFields();
-      if (!validateGeneralStep(draft, INSTANCE_TYPES.map(it => it.name))) {
+      const reviewStep = draft.step;
+      draft.step = 0;
+      const generalValid = validateCreateInstanceTypeStep();
+      draft.step = reviewStep;
+      if (!generalValid) {
         draft.step = 0;
         renderCreateInstanceTypeWizard();
         toast(Object.values(draft.fieldErrors)[0] || 'Fix General step errors.');
@@ -14139,6 +14204,27 @@
         validateCreateInstanceTypeStep();
         renderCreateInstanceTypeWizard();
         toast('vCPUs and Memory (GiB) are required.');
+        return;
+      }
+      if (draft.editName) {
+        const it = INSTANCE_TYPES.find(item => item.name === draft.editName);
+        if (!it) return;
+        Object.assign(it, {
+          description: draft.description || null,
+          labels: [...draft.labels],
+          scope: providerScopeLabel(draft),
+          tenantId: draft.isGlobal ? null : (draft.tenantId || null),
+          cpu: draft.cpu,
+          memoryGiB: draft.memoryGiB,
+          gpus: draft.gpuCount > 0 ? draft.gpuCount : null,
+          gpuResource: draft.gpuResource || null,
+          gpuPci: draft.gpuPci || null,
+        });
+        toast(`Saved changes to instance type ${it.name}.`, 'success');
+        state.selectedInstanceTypeName = it.name;
+        state.createInstanceType = null;
+        setView('instance-type');
+        renderInstanceTypeDetail();
         return;
       }
       INSTANCE_TYPES.unshift({
@@ -21333,7 +21419,7 @@
     /** Lifecycle actions from the product state table. Delete is available in every state. */
     function instanceTypeLifecycleActions(lifecycle) {
       const current = normalizeInstanceTypeLifecycle(lifecycle);
-      const actions = [];
+      const actions = [{ id: 'edit', label: 'Edit' }];
       if (current !== 'Active') {
         actions.push({ id: 'set-active', label: 'Set Active' });
       }
@@ -21428,6 +21514,11 @@
       if (idx < 0) return;
       const it = INSTANCE_TYPES[idx];
       closeInstanceTypeActionsMenu();
+
+      if (actionId === 'edit') {
+        openEditInstanceType(name);
+        return;
+      }
 
       if (actionId === 'set-active') {
         it.lifecycle = 'Active';
@@ -25824,7 +25915,9 @@
     document.getElementById('create-it-cancel')?.addEventListener('click', closeCreateInstanceType);
     document.getElementById('create-it-crumb-list')?.addEventListener('click', e => {
       e.preventDefault();
-      closeCreateInstanceType();
+      state.createInstanceType = null;
+      setView('instance-types');
+      renderInstanceTypes();
     });
     document.getElementById('create-it-back')?.addEventListener('click', goCreateInstanceTypeBack);
     document.getElementById('create-it-next')?.addEventListener('click', goCreateInstanceTypeNext);
