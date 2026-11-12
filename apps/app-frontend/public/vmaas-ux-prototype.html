@@ -8794,17 +8794,15 @@
     function vmResizeGpuSummary(id) {
       const specs = computeResourceSpecs(id);
       if (!specs.gpus) return 'No GPU';
-      const gpuDetails = [specs.gpuResource, specs.gpuPci].filter(Boolean).join(', ');
-      return `${specs.gpus} GPU${specs.gpus === 1 ? '' : 's'}${gpuDetails ? ` (${gpuDetails})` : ''}`;
+      return `${specs.gpus} GPU${specs.gpus === 1 ? '' : 's'}${specs.gpuResource ? ` (${specs.gpuResource})` : ''}`;
     }
 
-    function vmResizeOptionDescription(id) {
+    function instanceTypeOptionDescription(id) {
       const parts = computeResourceParts(id);
       const specs = computeResourceSpecs(id);
-      const compute = parts.desc.replace(/,\s*\d+\s+GPUs?$/i, '');
-      const gpu = specs.gpus ? `; ${vmResizeGpuSummary(id)}` : '';
       const rate = formatComputeHourlyRate(parts.hourly);
-      return `${compute}${gpu}${rate ? ` · ${rate}` : ''}`;
+      return [specs.cpu, `${specs.mem} memory`, specs.gpus ? vmResizeGpuSummary(id) : '', rate]
+        .filter(Boolean).join(' · ');
     }
 
     function vmResizeGpuCompatible(currentId, candidateId) {
@@ -9336,7 +9334,7 @@
       const body = document.getElementById('compute-modal-body');
       if (!m || !body) return;
       const selectedParts = computeResourceParts(m.selectedId);
-      const toggleDesc = vmResizeOptionDescription(m.selectedId);
+      const toggleDesc = instanceTypeOptionDescription(m.selectedId);
       const requireGpu = !!m.requireGpu;
       const vmComputeOptions = filteredVmComputeResources(m.filter, { requireGpu, compatibleWith: m.initialId });
       const selectionChanged = !!m.initialId && m.selectedId !== m.initialId;
@@ -9378,7 +9376,7 @@
               <div class="rich-select__menu-list">
                 ${vmComputeOptions.map(c => {
                   const parts = computeResourceParts(c.id);
-                  const desc = vmResizeOptionDescription(c.id);
+                  const desc = instanceTypeOptionDescription(c.id);
                   const tooltip = instanceTypeLifecycleTooltip(c.lifecycle);
                   return `
                   <button type="button" class="pf-v6-c-menu__item rich-select__option ${m.selectedId === c.id ? 'pf-m-selected' : ''} ${c.lifecycle === 'Obsolete' ? 'pf-m-disabled' : ''}"
@@ -13539,10 +13537,13 @@
       const it = getCatalogInstanceType(opt.id);
       if (!it) return { id: opt.id, title: opt.id, desc: '' };
       const cpu = Number(it.cpu) === 1 ? '1 vCPU' : `${it.cpu} vCPUs`;
+      const gpu = Number(it.gpus) > 0
+        ? `${it.gpus} GPU${Number(it.gpus) === 1 ? '' : 's'}${it.gpuResource ? ` (${it.gpuResource})` : ''}`
+        : '';
       return {
         id: opt.id,
         title: it.label || it.name,
-        desc: `${cpu} · ${it.memoryGiB} GiB · ${formatCatalogInstanceTypeGpu(it)} · ${opt.rateHour}`,
+        desc: [cpu, `${it.memoryGiB} GiB memory`, gpu, opt.rateHour].filter(Boolean).join(' · '),
         lifecycle: it.lifecycle === 'Deprecated' || it.lifecycle === 'Obsolete' ? it.lifecycle : '',
         disabled: it.lifecycle === 'Obsolete',
       };
@@ -19328,7 +19329,7 @@
             vmComputeOptions = filteredVmComputeResources(state.vmComputeFilter, { requireGpu });
           }
           const selectedComputeFresh = computeResourceParts(d.computeResource);
-          const vmComputeToggleDesc = selectedComputeFresh.desc || '';
+          const vmComputeToggleDesc = d.computeResource ? instanceTypeOptionDescription(d.computeResource) : '';
           const gpuFilterHtml = computeEditable ? `
               <label class="form-check form-check--gpu-filter" for="f-show-gpu-its">
                 <input type="checkbox" id="f-show-gpu-its" ${showGpuIts ? 'checked' : ''} />
@@ -19361,8 +19362,7 @@
                     <div class="rich-select__menu-list">
                       ${vmComputeOptions.map(c => {
                         const parts = computeResourceParts(c.id);
-                        const rate = formatComputeHourlyRate(c.hourly);
-                        const desc = [parts.desc, rate].filter(Boolean).join(' · ');
+                        const desc = instanceTypeOptionDescription(c.id);
                         const tooltip = instanceTypeLifecycleTooltip(c.lifecycle);
                         return `
                         <button type="button" class="pf-v6-c-menu__item rich-select__option ${d.computeResource === c.id ? 'pf-m-selected' : ''} ${c.lifecycle === 'Obsolete' ? 'pf-m-disabled' : ''}" data-vm-compute="${c.id}" role="option" ${c.lifecycle === 'Obsolete' ? 'aria-disabled="true"' : ''}
