@@ -3606,6 +3606,17 @@
       color: var(--vmaas-text);
     }
     .rich-select--typeahead .rich-select__option-title { font-weight: 400; }
+    .instance-type-option-title {
+      max-width: 280px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow-wrap: anywhere;
+    }
+    .instance-type-list-name { color: var(--vmaas-blue); text-decoration: none; }
+    .instance-type-list-name:hover,
+    .instance-type-list-name:focus { text-decoration: underline; }
     .rich-select__option-desc {
       display: block; margin-top: 2px; font-size: 12px; line-height: 1.45;
       color: var(--vmaas-text-subtle); white-space: normal;
@@ -8738,6 +8749,7 @@
       { id: 'micro', label: 'micro: 1 vCPU, 1 GiB Memory', hourly: 0.12, gpus: 0 },
       { id: 'small', label: 'small: 1 vCPU, 2 GiB Memory', hourly: 0.80, gpus: 0 },
       { id: 'medium', label: 'medium: 1 vCPU, 4 GiB Memory', hourly: 1.60, gpus: 0 },
+      { id: 'instance-type-e2e-resize-cpu-up-memory-down', label: 'instance-type-e2e-resize-cpu-up-memory-down: 5 vCPUs, 4 GiB Memory', hourly: 2.20, gpus: 0 },
       { id: '2xmedium', label: '2xmedium: 2 vCPUs, 4 GiB Memory', hourly: 2.40, gpus: 0, lifecycle: 'Deprecated' },
       { id: 'large', label: 'large: 2 vCPUs, 8 GiB Memory', hourly: 4.70, gpus: 0 },
       { id: 'xlarge', label: 'xlarge: 4 vCPUs, 16 GiB Memory', hourly: 9.40, gpus: 0 },
@@ -9377,10 +9389,10 @@
                   return `
                   <button type="button" class="pf-v6-c-menu__item rich-select__option ${m.selectedId === c.id ? 'pf-m-selected' : ''} ${c.lifecycle === 'Obsolete' ? 'pf-m-disabled' : ''}"
                     data-edit-compute="${richSelectEsc(c.id)}" role="option" ${c.lifecycle === 'Obsolete' ? 'aria-disabled="true"' : ''}
-                    ${tooltip ? `data-pf-tooltip="${richSelectEsc(tooltip)}" aria-label="${richSelectEsc(`${parts.title}, ${c.lifecycle}. ${tooltip}`)}"` : ''}>
+                    ${instanceTypeOptionTooltip(parts.title, c.lifecycle) ? `data-pf-tooltip="${richSelectEsc(instanceTypeOptionTooltip(parts.title, c.lifecycle))}"` : ''} aria-label="${richSelectEsc(`${parts.title}. ${desc}${tooltip ? `. ${tooltip}` : ''}`)}">
                     <span class="pf-v6-c-menu__item-main">
                       <span class="rich-select__option-body">
-                        <span class="rich-select__option-title">${richSelectEsc(parts.title)} ${instanceTypeLifecycleLabel(c.lifecycle)}</span>
+                        <span class="rich-select__option-title instance-type-option-title">${richSelectEsc(parts.title)} ${instanceTypeLifecycleLabel(c.lifecycle)}</span>
                         <span class="rich-select__option-desc">${richSelectEsc(desc)}</span>
                       </span>
                     </span>
@@ -11017,6 +11029,11 @@
         .replace(/"/g, '&quot;');
     }
 
+    function instanceTypeOptionTooltip(title, lifecycle) {
+      const lifecycleTooltip = instanceTypeLifecycleTooltip(lifecycle);
+      return [String(title).length > 28 ? title : '', lifecycleTooltip].filter(Boolean).join('. ');
+    }
+
     /**
      * Typeahead rich-select matching Instance type (FormControl toggle + search menu).
      * options: [{ id, title, desc? }]
@@ -11093,10 +11110,10 @@
               ${filtered.map(o => `
                 <button type="button" class="pf-v6-c-menu__item rich-select__option ${o.id === selectedId ? 'pf-m-selected' : ''} ${o.disabled ? 'pf-m-disabled' : ''}"
                   ${optionAttr}="${richSelectEsc(o.id)}" role="option" ${o.disabled ? 'aria-disabled="true"' : ''}
-                  ${o.lifecycle ? `data-pf-tooltip="${richSelectEsc(instanceTypeLifecycleTooltip(o.lifecycle))}" aria-label="${richSelectEsc(`${o.title}, ${o.lifecycle}. ${instanceTypeLifecycleTooltip(o.lifecycle)}`)}"` : ''}>
+                  ${instanceTypeOptionTooltip(o.title, o.lifecycle) ? `data-pf-tooltip="${richSelectEsc(instanceTypeOptionTooltip(o.title, o.lifecycle))}"` : ''} aria-label="${richSelectEsc(`${o.title}${o.desc ? `. ${o.desc}` : ''}${o.lifecycle ? `. ${o.lifecycle}. ${instanceTypeLifecycleTooltip(o.lifecycle)}` : ''}`)}">
                   <span class="pf-v6-c-menu__item-main">
                     <span class="rich-select__option-body">
-                      <span class="rich-select__option-title">${richSelectEsc(o.title)} ${instanceTypeLifecycleLabel(o.lifecycle)}</span>
+                      <span class="rich-select__option-title instance-type-option-title">${richSelectEsc(o.title)} ${instanceTypeLifecycleLabel(o.lifecycle)}</span>
                       ${o.desc ? `<span class="rich-select__option-desc">${richSelectEsc(o.desc)}</span>` : ''}
                     </span>
                   </span>
@@ -19345,10 +19362,10 @@
                         const tooltip = instanceTypeLifecycleTooltip(c.lifecycle);
                         return `
                         <button type="button" class="pf-v6-c-menu__item rich-select__option ${d.computeResource === c.id ? 'pf-m-selected' : ''} ${c.lifecycle === 'Obsolete' ? 'pf-m-disabled' : ''}" data-vm-compute="${c.id}" role="option" ${c.lifecycle === 'Obsolete' ? 'aria-disabled="true"' : ''}
-                          ${tooltip ? `data-pf-tooltip="${richSelectEsc(tooltip)}" aria-label="${richSelectEsc(`${parts.title}, ${c.lifecycle}. ${tooltip}`)}"` : ''}>
+                          ${instanceTypeOptionTooltip(parts.title, c.lifecycle) ? `data-pf-tooltip="${richSelectEsc(instanceTypeOptionTooltip(parts.title, c.lifecycle))}"` : ''} aria-label="${richSelectEsc(`${parts.title}. ${desc}${tooltip ? `. ${tooltip}` : ''}`)}">
                           <span class="pf-v6-c-menu__item-main">
                             <span class="rich-select__option-body">
-                              <span class="rich-select__option-title">${parts.title} ${instanceTypeLifecycleLabel(c.lifecycle)}</span>
+                              <span class="rich-select__option-title instance-type-option-title">${richSelectEsc(parts.title)} ${instanceTypeLifecycleLabel(c.lifecycle)}</span>
                               <span class="rich-select__option-desc">${desc}</span>
                             </span>
                           </span>
@@ -21355,6 +21372,7 @@
       { name: 'catalog-small', lifecycle: 'Active', label: 'Small', cpu: 16, memoryGiB: 128, gpus: 1, gpuPci: null, gpuResource: 'NVIDIA A100 40 GB', created: '7/14/2026, 9:05 AM' },
       { name: 'catalog-medium', lifecycle: 'Active', label: 'Medium', cpu: 32, memoryGiB: 256, gpus: 1, gpuPci: null, gpuResource: 'NVIDIA A100 40 GB', created: '8/22/2026, 3:42 PM' },
       { name: 'catalog-large', lifecycle: 'Active', label: 'Large', cpu: 64, memoryGiB: 512, gpus: 1, gpuPci: null, gpuResource: 'NVIDIA A100 80 GB', created: '9/7/2026, 11:16 AM' },
+      { name: 'instance-type-e2e-resize-cpu-up-memory-down', lifecycle: 'Active', cpu: 5, memoryGiB: 4, gpus: null, gpuPci: null, gpuResource: null, created: '11/12/2026, 16:30' },
       { name: 'aaa', lifecycle: 'Active', cpu: 10, memoryGiB: 100, gpus: null, gpuPci: null, gpuResource: null, created: '8/13/2024, 16:13' },
       { name: 'bbb', lifecycle: 'Obsolete', cpu: 1, memoryGiB: 2, gpus: 2, gpuPci: '20B0', gpuResource: 'nvidia.com/A100', created: '8/12/2024, 22:52' },
       { name: 'ddd', lifecycle: 'Active', cpu: 4, memoryGiB: 16, gpus: null, gpuPci: null, gpuResource: null, created: '8/11/2024, 09:40' },
@@ -21624,7 +21642,7 @@
       const rows = paginateList('it', INSTANCE_TYPES);
       tbody.innerHTML = rows.map(it => `
         <tr class="pf-v6-c-table__tr">
-          <td class="pf-v6-c-table__td"><a href="#" class="pf-v6-c-button pf-m-link pf-m-inline" data-instance-type="${String(it.name).replace(/"/g, '&quot;')}">${String(it.name).replace(/</g, '&lt;')}</a></td>
+          <td class="pf-v6-c-table__td"><a href="#" class="instance-type-list-name instance-type-option-title" data-pf-tooltip="${richSelectEsc(it.name)}" data-instance-type="${richSelectEsc(it.name)}">${richSelectEsc(it.name)}</a></td>
           <td class="pf-v6-c-table__td">${lifecycleLabelHtml(it.lifecycle)}</td>
           <td class="pf-v6-c-table__td">${it.cpu}</td>
           <td class="pf-v6-c-table__td">${it.memoryGiB}</td>

@@ -1,7 +1,7 @@
 # VM resize via instance type
 
 Contact: Yifat Friman Menchik, UXD  
-Updated: 10 November 2026
+Updated: 12 November 2026
 
 UX Google Doc: https://docs.google.com/document/d/1kgln_LzTA3-VSP0SUM0jLce2Nvw0pix3oTYkwZuX-wE/edit  
 Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=38890d7&role=admin&vm=windows-golden-eider-58
@@ -16,6 +16,8 @@ On VM Overview, select the pencil beside Instance type. Tenant Admin and Tenant 
 ## Select an instance type
 
 The modal has a required typeahead Instance type field and Save/Cancel actions. Each option shows the instance type name on the first line and CPU, memory, GPU count and readable model, and rate in the description below. For example: **small-gpu** followed by `1 vCPU · 2 GiB memory · 1 GPU (NVIDIA A100 40 GB) · $1.90/hr`. Omit PCI IDs from the visible description; use the GPU count, resource name, and PCI selector for compatibility filtering. The VM's GPU configuration cannot change during resize. Do not predict hot-plug or restart from boot-disk access mode before submission. Show submit failures inside the modal.
+
+Allow long instance type names to wrap to two lines, with the resource details still below the name. If the name needs more than two lines, truncate it and reveal the full name on hover and keyboard focus. The full name and resource details remain in the option's accessible name. The mockup includes `instance-type-e2e-resize-cpu-up-memory-down` as an example in both the Instance types list and selection menus.
 
 Show Deprecated instance types as selectable options with a **Deprecated** label and tooltip: “Still available, but being phased out. We recommend an active type.” Omit Obsolete types from the menu. If the VM currently uses an Obsolete type, show it as the current value in the resize form and require the user to choose a different type before saving. Keep the lifecycle label visible after selecting a Deprecated type. The same rule applies in Create VM and Create VM Catalog Item; see [instance type lifecycle selection](instance-type-lifecycle-selection.md).
 
@@ -40,6 +42,10 @@ The API must expose or allow derivation of both active and requested configurati
 **Instance type choices.** The resource name is the primary line and the configuration is the description. This same pattern applies to Create VM and Create VM Catalog Item.
 
 ![Name-first instance type picker in the resize modal](screenshots/latest-ux/resize-instance-types.png)
+
+![Long instance type name wraps in the Instance types list](screenshots/latest-ux/instance-type-long-name.png)
+
+![Full instance type name on hover](screenshots/latest-ux/instance-type-long-name-tooltip.png)
 
 **List pagination.** VM card and table views use the compact PatternFly count dropdown with Previous and Next controls.
 

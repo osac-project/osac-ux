@@ -9,6 +9,8 @@ The template-first wizard runs **Select template → Details → Compute configu
 
 In Compute configuration, select the guest OS family and disk image, then review or select the instance type. The **instance type name is the first line** of every option. The second line gives vCPUs, memory, and any GPU count and readable model, followed by the rate. Example: **small-gpu** / `1 vCPU · 2 GiB memory · 1 GPU (NVIDIA A100 40 GB) · $1.90/hr`. Do not expose the PCI device ID in the label. The selected control uses the same name and description. The GPU checkbox switches between GPU and non-GPU types.
 
+Long instance type names wrap to two lines above the resource description. If the name still does not fit, truncate it and show the full name on hover or keyboard focus; keep the full name available to screen readers. The same rule applies in the resize picker and Instance types list.
+
 Deprecated types remain selectable with a label and tooltip. Obsolete types are omitted from new choices. If a template defaults to an Obsolete type, require a replacement when editable or direct the user to another catalog item when locked. See [instance type lifecycle selection](instance-type-lifecycle-selection.md).
 
 The VM list uses compact PatternFly pagination: an item-range dropdown, Previous, and Next. It appears above and below card and table views.
