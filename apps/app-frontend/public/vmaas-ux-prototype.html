@@ -3931,16 +3931,22 @@
       color: var(--vmaas-text-subtle); cursor: pointer;
     }
     .icon-tool:hover { background: var(--vmaas-bg-subtle); color: var(--vmaas-text); }
-    .pagination {
-      display: inline-flex; align-items: center; gap: 4px; font-size: 14px; color: var(--vmaas-text-subtle);
+    .list-pagination { display: flex; justify-content: flex-end; margin-block: 12px; }
+    .list-pagination--top { margin-block-start: 0; }
+    .list-pagination .pf-v6-c-pagination { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .list-pagination .pf-v6-c-pagination__nav { display: flex; align-items: center; gap: 4px; }
+    .list-pagination .pf-v6-c-pagination__nav-control { width: 32px; height: 32px; }
+    .list-pagination .pf-v6-c-pagination__nav-page-select { width: 44px; text-align: center; }
+    .list-pagination .pf-v6-c-form-control { width: auto; min-width: 64px; }
+    .list-pagination .pf-v6-c-form-select { width: 64px; }
+    @media (max-width: 768px) {
+      .list-pagination--top .pf-v6-c-pagination__per-page,
+      .list-pagination--top .pf-v6-c-pagination__nav { display: none; }
+      .list-pagination--bottom .list-pagination__first,
+      .list-pagination--bottom .list-pagination__last,
+      .list-pagination--bottom .pf-v6-c-pagination__nav-page-select,
+      .list-pagination--bottom .list-pagination__page-total { display: none; }
     }
-    .pagination__count { margin: 0 8px; white-space: nowrap; }
-    .pagination button {
-      width: 28px; height: 28px; border: none; background: transparent; cursor: pointer;
-      color: var(--vmaas-text-subtle); border-radius: 4px;
-    }
-    .pagination button:hover:not(:disabled) { background: var(--vmaas-bg-subtle); color: var(--vmaas-text); }
-    .pagination button:disabled { opacity: .4; cursor: not-allowed; }
     .res-icon {
       display: inline-flex; align-items: center; justify-content: center;
       width: 22px; height: 22px; border-radius: 50%; font-size: 9px; font-weight: 700;
@@ -7469,16 +7475,9 @@
                   <button type="button" data-vm-view="cards" class="pf-m-selected" aria-pressed="true" aria-label="Card view" title="Card view"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i></button>
                   <button type="button" data-vm-view="list" aria-pressed="false" aria-label="List view" title="List view"><i class="fa-solid fa-list" aria-hidden="true"></i></button>
                 </div>
-                <div class="pagination" aria-label="Pagination">
-                  <span class="pagination__count" id="vm-page-count">1–1 of 1</span>
-                  <button type="button" disabled aria-label="First page"><i class="fa-solid fa-angles-left"></i></button>
-                  <button type="button" disabled aria-label="Previous page"><i class="fa-solid fa-angle-left"></i></button>
-                  <span style="margin:0 4px;">1 of 1</span>
-                  <button type="button" disabled aria-label="Next page"><i class="fa-solid fa-angle-right"></i></button>
-                  <button type="button" disabled aria-label="Last page"><i class="fa-solid fa-angles-right"></i></button>
-                </div>
               </div>
             </div>
+            <div class="list-pagination list-pagination--top" id="vm-pagination-top"></div>
 
             <div id="vm-table-area">
               <div style="overflow-x:auto;" id="vm-table-scroll">
@@ -7491,6 +7490,7 @@
               </div>
               <div class="vm-cards" id="vm-cards-gallery" hidden role="list" aria-label="Virtual machines"></div>
             </div>
+            <div class="list-pagination list-pagination--bottom" id="vm-pagination-bottom"></div>
           </section>
 
           <section class="view" id="view-vm">
@@ -7544,6 +7544,7 @@
                 <button type="button" data-net-view="list" aria-pressed="false" aria-label="List view" title="List view"><i class="fa-solid fa-list" aria-hidden="true"></i></button>
               </div>
             </div>
+            <div class="list-pagination list-pagination--top" id="net-pagination-top"></div>
             <p class="net-summary" id="net-summary" hidden></p>
             <div id="net-table-area">
               <div style="overflow-x:auto;" id="net-table-scroll">
@@ -7565,6 +7566,7 @@
               </div>
               <div class="vm-cards" id="net-cards-gallery" hidden role="list" aria-label="Virtual networks"></div>
             </div>
+            <div class="list-pagination list-pagination--bottom" id="net-pagination-bottom"></div>
           </section>
 
           <section class="view" id="view-network">
@@ -7631,7 +7633,9 @@
               </div>
             </div>
             <p class="catalog-summary" id="catalog-summary" hidden></p>
+            <div class="list-pagination list-pagination--top" id="catalog-pagination-top"></div>
             <div id="catalog-content"></div>
+            <div class="list-pagination list-pagination--bottom" id="catalog-pagination-bottom"></div>
           </section>
 
           <section class="view" id="view-catalog-item">
@@ -7646,6 +7650,7 @@
               </div>
               <button type="button" class="pf-v6-c-button pf-m-primary" id="btn-create-instance-type">Create instance type</button>
             </div>
+            <div class="list-pagination list-pagination--top" id="it-pagination-top"></div>
             <div style="overflow-x:auto;">
               <table class="pf-v6-c-table pf-m-grid-md vm-table" role="grid">
                 <thead class="pf-v6-c-table__thead">
@@ -7662,6 +7667,7 @@
                 <tbody class="pf-v6-c-table__tbody" id="instance-types-tbody"></tbody>
               </table>
             </div>
+            <div class="list-pagination list-pagination--bottom" id="it-pagination-bottom"></div>
           </section>
 
           <section class="view" id="view-instance-type">
@@ -7682,6 +7688,7 @@
                 Show obsolete
               </label>
             </div>
+            <div class="list-pagination list-pagination--top" id="di-pagination-top"></div>
             <div id="disk-images-table-area">
               <div style="overflow-x:auto;" id="disk-images-table-scroll">
               <table class="pf-v6-c-table pf-m-grid-md vm-table" role="grid">
@@ -7700,6 +7707,7 @@
               </table>
               </div>
             </div>
+            <div class="list-pagination list-pagination--bottom" id="di-pagination-bottom"></div>
           </section>
 
           <section class="view" id="view-disk-image">
@@ -12693,12 +12701,95 @@
       `;
     }
 
+    const LIST_RENDERERS = {
+      vm: () => renderVms(state.vmFilter),
+      net: () => renderNetworks(document.getElementById('net-search')?.value || ''),
+      catalog: () => renderCatalog(),
+      it: () => renderInstanceTypes(),
+      di: () => renderDiskImages(),
+    };
+
+    function listPaginationHtml(key, total, position, page, perPage) {
+      if (!total) return '';
+      const pages = Math.max(1, Math.ceil(total / perPage));
+      const start = (page - 1) * perPage + 1;
+      const end = Math.min(page * perPage, total);
+      const button = (action, label, icon, disabled, extraClass = '') => `
+        <button type="button" class="pf-v6-c-button pf-m-plain pf-v6-c-pagination__nav-control ${extraClass}"
+          data-list-page="${key}" data-page-action="${action}" aria-label="${label}" ${disabled ? 'disabled' : ''}>
+          <i class="fa-solid ${icon}" aria-hidden="true"></i>
+        </button>`;
+      return `<nav class="pf-v6-c-pagination pf-m-${position}" aria-label="${position === 'top' ? 'Top' : 'Bottom'} pagination">
+        <span class="pf-v6-c-pagination__per-page">
+          <label for="${key}-${position}-per-page">Items per page</label>
+          <select class="pf-v6-c-form-select" id="${key}-${position}-per-page" data-list-per-page="${key}">
+            ${[10, 20, 50, 100].map(n => `<option value="${n}" ${perPage === n ? 'selected' : ''}>${n}</option>`).join('')}
+          </select>
+        </span>
+        <span class="pf-v6-c-pagination__total-items" aria-live="polite">${start}–${end} of ${total}</span>
+        <div class="pf-v6-c-pagination__nav">
+          ${button('first', 'Go to first page', 'fa-angles-left', page === 1, 'list-pagination__first')}
+          ${button('previous', 'Go to previous page', 'fa-angle-left', page === 1)}
+          <label class="pf-v6-screen-reader" for="${key}-${position}-page">Current page</label>
+          <input class="pf-v6-c-form-control pf-v6-c-pagination__nav-page-select" id="${key}-${position}-page"
+            type="number" min="1" max="${pages}" value="${page}" data-list-page-input="${key}" aria-label="Current page" />
+          <span class="list-pagination__page-total">of ${pages}</span>
+          ${button('next', 'Go to next page', 'fa-angle-right', page === pages)}
+          ${button('last', 'Go to last page', 'fa-angles-right', page === pages, 'list-pagination__last')}
+        </div>
+      </nav>`;
+    }
+
+    function paginateList(key, rows) {
+      if (!state.listPagination) state.listPagination = {};
+      const current = state.listPagination[key] || { page: 1, perPage: 10, signature: '' };
+      const signature = rows.map(item => item.id || item.name).join('|');
+      if (current.signature !== signature) current.page = 1;
+      current.signature = signature;
+      const pages = Math.max(1, Math.ceil(rows.length / current.perPage));
+      current.page = Math.min(Math.max(1, current.page), pages);
+      state.listPagination[key] = current;
+      for (const position of ['top', 'bottom']) {
+        const host = document.getElementById(`${key}-pagination-${position}`);
+        if (host) host.innerHTML = listPaginationHtml(key, rows.length, position, current.page, current.perPage);
+      }
+      return rows.slice((current.page - 1) * current.perPage, current.page * current.perPage);
+    }
+
+    document.addEventListener('click', e => {
+      const button = e.target.closest('[data-list-page][data-page-action]');
+      if (!button) return;
+      const key = button.dataset.listPage;
+      const current = state.listPagination?.[key];
+      if (!current) return;
+      const total = Number(document.querySelector(`#${key}-pagination-top [data-list-page-input]`)?.max || 1);
+      const action = button.dataset.pageAction;
+      current.page = action === 'first' ? 1 : action === 'last' ? total
+        : Math.min(total, Math.max(1, current.page + (action === 'next' ? 1 : -1)));
+      LIST_RENDERERS[key]?.();
+    });
+    document.addEventListener('change', e => {
+      const perPageKey = e.target.dataset?.listPerPage;
+      const pageKey = e.target.dataset?.listPageInput;
+      if (!perPageKey && !pageKey) return;
+      const key = perPageKey || pageKey;
+      const current = state.listPagination?.[key];
+      if (!current) return;
+      if (perPageKey) {
+        current.perPage = Number(e.target.value);
+        current.page = 1;
+      } else {
+        current.page = Math.min(Number(e.target.max), Math.max(1, Number(e.target.value) || 1));
+      }
+      LIST_RENDERERS[key]?.();
+    });
+
     function renderVms(q = state.vmFilter) {
       state.vmFilter = q;
-      const rows = filteredVms(q);
-      const n = rows.length;
+      const allRows = filteredVms(q);
+      const rows = paginateList('vm', allRows);
+      const n = allRows.length;
       const isCards = state.vmView === 'cards';
-      document.getElementById('vm-page-count').textContent = n ? `1–${n} of ${n}` : '0–0 of 0';
       syncVmListViewChrome();
       const tbody = document.getElementById('vm-tbody');
       const tableScroll = document.getElementById('vm-table-scroll');
@@ -17559,7 +17650,8 @@
 
     function renderNetworks(q = '') {
       const search = String(q || '').trim();
-      const rows = filteredNetworks(search);
+      const allRows = filteredNetworks(search);
+      const rows = paginateList('net', allRows);
       const tbody = document.getElementById('net-tbody');
       const tableScroll = document.getElementById('net-table-scroll');
       const gallery = document.getElementById('net-cards-gallery');
@@ -17568,7 +17660,7 @@
 
       syncNetListViewChrome();
       const isCards = state.netView === 'cards';
-      const n = rows.length;
+      const n = allRows.length;
       if (summary) {
         if (!n && !NETWORKS.length) {
           summary.hidden = true;
@@ -17579,7 +17671,7 @@
         }
       }
 
-      if (!rows.length) {
+      if (!n) {
         tbody.innerHTML = '';
         if (gallery) {
           gallery.hidden = true;
@@ -21457,7 +21549,8 @@
     function renderInstanceTypes() {
       const tbody = document.getElementById('instance-types-tbody');
       if (!tbody) return;
-      tbody.innerHTML = INSTANCE_TYPES.map(it => `
+      const rows = paginateList('it', INSTANCE_TYPES);
+      tbody.innerHTML = rows.map(it => `
         <tr class="pf-v6-c-table__tr">
           <td class="pf-v6-c-table__td"><a href="#" class="pf-v6-c-button pf-m-link pf-m-inline" data-instance-type="${String(it.name).replace(/"/g, '&quot;')}">${String(it.name).replace(/</g, '&lt;')}</a></td>
           <td class="pf-v6-c-table__td">${lifecycleLabelHtml(it.lifecycle)}</td>
@@ -24739,6 +24832,7 @@
         total: catalogItemsSource().length,
         hasFilters,
       });
+      const pageItems = paginateList('catalog', items);
       if (catalogIsEmpty) {
         root.innerHTML = catalogEmptyStateHtml({ isProvider });
         return;
@@ -24768,7 +24862,7 @@
                 </tr>
               </thead>
               <tbody class="pf-v6-c-table__tbody">
-                ${items.map(item => {
+                ${pageItems.map(item => {
                   const name = String(item.name).replace(/</g, '&lt;');
                   const diskMatch = findDiskImageByCatalogLabel(item.diskImage);
                   const diskLabel = String(item.diskImage || '—').replace(/</g, '&lt;');
@@ -24796,7 +24890,7 @@
         wireCatalogCards(root);
         return;
       }
-      const cards = items.map(item => renderCatalogCard(item, {
+      const cards = pageItems.map(item => renderCatalogCard(item, {
           showVisibility: isProvider,
           showPublishState: isProvider,
         })).join('');
@@ -25131,8 +25225,9 @@
       const tbody = document.getElementById('disk-images-tbody');
       if (!tbody) return;
       const showObsolete = !!state.diShowObsolete;
-      const rows = DISK_IMAGES.filter(di => showObsolete || normalizeDiskImageLifecycle(di.lifecycle) !== 'Obsolete');
-      if (!rows.length) {
+      const allRows = DISK_IMAGES.filter(di => showObsolete || normalizeDiskImageLifecycle(di.lifecycle) !== 'Obsolete');
+      const rows = paginateList('di', allRows);
+      if (!allRows.length) {
         tbody.innerHTML = '';
         const emptyHtml = !DISK_IMAGES.length
           ? emptyStateHtml({
