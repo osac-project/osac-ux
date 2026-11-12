@@ -3,7 +3,7 @@
 Contact: Yifat Friman Menchik, UXD  
 Jira: [HPUX-2031](https://redhat.atlassian.net/browse/HPUX-2031)  
 Google Doc: [Create Virtual machine](https://docs.google.com/document/d/1LL0iWhIIh3gAhJAsm7MCpnlFxfzaOXkZS_MVI6dSfSo/edit)  
-Interactive mock: [Create VM, Tenant Admin](https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=38890d7&role=admin)
+Interactive mock: [Create VM, Tenant Admin](https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=9c71d7d&role=admin)
 
 The template-first wizard runs **Select template → Details → Compute configuration → Storage → Networking → Access & Initial run → Review and create**. Template rules keep locked settings visible and identify editable settings. Back and Next retain values; leaving after editing asks before discarding.
 

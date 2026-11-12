@@ -3,7 +3,7 @@
 Contact: Yifat Friman Menchik, UXD  
 Jira: [HPUX-2175](https://redhat.atlassian.net/browse/HPUX-2175)  
 Google Doc: [Catalog items](https://docs.google.com/document/d/1YTm2X4nUXWVI_Mjq_hXEY4Rj6i9BaOiXjzVeF3jcMA4/edit)  
-Interactive mock: [Catalog, Cloud provider admin](https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=38890d7&role=provider)
+Interactive mock: [Catalog, Cloud provider admin](https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=9c71d7d&role=provider)
 
 The provider Catalog list supports publish-state and tenant filters, search, and card and table views. Both views use compact PatternFly pagination above and below the list: an item-range dropdown with Previous and Next.
 

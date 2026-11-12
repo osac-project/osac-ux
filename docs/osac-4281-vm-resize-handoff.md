@@ -4,7 +4,7 @@ Contact: Yifat Friman Menchik, UXD
 Updated: 12 November 2026
 
 UX Google Doc: https://docs.google.com/document/d/1kgln_LzTA3-VSP0SUM0jLce2Nvw0pix3oTYkwZuX-wE/edit  
-Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=38890d7&role=admin&vm=windows-golden-eider-58
+Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=9c71d7d&role=admin&vm=windows-golden-eider-58
 Feature: [OSAC-4277](https://redhat.atlassian.net/browse/OSAC-4277)  
 Resize: [OSAC-4281](https://redhat.atlassian.net/browse/OSAC-4281)  
 Related work: [OSAC-7576](https://redhat.atlassian.net/browse/OSAC-7576), [OSAC-7463](https://redhat.atlassian.net/browse/OSAC-7463), [OSAC-7582](https://redhat.atlassian.net/browse/OSAC-7582), [OSAC-6578](https://redhat.atlassian.net/browse/OSAC-6578)
