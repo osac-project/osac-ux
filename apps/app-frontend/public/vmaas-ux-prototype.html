@@ -19440,6 +19440,7 @@
                   id: img.id,
                   title: img.title,
                   desc: `${img.family} · ${img.arch}`,
+                  lifecycle: img.lifecycle,
                 })),
               })}
               ${fieldErrorHtml('diskImage')}
@@ -21746,7 +21747,7 @@
 
     const CATALOG_DISK_IMAGE_OPTIONS = [
       { id: 'rhel-10', title: 'RHEL 10', family: 'Red Hat Enterprise Linux', arch: 'x86_64', guestOs: 'Linux' },
-      { id: 'rhel-94', title: 'RHEL 9.4', family: 'Red Hat Enterprise Linux', arch: 'x86_64', guestOs: 'Linux' },
+      { id: 'rhel-94', title: 'RHEL 9.4', family: 'Red Hat Enterprise Linux', arch: 'x86_64', guestOs: 'Linux', lifecycle: 'Deprecated' },
       { id: 'ubuntu-2204', title: 'Ubuntu 22.04 LTS', family: 'Ubuntu', arch: 'x86_64', guestOs: 'Linux' },
       { id: 'rocky-93', title: 'Rocky Linux 9.3', family: 'Rocky Linux', arch: 'x86_64', guestOs: 'Linux' },
       { id: 'windows-2022', title: 'Windows Server 2022', family: 'Microsoft Windows', arch: 'x86_64', guestOs: 'Microsoft Windows' },
@@ -22293,7 +22294,7 @@
 
     function filteredCatalogDiskImages(guestOsFamily, filter = '') {
       const q = (filter || '').toLowerCase();
-      return CATALOG_DISK_IMAGE_OPTIONS.filter(d => {
+      return CATALOG_DISK_IMAGE_OPTIONS.filter(d => d.lifecycle !== 'Obsolete').filter(d => {
         if (guestOsFamily === 'Microsoft Windows') return d.guestOs === 'Microsoft Windows';
         if (guestOsFamily === 'Linux') return d.guestOs === 'Linux';
         return true; // no family / unspecified → show all
@@ -22765,6 +22766,7 @@
                 id: img.id,
                 title: img.title,
                 desc: `${img.family} · ${img.arch}`,
+                  lifecycle: img.lifecycle,
               })),
             })}
             ${providerFieldErrorHtml(state.fieldErrors.ciDiskImage, 'err-ciDiskImage')}

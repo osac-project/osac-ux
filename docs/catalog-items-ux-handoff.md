@@ -13,6 +13,8 @@ Compute configuration sets guest OS, disk image, and instance type. Instance typ
 
 Long instance type names wrap to two lines above their resource description. If a name still does not fit, truncate it and reveal the full name on hover or keyboard focus. Keep the full name available to screen readers, including in the Instance types list.
 
+The same lifecycle distinction applies to disk images in the catalog item wizard: keep Deprecated options selectable and labeled; omit Obsolete images from new choices.
+
 The provider can edit an instance type from its details page. Edit opens on **Configuration**, with vCPUs, memory, and GPU fields visible immediately; General remains available for scope, description, and labels. The name stays read-only.
 
 ![Catalog instance type menu](screenshots/latest-ux/catalog-instance-types.png)
