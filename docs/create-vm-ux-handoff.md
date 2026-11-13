@@ -14,6 +14,7 @@ Long instance type names wrap to two lines above the resource description. If th
 Deprecated types remain selectable with a label and tooltip. Obsolete types are omitted from new choices. If a template defaults to an Obsolete type, require a replacement when editable or direct the user to another catalog item when locked. See [instance type lifecycle selection](instance-type-lifecycle-selection.md).
 
 Apply the same lifecycle distinction to disk images: a Deprecated image remains selectable and labeled; an Obsolete image is unavailable for a new VM.
+The explanation appears when hovering the **Deprecated** label or focusing its option, rather than hovering anywhere in the option.
 
 The VM list uses compact PatternFly pagination: an item-range dropdown, Previous, and Next. It appears above and below card and table views.
 

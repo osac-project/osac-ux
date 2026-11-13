@@ -7,6 +7,7 @@ Interactive mock: [Disk images, Cloud provider admin](https://osac-project.githu
 Disk images are provider-managed references with metadata, visibility, and lifecycle controls. The list uses compact PatternFly pagination above and below the results: an item-range dropdown plus Previous and Next. The dropdown changes items per page (10, 20, 50, or 100). Filtering resets to the first page.
 
 Deprecated disk images remain selectable in Create VM and Create Catalog Item, with a visible **Deprecated** label and an explanation on hover or focus. They may remain Deprecated for a long time, so hiding them would make the state behave like Obsolete. Obsolete images are unavailable as new choices; an existing use remains visible until replaced.
+Anchor the tooltip to the **Deprecated** label itself, not the whole option. Its text is: “Still available, but being phased out. We recommend an active image.”
 
 ![Disk images list with compact pagination](screenshots/latest-ux/disk-images-list.png)
 

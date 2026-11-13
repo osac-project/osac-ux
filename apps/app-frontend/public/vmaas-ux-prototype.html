@@ -8789,14 +8789,19 @@
       'Still available, but being phased out. We recommend an active type.';
     const INSTANCE_TYPE_OBSOLETE_TOOLTIP = 'Unavailable for new VMs or resizes.';
 
-    function instanceTypeLifecycleLabel(lifecycle) {
+    function instanceTypeLifecycleLabel(lifecycle, resource = 'instance type') {
       if (lifecycle !== 'Deprecated' && lifecycle !== 'Obsolete') return '';
-      return `<span class="pf-v6-c-label pf-m-outline pf-m-compact ${lifecycle === 'Deprecated' ? 'pf-m-gold' : 'pf-m-grey'}"><span class="pf-v6-c-label__content"><span class="pf-v6-c-label__text">${lifecycle}</span></span></span>`;
+      return `<span class="pf-v6-c-label pf-m-outline pf-m-compact ${lifecycle === 'Deprecated' ? 'pf-m-gold' : 'pf-m-grey'}" data-pf-tooltip="${richSelectEsc(instanceTypeLifecycleTooltip(lifecycle, resource))}"><span class="pf-v6-c-label__content"><span class="pf-v6-c-label__text">${lifecycle}</span></span></span>`;
     }
 
-    function instanceTypeLifecycleTooltip(lifecycle) {
-      return lifecycle === 'Deprecated' ? INSTANCE_TYPE_DEPRECATED_TOOLTIP
-        : lifecycle === 'Obsolete' ? INSTANCE_TYPE_OBSOLETE_TOOLTIP : '';
+    function instanceTypeLifecycleTooltip(lifecycle, resource = 'instance type') {
+      if (lifecycle === 'Deprecated') return resource === 'disk image'
+        ? 'Still available, but being phased out. We recommend an active image.'
+        : INSTANCE_TYPE_DEPRECATED_TOOLTIP;
+      if (lifecycle === 'Obsolete') return resource === 'disk image'
+        ? 'Unavailable for new VMs or catalog items.'
+        : INSTANCE_TYPE_OBSOLETE_TOOLTIP;
+      return '';
     }
 
     function vmResizeGpuSummary(id) {
@@ -9368,7 +9373,7 @@
               ariaExpanded: m.menuOpen,
               ariaControls: 'edit-compute-menu',
               stacked: true,
-              tooltip: selectedParts.lifecycle === 'Deprecated' ? INSTANCE_TYPE_DEPRECATED_TOOLTIP : '',
+              tooltip: '',
               mainHtml: `
                 <span class="rich-select__toggle-label">${richSelectEsc(selectedParts.title)} ${instanceTypeLifecycleLabel(selectedParts.lifecycle)}</span>
                 ${toggleDesc ? `<span class="rich-select__toggle-desc">${richSelectEsc(toggleDesc)}</span>` : ''}
@@ -11030,8 +11035,7 @@
     }
 
     function instanceTypeOptionTooltip(title, lifecycle) {
-      const lifecycleTooltip = instanceTypeLifecycleTooltip(lifecycle);
-      return [String(title).length > 28 ? title : '', lifecycleTooltip].filter(Boolean).join('. ');
+      return String(title).length > 28 ? title : '';
     }
 
     /**
@@ -11058,6 +11062,7 @@
       describedBy = '',
       hiddenInputId = '',
       emptyNoun = 'options',
+      resourceNoun = 'instance type',
       footerHtml = '',
     }) {
       const selected = selectedOption || options.find(o => o.id === selectedId);
@@ -11079,8 +11084,8 @@
       const useStacked = !!(stacked && selected?.desc);
       const toggleMain = selected
         ? (useStacked
-          ? `<span class="rich-select__toggle-label">${richSelectEsc(selected.title)} ${instanceTypeLifecycleLabel(selected.lifecycle)}</span><span class="rich-select__toggle-desc">${richSelectEsc(selected.desc)}</span>`
-          : `<span class="rich-select__toggle-label">${richSelectEsc(selected.title)} ${instanceTypeLifecycleLabel(selected.lifecycle)}</span>`)
+          ? `<span class="rich-select__toggle-label">${richSelectEsc(selected.title)} ${instanceTypeLifecycleLabel(selected.lifecycle, resourceNoun)}</span><span class="rich-select__toggle-desc">${richSelectEsc(selected.desc)}</span>`
+          : `<span class="rich-select__toggle-label">${richSelectEsc(selected.title)} ${instanceTypeLifecycleLabel(selected.lifecycle, resourceNoun)}</span>`)
         : `<span class="rich-select__toggle-label">${richSelectEsc(placeholder)}</span>`;
       const controlExtra = [
         selected ? '' : 'pf-m-placeholder',
@@ -11096,7 +11101,7 @@
             ariaControls: menuId,
             stacked: useStacked,
             extraClass: controlExtra,
-            tooltip: selected?.lifecycle === 'Deprecated' ? INSTANCE_TYPE_DEPRECATED_TOOLTIP : '',
+            tooltip: '',
             mainHtml: toggleMain,
           })}
           <div class="pf-v6-c-menu rich-select__menu" id="${menuId}" role="listbox" ${open ? '' : 'hidden'}>
@@ -11110,10 +11115,10 @@
               ${filtered.map(o => `
                 <button type="button" class="pf-v6-c-menu__item rich-select__option ${o.id === selectedId ? 'pf-m-selected' : ''} ${o.disabled ? 'pf-m-disabled' : ''}"
                   ${optionAttr}="${richSelectEsc(o.id)}" role="option" ${o.disabled ? 'aria-disabled="true"' : ''}
-                  ${instanceTypeOptionTooltip(o.title, o.lifecycle) ? `data-pf-tooltip="${richSelectEsc(instanceTypeOptionTooltip(o.title, o.lifecycle))}"` : ''} aria-label="${richSelectEsc(`${o.title}${o.desc ? `. ${o.desc}` : ''}${o.lifecycle ? `. ${o.lifecycle}. ${instanceTypeLifecycleTooltip(o.lifecycle)}` : ''}`)}">
+                  ${instanceTypeOptionTooltip(o.title, o.lifecycle) ? `data-pf-tooltip="${richSelectEsc(instanceTypeOptionTooltip(o.title, o.lifecycle))}"` : ''} aria-label="${richSelectEsc(`${o.title}${o.desc ? `. ${o.desc}` : ''}${o.lifecycle ? `. ${o.lifecycle}. ${instanceTypeLifecycleTooltip(o.lifecycle, resourceNoun)}` : ''}`)}">
                   <span class="pf-v6-c-menu__item-main">
                     <span class="rich-select__option-body">
-                      <span class="rich-select__option-title instance-type-option-title">${richSelectEsc(o.title)} ${instanceTypeLifecycleLabel(o.lifecycle)}</span>
+                      <span class="rich-select__option-title instance-type-option-title">${richSelectEsc(o.title)} ${instanceTypeLifecycleLabel(o.lifecycle, resourceNoun)}</span>
                       ${o.desc ? `<span class="rich-select__option-desc">${richSelectEsc(o.desc)}</span>` : ''}
                     </span>
                   </span>
@@ -16670,11 +16675,13 @@
         }
       });
       document.addEventListener('focusin', e => {
-        const trigger = e.target.closest('[data-pf-tooltip]');
+        const trigger = e.target.querySelector?.('.pf-v6-c-label[data-pf-tooltip]')
+          || e.target.closest('[data-pf-tooltip]');
         if (trigger) showPfTooltip(trigger);
       });
       document.addEventListener('focusout', e => {
-        if (e.target.closest('[data-pf-tooltip]')) hidePfTooltip();
+        if (e.target.querySelector?.('.pf-v6-c-label[data-pf-tooltip]')
+          || e.target.closest('[data-pf-tooltip]')) hidePfTooltip();
       });
       document.addEventListener('keydown', e => {
         if (e.key === 'Escape') hidePfTooltip();
@@ -19343,7 +19350,7 @@
                     ariaExpanded: state.vmComputeMenuOpen,
                     stacked: true,
                     extraClass: state.fieldErrors.computeResource ? 'pf-m-error' : '',
-                    tooltip: selectedComputeFresh.lifecycle === 'Deprecated' ? INSTANCE_TYPE_DEPRECATED_TOOLTIP : '',
+                    tooltip: '',
                     mainHtml: `
                       <span class="rich-select__toggle-label" id="f-compute-resource">${d.computeResource ? selectedComputeFresh.title : 'Select an instance type'} ${instanceTypeLifecycleLabel(selectedComputeFresh.lifecycle)}</span>
                       ${vmComputeToggleDesc ? `<span class="rich-select__toggle-desc">${vmComputeToggleDesc}</span>` : ''}
@@ -19434,6 +19441,7 @@
                 placeholder: 'Select a disk image',
                 optionAttr: 'data-vm-disk-image',
                 emptyNoun: 'disk images',
+                resourceNoun: 'disk image',
                 invalid: !!state.fieldErrors.diskImage,
                 describedBy: state.fieldErrors.diskImage ? 'err-diskImage' : '',
                 options: filteredForFamily.map(img => ({
@@ -21385,13 +21393,14 @@
       { name: 'vm-type-1-xlarge', lifecycle: 'Active', cpu: 4, memoryGiB: 32, gpus: null, gpuPci: null, gpuResource: null, created: '11/13/2023, 14:05' },
     ];
 
-    function lifecycleLabelHtml(state) {
+    function lifecycleLabelHtml(state, resource = 'instance type') {
       const key = String(state || '').toLowerCase();
       const mod = (key === 'active' || key === 'available') ? 'pf-m-active'
         : key === 'obsolete' ? 'pf-m-obsolete'
         : key === 'deprecated' ? 'pf-m-deprecated'
         : 'pf-m-obsolete';
-      return `<span class="lifecycle-label ${mod}">${String(state || '—').replace(/</g, '&lt;')}</span>`;
+      const explanation = instanceTypeLifecycleTooltip(state, resource);
+      return `<span class="lifecycle-label ${mod}" ${explanation ? `data-pf-tooltip="${richSelectEsc(explanation)}" tabindex="0"` : ''}>${richSelectEsc(state || '—')}</span>`;
     }
 
     function itField(label, valueHtml) {
@@ -22760,6 +22769,7 @@
               placeholder: 'Select a disk image',
               optionAttr: 'data-ci-disk-image',
               emptyNoun: 'disk images',
+              resourceNoun: 'disk image',
               invalid: !!state.fieldErrors.ciDiskImage,
               describedBy: state.fieldErrors.ciDiskImage ? 'err-ciDiskImage' : '',
               options: filteredForFamily.map(img => ({
@@ -25249,7 +25259,7 @@
         : '';
 
       let overviewFields = `
-        ${itField('Lifecycle', lifecycleLabelHtml(di.lifecycle))}
+        ${itField('Lifecycle', lifecycleLabelHtml(di.lifecycle, 'disk image'))}
         ${itField('Visibility', String(di.scope || '—').replace(/</g, '&lt;'))}
         ${itField('Created', String(di.created || '—').replace(/</g, '&lt;'))}
       `;
@@ -25340,7 +25350,7 @@
         return `
         <tr class="pf-v6-c-table__tr">
           <td class="pf-v6-c-table__td"><a href="#" class="pf-v6-c-button pf-m-link pf-m-inline" data-disk-image="${String(di.name).replace(/"/g, '&quot;')}">${String(di.name).replace(/</g, '&lt;')}</a></td>
-          <td class="pf-v6-c-table__td">${lifecycleLabelHtml(di.lifecycle)}</td>
+          <td class="pf-v6-c-table__td">${lifecycleLabelHtml(di.lifecycle, 'disk image')}</td>
           <td class="pf-v6-c-table__td">${String(formatDiskImageGuestOs(di.guestOs)).replace(/</g, '&lt;')}</td>
           <td class="pf-v6-c-table__td">${String(arch).replace(/</g, '&lt;')}</td>
           <td class="pf-v6-c-table__td">${String(di.scope || '—').replace(/</g, '&lt;')}</td>
