@@ -3,7 +3,7 @@
 Contact: Yifat Friman Menchik, UXD  
 Updated: 12 November 2026
 
-Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=0c53b14&role=admin&vm=windows-golden-eider-58
+Interactive mockup: https://osac-project.github.io/osac-ux/vmaas-ux-prototype.html?v=7de83de&role=admin&vm=windows-golden-eider-58
 
 This rule applies to the instance type menus in **Create VM**, **Create VM Catalog Item**, and **Edit instance type** (resize).
 
