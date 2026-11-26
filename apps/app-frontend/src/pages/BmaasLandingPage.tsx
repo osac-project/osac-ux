@@ -4,23 +4,25 @@ import {
   Button,
   Card,
   CardBody,
+  CardTitle,
   Content,
-  Divider,
   Flex,
   FlexItem,
-  Icon,
-  Stack,
-  StackItem,
+  Label,
+  LabelGroup,
+  List,
+  ListItem,
+  SearchInput,
   Title,
 } from '@patternfly/react-core'
 import { css } from '@patternfly/react-styles'
 import alignmentStyles from '@patternfly/react-styles/css/utilities/Alignment/alignment'
-import { CogIcon } from '@patternfly/react-icons/dist/esm/icons/cog-icon'
-import { CrownIcon } from '@patternfly/react-icons/dist/esm/icons/crown-icon'
-import { UserIcon } from '@patternfly/react-icons/dist/esm/icons/user-icon'
-import { UsersIcon } from '@patternfly/react-icons/dist/esm/icons/users-icon'
-import { Fragment, type ReactNode } from 'react'
+import { BlueprintIcon } from '@patternfly/react-icons/dist/esm/icons/blueprint-icon'
+import { useState } from 'react'
+import { ViewModeToggle } from '../components/catalog/CatalogViewToggle'
+import { CatalogFilterEmptyState } from '../components/catalog/CatalogFilterEmptyState'
 import { RouterButton } from '../components/RouterButton'
+import type { ViewMode } from '../catalog/viewMode'
 import { BMAAS_LANDING_LAST_UPDATED } from '../bmaasLandingLastUpdated'
 import redHatHatLogoUrl from '../assets/Logo-RedHat-Hat-Color-RGB.svg?url'
 
@@ -38,218 +40,187 @@ import redHatHatLogoUrl from '../assets/Logo-RedHat-Hat-Color-RGB.svg?url'
  */
 const STORYBOOK_URL = import.meta.env.DEV
   ? 'http://localhost:6006/'
-  : `${import.meta.env.BASE_URL}storybook/`;
+  : `${import.meta.env.BASE_URL}storybook/`
 
-type PrototypeLink = {
+type TopicLink = {
   label: string
   to: string
-  companionSeparator?: string
-  companionLink?: {
-    label: string
-    to: string
-  }
 }
 
-type RoleBlockProps = {
+type TopicCard = {
   id: string
   title: string
   description: string
-  icon: ReactNode
-  actions: ReactNode
-  prototypeLinks?: PrototypeLink[]
+  status: 'In progress'
+  links: TopicLink[]
+  personas: string[]
+  attribution: string
 }
 
-function RoleBlock({ id, title, description, icon, actions, prototypeLinks = [] }: RoleBlockProps) {
+const TOPICS: TopicCard[] = [
+  {
+    id: 'catalog-experience',
+    title: 'Catalog experience',
+    description: 'Browse and manage catalog offerings across personas.',
+    status: 'In progress',
+    links: [
+      { label: 'Provider Admin', to: '/provider/workspace?nav=catalog' },
+      { label: 'Tenant Admin', to: '/tenant-admin/northsummit/workspace?nav=catalog' },
+      { label: 'Tenant User', to: '/tenant-user/northsummit/workspace?nav=catalog' },
+      { label: 'IdP Manager', to: '/idp-manager/bluesolace' },
+    ],
+    personas: [],
+    attribution: `Fix version 0.4 · ${formatUpdatedDate(BMAAS_LANDING_LAST_UPDATED)}`,
+  },
+]
+
+function formatUpdatedDate(isoDate: string): string {
+  const date = new Date(`${isoDate}T00:00:00`)
+  if (Number.isNaN(date.getTime())) {
+    return isoDate
+  }
+
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function topicMatchesQuery(topic: TopicCard, query: string): boolean {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) {
+    return true
+  }
+
+  const haystack = [topic.title, topic.description, topic.status, ...topic.links.map((l) => l.label), ...topic.personas]
+    .join(' ')
+    .toLowerCase()
+
+  return haystack.includes(normalized)
+}
+
+function TopicCardView({ topic }: { topic: TopicCard }) {
+  return (
+    <Card
+      id={`topic-${topic.id}`}
+      component="article"
+      className="bmaas-landing-topic-card"
+      aria-labelledby={topic.id}
+    >
+      <CardTitle>
+        <Flex direction={{ default: 'column' }} gap={{ default: 'gapMd' }}>
+          <Flex
+            className="bmaas-landing-topic-card__meta"
+            alignItems={{ default: 'alignItemsCenter' }}
+            justifyContent={{ default: 'justifyContentSpaceBetween' }}
+            gap={{ default: 'gapSm' }}
+          >
+            <Flex alignItems={{ default: 'alignItemsCenter' }} flexWrap={{ default: 'wrap' }} gap={{ default: 'gapSm' }}>
+              <Label variant="outline">{topic.status}</Label>
+            </Flex>
+          </Flex>
+          <Title id={topic.id} headingLevel="h3" size="lg" className="bmaas-landing-topic-card__title">
+            {topic.title}
+          </Title>
+        </Flex>
+      </CardTitle>
+      <CardBody className="bmaas-landing-topic-card__body">
+        <Content component="p" className="bmaas-landing-topic-card__description">
+          {topic.description}
+        </Content>
+        <ul className="bmaas-landing-topic-card__links">
+          {topic.links.map((link) => (
+            <li key={`${topic.id}-${link.label}`}>
+              <RouterButton
+                variant="link"
+                isInline
+                icon={<BlueprintIcon />}
+                to={link.to}
+                aria-label={`${topic.title}: ${link.label}`}
+              >
+                {link.label}
+              </RouterButton>
+            </li>
+          ))}
+        </ul>
+        <p className="bmaas-landing-topic-card__attribution">{topic.attribution}</p>
+        {topic.personas.length > 0 ? (
+          <LabelGroup className="bmaas-landing-topic-card__personas" numLabels={topic.personas.length}>
+            {topic.personas.map((persona) => (
+              <Label key={persona} variant="outline">
+                {persona}
+              </Label>
+            ))}
+          </LabelGroup>
+        ) : null}
+      </CardBody>
+    </Card>
+  )
+}
+
+function TopicListRow({ topic }: { topic: TopicCard }) {
   return (
     <Flex
-      component="section"
+      component="article"
       direction={{ default: 'column' }}
-      alignItems={{ default: 'alignItemsCenter' }}
-      gap={{ default: 'gapLg' }}
-      fullWidth={{ default: 'fullWidth' }}
-      className={css(alignmentStyles.textAlignCenter)}
-      aria-labelledby={id}
+      gap={{ default: 'gapMd' }}
+      className="bmaas-landing-topic-list-row"
+      aria-labelledby={topic.id}
     >
-      <span className="bmaas-role-landing__icon-wrap" aria-hidden>
-        <Icon size="lg">{icon}</Icon>
-      </span>
-      <Title id={id} headingLevel="h2" size="lg">
-        {title}
-      </Title>
-      <div className="bmaas-role-landing__cta">
-        <Content component="p" className="bmaas-role-landing__description">
-          {description}
-        </Content>
-        {actions}
-      </div>
-      <FlexItem>
-        {prototypeLinks.length > 0 ? (
-          <Stack hasGutter>
-            {prototypeLinks.map((link) => (
-              <StackItem key={`${link.label}-${link.to}`}>
-                <Flex
-                  gap={{ default: 'gapSm' }}
-                  alignItems={{ default: 'alignItemsCenter' }}
-                  justifyContent={{ default: 'justifyContentCenter' }}
-                  flexWrap={{ default: 'wrap' }}
-                >
-                  {link.companionLink ? (
-                    <>
-                      <span className="bmaas-role-landing__prototype-link-prefix">
-                        <RouterButton variant="link" isInline to={link.to}>
-                          {link.label}
-                        </RouterButton>
-                        {link.companionSeparator?.includes(',') ? ',' : link.companionSeparator}
-                      </span>
-                      <RouterButton variant="link" isInline to={link.companionLink.to}>
-                        {link.companionLink.label}
-                      </RouterButton>
-                    </>
-                  ) : (
-                    <RouterButton variant="link" isInline to={link.to}>
-                      {link.label}
-                    </RouterButton>
-                  )}
-                </Flex>
-              </StackItem>
+      <Flex
+        alignItems={{ default: 'alignItemsCenter' }}
+        justifyContent={{ default: 'justifyContentSpaceBetween' }}
+        gap={{ default: 'gapMd' }}
+        flexWrap={{ default: 'wrap' }}
+      >
+        <Flex direction={{ default: 'column' }} gap={{ default: 'gapSm' }} flex={{ default: 'flex_1' }}>
+          <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }} flexWrap={{ default: 'wrap' }}>
+            <Label variant="outline">{topic.status}</Label>
+            <Title id={topic.id} headingLevel="h3" size="lg">
+              {topic.title}
+            </Title>
+          </Flex>
+          <Content component="p" className="bmaas-landing-topic-card__description">
+            {topic.description}
+          </Content>
+        </Flex>
+        {topic.personas.length > 0 ? (
+          <LabelGroup numLabels={topic.personas.length}>
+            {topic.personas.map((persona) => (
+              <Label key={persona} variant="outline">
+                {persona}
+              </Label>
             ))}
-          </Stack>
-        ) : (
-          <Content component="p">Prototype versions coming soon</Content>
-        )}
-      </FlexItem>
+          </LabelGroup>
+        ) : null}
+      </Flex>
+      <ul className="bmaas-landing-topic-card__links">
+        {topic.links.map((link) => (
+          <li key={`${topic.id}-${link.label}`}>
+            <RouterButton
+              variant="link"
+              isInline
+              icon={<BlueprintIcon />}
+              to={link.to}
+              aria-label={`${topic.title}: ${link.label}`}
+            >
+              {link.label}
+            </RouterButton>
+          </li>
+        ))}
+      </ul>
+      <p className="bmaas-landing-topic-card__attribution">{topic.attribution}</p>
     </Flex>
   )
 }
 
-function SingleEnterActions({
-  to,
-  disabled = false,
-  ariaLabel,
-}: {
-  to?: string
-  disabled?: boolean
-  ariaLabel: string
-}) {
-  if (disabled || !to) {
-    return (
-      <Button variant="primary" isBlock isDisabled aria-label={ariaLabel}>
-        Enter
-      </Button>
-    )
-  }
-
-  return (
-    <RouterButton variant="primary" isBlock to={to} aria-label={ariaLabel}>
-      Enter
-    </RouterButton>
-  )
-}
-
 export function BmaasLandingPage() {
-  const providerPrototypeLinks: PrototypeLink[] = [
-    {
-      label: 'Catalog',
-      to: '/provider/workspace?nav=catalog',
-    },
-    {
-      label: 'Tenants',
-      to: '/provider/workspace?nav=administration-organizations',
-      companionSeparator: ', ',
-      companionLink: {
-        label: 'IdP Manager',
-        to: '/idp-manager/bluesolace',
-      },
-    },
-    {
-      label: 'External IP Pools',
-      to: '/provider/workspace?nav=networking',
-    },
-  ]
+  const [searchValue, setSearchValue] = useState('')
+  const [viewMode, setViewMode] = useState<ViewMode>('grid')
 
-  const roles: RoleBlockProps[] = [
-    {
-      id: 'bmaas-landing-role-infra-admin-title',
-      title: 'Infra Admin',
-      description: 'Bootstrap the environment, manage bare metal, and make Red Hat cloud-ready.',
-      icon: <CogIcon />,
-      actions: (
-        <SingleEnterActions disabled ariaLabel="Infra Admin — not available in this demo" />
-      ),
-    },
-    {
-      id: 'bmaas-landing-role-provider-title',
-      title: 'Provider Admin',
-      description: 'Manage platform services, tenants, and global policies for the environment.',
-      icon: <CrownIcon />,
-      actions: <SingleEnterActions to="/provider" ariaLabel="Enter Provider Admin demo" />,
-      prototypeLinks: providerPrototypeLinks,
-    },
-    {
-      id: 'bmaas-landing-role-tenant-admin-title',
-      title: 'Tenant Admin',
-      description: 'Configure tenant resources, users, quotas, and shared services.',
-      icon: <UserIcon />,
-      actions: (
-        <SingleEnterActions to="/tenant-admin/northsummit" ariaLabel="Enter Tenant Admin demo" />
-      ),
-      prototypeLinks: [
-        {
-          label: 'Catalog',
-          to: '/tenant-admin/northsummit/workspace?nav=catalog',
-        },
-        {
-          label: 'Projects',
-          to: '/tenant-admin/northsummit/workspace?nav=projects-teams',
-        },
-        {
-          label: 'Virtual networks',
-          to: '/tenant-admin/northsummit/workspace?nav=networking-virtual-networks',
-          companionSeparator: ', ',
-          companionLink: {
-            label: 'External IPs',
-            to: '/tenant-admin/northsummit/workspace?nav=networking-external-ip-pools',
-          },
-        },
-        {
-          label: 'Service accounts',
-          to: '/tenant-admin/northsummit/workspace?nav=administration-service-accounts',
-        },
-        {
-          label: 'Billing account not linked',
-          to: '/tenant-admin/northsummit/workspace?nav=catalog&scenario=billing-not-linked',
-        },
-      ],
-    },
-    {
-      id: 'bmaas-landing-role-tenant-user-title',
-      title: 'Tenant User',
-      description: 'Provision and manage Bare Metal, Cluster, VM, and Models workloads.',
-      icon: <UsersIcon />,
-      actions: (
-        <SingleEnterActions to="/tenant-user/northsummit" ariaLabel="Enter Tenant User demo" />
-      ),
-      prototypeLinks: [
-        {
-          label: 'Catalog',
-          to: '/tenant-user/northsummit/workspace?nav=catalog',
-        },
-        {
-          label: 'Projects',
-          to: '/tenant-user/northsummit/workspace?nav=projects-teams',
-        },
-        {
-          label: 'Virtual networks',
-          to: '/tenant-user/northsummit/workspace?nav=networking-virtual-networks',
-          companionSeparator: ', ',
-          companionLink: {
-            label: 'External IPs',
-            to: '/tenant-user/northsummit/workspace?nav=networking-external-ip-pools',
-          },
-        },
-      ],
-    },
-  ]
+  const filteredTopics = TOPICS.filter((topic) => topicMatchesQuery(topic, searchValue))
+  const inProgressTopics = filteredTopics.filter((topic) => topic.status === 'In progress')
 
   return (
     <Bullseye className="bmaas-role-landing">
@@ -257,7 +228,7 @@ export function BmaasLandingPage() {
         className="bmaas-role-landing__wrap"
         direction={{ default: 'column' }}
         alignItems={{ default: 'alignItemsCenter' }}
-        gap={{ default: 'gap2xl' }}
+        gap={{ default: 'gapLg' }}
         flexWrap={{ default: 'nowrap' }}
       >
         <FlexItem>
@@ -268,106 +239,132 @@ export function BmaasLandingPage() {
             gap={{ default: 'gapMd' }}
             className={css(alignmentStyles.textAlignCenter)}
           >
-            <Brand src={redHatHatLogoUrl} alt="Red Hat" heights={{ default: '52px' }} />
+            <Brand src={redHatHatLogoUrl} alt="Red Hat" heights={{ default: '40px' }} />
             <Title headingLevel="h1" size="4xl">
-              Red Hat OSAC Prototypes 0.3
+              Red Hat Cloud Extensions Prototypes 0.4
             </Title>
-            <Content component="p">Select a role to access the customized interface.</Content>
+            <Content component="p">Explore prototype experiences by topic.</Content>
           </Flex>
         </FlexItem>
 
-        <FlexItem alignSelf={{ default: 'alignSelfStretch' }}>
-          <Card component="article">
-            <CardBody>
-              <Flex
-                direction={{ default: 'column', lg: 'row' }}
-                alignItems={{ default: 'alignItemsStretch' }}
-                gap={{ default: 'gapLg' }}
-              >
-                {roles.map((role, index) => (
-                  <Fragment key={role.id}>
-                    {index > 0 ? (
-                      <Divider
-                        orientation={{
-                          default: 'horizontal',
-                          lg: 'vertical',
-                        }}
-                      />
-                    ) : null}
-                    <FlexItem flex={{ default: 'flex_1' }}>
-                      <RoleBlock {...role} />
-                    </FlexItem>
-                  </Fragment>
-                ))}
-              </Flex>
-            </CardBody>
-          </Card>
+        <FlexItem alignSelf={{ default: 'alignSelfStretch' }} className="bmaas-landing-main">
+          <div className="catalog-view-toolbar bmaas-landing-toolbar">
+            <div className="catalog-view-toolbar__start">
+              <SearchInput
+                className="catalog-search bmaas-landing-search"
+                placeholder="Search topics, personas, Jira…"
+                value={searchValue}
+                onChange={(_event, value) => setSearchValue(value)}
+                onClear={() => setSearchValue('')}
+                aria-label="Search design topics"
+              />
+            </div>
+            <ViewModeToggle
+              viewMode={viewMode}
+              onChange={setViewMode}
+              idPrefix="landing-view"
+              ariaLabel="Topic view"
+            />
+          </div>
+
+          {filteredTopics.length === 0 ? (
+            <CatalogFilterEmptyState
+              title="No topics match your search"
+              description="Try a different search term."
+              onClearFilters={() => setSearchValue('')}
+            />
+          ) : (
+            <Flex direction={{ default: 'column' }} gap={{ default: 'gapXl' }}>
+              {inProgressTopics.length > 0 ? (
+                <Flex
+                  component="section"
+                  direction={{ default: 'column' }}
+                  gap={{ default: 'gapLg' }}
+                  aria-labelledby="bmaas-landing-in-progress-title"
+                >
+                  <Flex
+                    className="bmaas-landing-section-heading"
+                    alignItems={{ default: 'alignItemsCenter' }}
+                    gap={{ default: 'gapSm' }}
+                  >
+                    <Title id="bmaas-landing-in-progress-title" headingLevel="h2" size="xl">
+                      In progress
+                    </Title>
+                    <span
+                      className="bmaas-landing-section-count"
+                      aria-label={`${inProgressTopics.length} topics`}
+                    >
+                      {inProgressTopics.length}
+                    </span>
+                  </Flex>
+
+                  {viewMode === 'list' ? (
+                    <Flex direction={{ default: 'column' }} gap={{ default: 'gapLg' }}>
+                      {inProgressTopics.map((topic) => (
+                        <TopicListRow key={topic.id} topic={topic} />
+                      ))}
+                    </Flex>
+                  ) : (
+                    <div className="bmaas-landing-topic-grid">
+                      {inProgressTopics.map((topic) => (
+                        <TopicCardView key={topic.id} topic={topic} />
+                      ))}
+                    </div>
+                  )}
+                </Flex>
+              ) : null}
+            </Flex>
+          )}
         </FlexItem>
 
-        <FlexItem>
+        <FlexItem alignSelf={{ default: 'alignSelfStretch' }} className="bmaas-landing-resources">
           <Flex
-            component="footer"
+            component="section"
             direction={{ default: 'column' }}
-            alignItems={{ default: 'alignItemsCenter' }}
-            gap={{ default: 'gapMd' }}
-            className={css(alignmentStyles.textAlignCenter)}
+            gap={{ default: 'gapLg' }}
+            fullWidth={{ default: 'fullWidth' }}
+            aria-labelledby="bmaas-landing-resources-title"
           >
-            <Button
-              variant="link"
-              component="a"
-              isInline
-              href="https://docs.google.com/spreadsheets/d/1Gw4zbnim9oCjHkvqREvoNyViHgLd4JBZcBmtaFrO0xE/edit?gid=1297446303#gid=1297446303"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Delivery Overview
-            </Button>
-            <Button
-              variant="link"
-              component="a"
-              isInline
-              href={`${import.meta.env.BASE_URL}vmaas-ux-prototype.html`}
-            >
-              Virtual Machines
-            </Button>
-            <Button
-              variant="link"
-              component="a"
-              isInline
-              href={STORYBOOK_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Golden patterns (Storybook)
-            </Button>
-            <div className="bmaas-role-landing__credits">
-              <Content component="p">
-                Created by{' '}
+            <Title id="bmaas-landing-resources-title" headingLevel="h2" size="xl">
+              Resources
+            </Title>
+            <List className="bmaas-landing-resources__list">
+              <ListItem>
                 <Button
                   variant="link"
                   component="a"
                   isInline
-                  href="https://redhat.enterprise.slack.com/archives/D021Q4YKTBR"
+                  href="https://docs.google.com/spreadsheets/d/1Gw4zbnim9oCjHkvqREvoNyViHgLd4JBZcBmtaFrO0xE/edit?gid=1297446303#gid=1297446303"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Ethan Kim
+                  Delivery Overview
                 </Button>
-                {' & '}
+              </ListItem>
+              <ListItem>
                 <Button
                   variant="link"
                   component="a"
                   isInline
-                  href="https://redhat.enterprise.slack.com/archives/D08ABCFSWGW"
+                  href={`${import.meta.env.BASE_URL}vmaas-ux-prototype.html`}
+                >
+                  Virtual Machine Experience
+                </Button>
+              </ListItem>
+              <ListItem>
+                <Button
+                  variant="link"
+                  component="a"
+                  isInline
+                  href={STORYBOOK_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Kyle Baker
+                  Golden Patterns (Storybook)
                 </Button>
-                {' - OpenShift UXD'}
-              </Content>
-              <Content component="p">Last updated: {BMAAS_LANDING_LAST_UPDATED}</Content>
-            </div>
+              </ListItem>
+            </List>
+            <Content component="p">Last updated: {BMAAS_LANDING_LAST_UPDATED}</Content>
           </Flex>
         </FlexItem>
       </Flex>
